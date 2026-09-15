@@ -42,13 +42,6 @@ const newPersonMessage =
 
 function getCurrentCaseId() {
 
-    /*
-     * Your Manage Cases page uses the case selector.
-     * We check several common possibilities so this
-     * works even if the selector is loaded slightly
-     * differently.
-     */
-
     const selectors = [
         "case-selector",
         "case-select",
@@ -65,12 +58,6 @@ function getCurrentCaseId() {
             const value =
                 element.value;
 
-            /*
-             * Keep UUID/string IDs intact.
-             * If the database uses an integer ID,
-             * convert it to a number.
-             */
-
             if (/^\d+$/.test(value)) {
                 return Number(value);
             }
@@ -79,11 +66,6 @@ function getCurrentCaseId() {
         }
     }
 
-
-    /*
-     * Fallback: look for a select whose name/id
-     * contains "case".
-     */
 
     const possibleCaseSelectors =
         document.querySelectorAll(
@@ -111,9 +93,9 @@ function getCurrentCaseId() {
 }
 
 
-/* -----------------------------------------
+/* =========================================
    MESSAGE HELPERS
-   ----------------------------------------- */
+   ========================================= */
 
 function showCasePersonMessage(
     message,
@@ -140,9 +122,9 @@ function showCasePersonMessage(
 }
 
 
-/* -----------------------------------------
+/* =========================================
    ESCAPE HTML
-   ----------------------------------------- */
+   ========================================= */
 
 function escapeHTML(value) {
 
@@ -162,9 +144,9 @@ function escapeHTML(value) {
 }
 
 
-/* -----------------------------------------
+/* =========================================
    FORMAT DATE
-   ----------------------------------------- */
+   ========================================= */
 
 function formatDate(dateValue) {
 
@@ -180,6 +162,104 @@ function formatDate(dateValue) {
     }
 
     return date.toLocaleDateString();
+}
+
+
+/* =========================================
+   OFFENSE DATA
+   ========================================= */
+
+let casePersonOffenses = [];
+
+
+/* -----------------------------------------
+   LOAD ALL OFFENSES
+   ----------------------------------------- */
+
+async function loadCasePersonOffenses() {
+
+    const {
+        data,
+        error
+    } = await peopleSupabase
+        .from("case_offenses")
+        .select(`
+            id,
+            name
+        `)
+        .order(
+            "name",
+            {
+                ascending: true
+            }
+        );
+
+
+    if (error) {
+
+        console.error(
+            "Error loading case offenses:",
+            error
+        );
+
+        casePersonOffenses = [];
+
+        return [];
+    }
+
+
+    casePersonOffenses =
+        data || [];
+
+
+    return casePersonOffenses;
+}
+
+
+/* -----------------------------------------
+   FORMAT OFFENSE NAME
+   ----------------------------------------- */
+
+function formatOffenseName(
+    offenseName
+) {
+
+    if (!offenseName) {
+        return "";
+    }
+
+    return String(offenseName)
+        .replace(/\s+/g, " ")
+        .trim();
+}
+
+
+/* -----------------------------------------
+   FIND OFFENSE NAME
+   ----------------------------------------- */
+
+function getOffenseName(
+    offenseId
+) {
+
+    const offense =
+        casePersonOffenses.find(
+            function(item) {
+
+                return String(item.id) ===
+                    String(offenseId);
+            }
+        );
+
+
+    if (!offense) {
+        return "Unknown Offense";
+    }
+
+
+    return formatOffenseName(
+        offense.name
+    );
 }
 
 
@@ -254,6 +334,455 @@ async function loadPeopleSelector(caseId) {
 
 
 /* =========================================
+   CREATE PEOPLE MANAGEMENT FORM
+   ========================================= */
+
+function createPeopleManagementForm() {
+
+    const existingForm =
+        document.getElementById(
+            "case-person-management-card"
+        );
+
+
+    if (existingForm) {
+        return;
+    }
+
+
+    const container =
+        document.getElementById(
+            "case-people-list"
+        );
+
+
+    if (!container) {
+        return;
+    }
+
+
+    const card =
+        document.createElement("div");
+
+    card.id =
+        "case-person-management-card";
+
+    card.className =
+        "management-card";
+
+
+    card.innerHTML = `
+
+        <div class="management-card-header">
+
+            <h4>
+                Add Person to Case
+            </h4>
+
+            <p>
+                Connect a person to this case and assign
+                the charges associated with that person.
+            </p>
+
+        </div>
+
+
+        <form id="case-person-form">
+
+            <div class="form-grid">
+
+
+                <!-- PERSON -->
+
+                <div class="form-group">
+
+                    <label for="person-selector">
+                        Person
+                    </label>
+
+                    <select id="person-selector">
+
+                        <option value="">
+                            -- Select Person --
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- ROLE -->
+
+                <div class="form-group">
+
+                    <label for="person-role">
+                        Role
+                    </label>
+
+                    <input
+                        type="text"
+                        id="person-role"
+                        placeholder="Example: Defendant"
+                    >
+
+                </div>
+
+
+                <!-- PRIMARY OFFENSE -->
+
+                <div class="form-group">
+
+                    <label for="person-primary-offense">
+
+                        Primary Offense
+
+                    </label>
+
+                    <select
+                        id="person-primary-offense"
+                    >
+
+                        <option value="">
+                            -- Select Primary Offense --
+                        </option>
+
+                    </select>
+
+                    <small>
+                        Select the primary offense associated
+                        with this person.
+                    </small>
+
+                </div>
+
+
+                <!-- ADDITIONAL CHARGES -->
+
+                <div class="form-group">
+
+                    <label for="person-additional-offenses">
+
+                        Additional Charges
+
+                    </label>
+
+                    <select
+                        id="person-additional-offenses"
+                        multiple
+                        size="7"
+                    ></select>
+
+                    <small>
+                        Hold Ctrl while clicking to select
+                        multiple charges.
+                    </small>
+
+                </div>
+
+            </div>
+
+
+            <div class="form-actions">
+
+                <button
+                    type="submit"
+                    class="primary-button"
+                >
+                    Add Person
+                </button>
+
+            </div>
+
+
+            <div
+                id="case-person-message"
+                class="manage-message"
+            ></div>
+
+        </form>
+
+    `;
+
+
+    container.parentNode.insertBefore(
+        card,
+        container
+    );
+
+
+    const newForm =
+        document.getElementById(
+            "case-person-form"
+        );
+
+
+    if (newForm) {
+
+        newForm.addEventListener(
+            "submit",
+            addPerson
+        );
+    }
+
+
+    populatePersonOffenseSelectors();
+}
+
+
+/* =========================================
+   POPULATE PERSON OFFENSE SELECTORS
+   ========================================= */
+
+function populatePersonOffenseSelectors() {
+
+    const primarySelector =
+        document.getElementById(
+            "person-primary-offense"
+        );
+
+    const additionalSelector =
+        document.getElementById(
+            "person-additional-offenses"
+        );
+
+
+    if (!primarySelector ||
+        !additionalSelector) {
+
+        return;
+    }
+
+
+    primarySelector.innerHTML =
+        '<option value="">-- Select Primary Offense --</option>';
+
+
+    additionalSelector.innerHTML = "";
+
+
+    casePersonOffenses.forEach(
+        function(offense) {
+
+            const name =
+                formatOffenseName(
+                    offense.name
+                );
+
+
+            /* PRIMARY */
+
+            const primaryOption =
+                document.createElement(
+                    "option"
+                );
+
+            primaryOption.value =
+                offense.id;
+
+            primaryOption.textContent =
+                name;
+
+            primarySelector.appendChild(
+                primaryOption
+            );
+
+
+            /* ADDITIONAL */
+
+            const additionalOption =
+                document.createElement(
+                    "option"
+                );
+
+            additionalOption.value =
+                offense.id;
+
+            additionalOption.textContent =
+                name;
+
+            additionalSelector.appendChild(
+                additionalOption
+            );
+        }
+    );
+}
+
+
+/* =========================================
+   GET SELECTED OFFENSE IDS
+   ========================================= */
+
+function getSelectedPersonOffenseIds() {
+
+    const primarySelector =
+        document.getElementById(
+            "person-primary-offense"
+        );
+
+    const additionalSelector =
+        document.getElementById(
+            "person-additional-offenses"
+        );
+
+
+    const offenseIds =
+        [];
+
+
+    /* -----------------------------------------
+       PRIMARY
+       ----------------------------------------- */
+
+    if (
+        primarySelector &&
+        primarySelector.value
+    ) {
+
+        offenseIds.push(
+            String(
+                primarySelector.value
+            )
+        );
+    }
+
+
+    /* -----------------------------------------
+       ADDITIONAL
+       ----------------------------------------- */
+
+    if (additionalSelector) {
+
+        Array.from(
+            additionalSelector.selectedOptions
+        ).forEach(
+            function(option) {
+
+                const offenseId =
+                    String(option.value);
+
+
+                if (
+                    offenseId &&
+                    !offenseIds.includes(
+                        offenseId
+                    )
+                ) {
+
+                    offenseIds.push(
+                        offenseId
+                    );
+                }
+            }
+        );
+    }
+
+
+    return offenseIds;
+}
+
+
+/* =========================================
+   SET OFFENSE SELECTED VALUES
+   ========================================= */
+
+function setPersonOffenseSelectors(
+    offenseIds,
+    casePrimaryOffenseId
+) {
+
+    const primarySelector =
+        document.getElementById(
+            "person-primary-offense"
+        );
+
+    const additionalSelector =
+        document.getElementById(
+            "person-additional-offenses"
+        );
+
+
+    if (!primarySelector ||
+        !additionalSelector) {
+
+        return;
+    }
+
+
+    primarySelector.value = "";
+
+
+    Array.from(
+        additionalSelector.options
+    ).forEach(
+        function(option) {
+
+            option.selected = false;
+        }
+    );
+
+
+    const ids =
+        (offenseIds || [])
+            .map(
+                function(id) {
+                    return String(id);
+                }
+            );
+
+
+    /*
+     * If the case's primary offense is assigned
+     * to this person, show it as the primary.
+     */
+
+    if (
+        casePrimaryOffenseId !== null &&
+        casePrimaryOffenseId !== undefined &&
+        ids.includes(
+            String(casePrimaryOffenseId)
+        )
+    ) {
+
+        primarySelector.value =
+            String(casePrimaryOffenseId);
+
+        ids.splice(
+            ids.indexOf(
+                String(casePrimaryOffenseId)
+            ),
+            1
+        );
+    }
+
+
+    /*
+     * Remaining charges are additional charges.
+     */
+
+    ids.forEach(
+        function(id) {
+
+            const option =
+                Array.from(
+                    additionalSelector.options
+                ).find(
+                    function(item) {
+
+                        return String(item.value) ===
+                            String(id);
+                    }
+                );
+
+
+            if (option) {
+                option.selected = true;
+            }
+        }
+    );
+}
+
+
+/* =========================================
    LOAD PEOPLE ATTACHED TO CASE
    ========================================= */
 
@@ -282,6 +811,47 @@ async function loadPeople(caseId) {
         caseId
     );
 
+
+    /*
+     * Make sure offense list is available.
+     */
+
+    await loadCasePersonOffenses();
+
+
+    /*
+     * Get the case's primary offense.
+     */
+
+    let caseData = null;
+
+
+    const {
+        data: currentCase,
+        error: caseError
+    } = await peopleSupabase
+        .from("cases")
+        .select(`
+            id,
+            offense
+        `)
+        .eq(
+            "id",
+            caseId
+        )
+        .maybeSingle();
+
+
+    if (!caseError) {
+
+        caseData =
+            currentCase;
+    }
+
+
+    /*
+     * Load people.
+     */
 
     const {
         data,
@@ -333,242 +903,561 @@ async function loadPeople(caseId) {
     );
 
 
+    /*
+     * Recreate the add-person form.
+     */
+
+    casePeopleList.innerHTML = "";
+
+
+    createPeopleManagementForm();
+
+
+    /*
+     * Get the list container again because
+     * createPeopleManagementForm may have
+     * changed the DOM.
+     */
+
+    const peopleDisplay =
+        document.getElementById(
+            "case-people-list"
+        );
+
+
     if (
         !data ||
         data.length === 0
     ) {
 
-        casePeopleList.innerHTML =
-            "<p>No people are connected to this case yet.</p>";
+        const emptyMessage =
+            document.createElement("p");
+
+        emptyMessage.className =
+            "empty-message";
+
+        emptyMessage.textContent =
+            "No people are connected to this case yet.";
+
+        peopleDisplay.appendChild(
+            emptyMessage
+        );
 
         return;
     }
 
 
-    casePeopleList.innerHTML = "";
+    /*
+     * Create heading for attached people.
+     */
+
+    const heading =
+        document.createElement("h4");
+
+    heading.textContent =
+        "People Attached to Case";
+
+    heading.style.marginTop =
+        "2rem";
+
+    peopleDisplay.appendChild(
+        heading
+    );
 
 
-    data.forEach(
-        function(entry) {
+    /*
+     * Load every person's charges.
+     */
 
-            const person =
-                entry.people;
+    for (
+        const entry of data
+    ) {
 
-
-            if (!person) {
-                return;
-            }
-
-
-            /* -----------------------------------------
-               PERSON CARD
-               ----------------------------------------- */
-
-            const wrapper =
-                document.createElement("div");
-
-            wrapper.className =
-                "case-person-item";
+        await renderCasePerson(
+            entry,
+            caseData
+        );
+    }
+}
 
 
-            /* -----------------------------------------
-               PERSON INFO
-               ----------------------------------------- */
+/* =========================================
+   RENDER ONE CASE PERSON
+   ========================================= */
 
-            const info =
-                document.createElement("div");
+async function renderCasePerson(
+    entry,
+    caseData
+) {
 
-            info.className =
-                "case-person-info";
-
-
-            const name =
-                document.createElement("h3");
-
-            name.textContent =
-                person.display_name ||
-                "Unnamed Person";
-
-            info.appendChild(
-                name
-            );
+    const person =
+        entry.people;
 
 
-            /* -----------------------------------------
-               ROLE
-               ----------------------------------------- */
-
-            const role =
-                document.createElement("p");
-
-            role.innerHTML =
-                "<strong>Role:</strong> " +
-                escapeHTML(
-                    entry.role ||
-                    "Unknown"
-                );
-
-            info.appendChild(
-                role
-            );
+    if (!person) {
+        return;
+    }
 
 
-            /* -----------------------------------------
-               AGE
-               ----------------------------------------- */
-
-            if (
-                person.age_at_case !== null &&
-                person.age_at_case !== undefined
-            ) {
-
-                const age =
-                    document.createElement("p");
-
-                age.innerHTML =
-                    "<strong>Age at Case:</strong> " +
-                    escapeHTML(
-                        person.age_at_case
-                    );
-
-                info.appendChild(
-                    age
-                );
-            }
+    const peopleDisplay =
+        document.getElementById(
+            "case-people-list"
+        );
 
 
-            /* -----------------------------------------
-               DATE OF BIRTH
-               ----------------------------------------- */
+    if (!peopleDisplay) {
+        return;
+    }
 
-            if (person.date_of_birth) {
 
-                const dob =
-                    document.createElement("p");
+    /* -----------------------------------------
+       GET PERSON'S CHARGES
+       ----------------------------------------- */
 
-                dob.innerHTML =
-                    "<strong>Date of Birth:</strong> " +
-                    escapeHTML(
-                        formatDate(
-                            person.date_of_birth
-                        )
-                    );
+    const {
+        data: chargeRows,
+        error: chargeError
+    } = await peopleSupabase
+        .from("case_person_offenses")
+        .select(`
+            id,
+            case_people_id,
+            offense_id
+        `)
+        .eq(
+            "case_people_id",
+            entry.id
+        );
 
-                info.appendChild(
-                    dob
+
+    if (chargeError) {
+
+        console.error(
+            "Error loading person charges:",
+            chargeError
+        );
+    }
+
+
+    const charges =
+        chargeRows || [];
+
+
+    const chargeIds =
+        charges.map(
+            function(charge) {
+
+                return String(
+                    charge.offense_id
                 );
             }
+        );
 
 
-            /* -----------------------------------------
-               GENDER
-               ----------------------------------------- */
+    /*
+     * Find the case primary offense ID.
+     *
+     * The cases table stores the offense as text,
+     * while case_offenses stores offense IDs.
+     */
 
-            if (person.gender) {
-
-                const gender =
-                    document.createElement("p");
-
-                gender.innerHTML =
-                    "<strong>Gender:</strong> " +
-                    escapeHTML(
-                        person.gender
-                    );
-
-                info.appendChild(
-                    gender
-                );
-            }
+    let casePrimaryOffenseId = null;
 
 
-            wrapper.appendChild(
-                info
-            );
+    if (
+        caseData &&
+        caseData.offense
+    ) {
 
+        const matchingOffense =
+            casePersonOffenses.find(
+                function(offense) {
 
-            /* -----------------------------------------
-               BUTTONS
-               ----------------------------------------- */
-
-            const buttons =
-                document.createElement("div");
-
-            buttons.className =
-                "case-person-buttons";
-
-
-            /* VIEW PERSON */
-
-            const viewButton =
-                document.createElement("button");
-
-            viewButton.type =
-                "button";
-
-            viewButton.textContent =
-                "View Person";
-
-            viewButton.addEventListener(
-                "click",
-                function() {
-
-                    viewPerson(
-                        person.id
-                    );
+                    return String(
+                        offense.name
+                    ).trim().toLowerCase() ===
+                    String(
+                        caseData.offense
+                    ).trim().toLowerCase();
                 }
             );
 
 
-            /* REMOVE */
+        if (matchingOffense) {
 
-            const removeButton =
-                document.createElement("button");
-
-            removeButton.type =
-                "button";
-
-            removeButton.textContent =
-                "Remove From Case";
-
-            removeButton.className =
-                "danger";
+            casePrimaryOffenseId =
+                matchingOffense.id;
+        }
+    }
 
 
-            removeButton.addEventListener(
-                "click",
-                function() {
+    /* -----------------------------------------
+       PERSON CARD
+       ----------------------------------------- */
 
-                    removePersonFromCase(
-                        entry.id
+    const wrapper =
+        document.createElement("div");
+
+    wrapper.className =
+        "case-person-item";
+
+
+    /* -----------------------------------------
+       PERSON INFO
+       ----------------------------------------- */
+
+    const info =
+        document.createElement("div");
+
+    info.className =
+        "case-person-info";
+
+
+    const name =
+        document.createElement("h3");
+
+    name.textContent =
+        person.display_name ||
+        "Unnamed Person";
+
+    info.appendChild(
+        name
+    );
+
+
+    /* -----------------------------------------
+       ROLE
+       ----------------------------------------- */
+
+    const role =
+        document.createElement("p");
+
+    role.innerHTML =
+        "<strong>Role:</strong> " +
+        escapeHTML(
+            entry.role ||
+            "Unknown"
+        );
+
+    info.appendChild(
+        role
+    );
+
+
+    /* -----------------------------------------
+       AGE
+       ----------------------------------------- */
+
+    if (
+        person.age_at_case !== null &&
+        person.age_at_case !== undefined
+    ) {
+
+        const age =
+            document.createElement("p");
+
+        age.innerHTML =
+            "<strong>Age at Case:</strong> " +
+            escapeHTML(
+                person.age_at_case
+            );
+
+        info.appendChild(
+            age
+        );
+    }
+
+
+    /* -----------------------------------------
+       DATE OF BIRTH
+       ----------------------------------------- */
+
+    if (person.date_of_birth) {
+
+        const dob =
+            document.createElement("p");
+
+        dob.innerHTML =
+            "<strong>Date of Birth:</strong> " +
+            escapeHTML(
+                formatDate(
+                    person.date_of_birth
+                )
+            );
+
+        info.appendChild(
+            dob
+        );
+    }
+
+
+    /* -----------------------------------------
+       GENDER
+       ----------------------------------------- */
+
+    if (person.gender) {
+
+        const gender =
+            document.createElement("p");
+
+        gender.innerHTML =
+            "<strong>Gender:</strong> " +
+            escapeHTML(
+                person.gender
+            );
+
+        info.appendChild(
+            gender
+        );
+    }
+
+
+    /* =========================================
+       CHARGES
+       ========================================= */
+
+    const chargesContainer =
+        document.createElement("div");
+
+    chargesContainer.className =
+        "case-person-charges";
+
+
+    const chargesHeading =
+        document.createElement("p");
+
+    chargesHeading.innerHTML =
+        "<strong>Charges:</strong>";
+
+    chargesContainer.appendChild(
+        chargesHeading
+    );
+
+
+    if (charges.length === 0) {
+
+        const noCharges =
+            document.createElement("p");
+
+        noCharges.className =
+            "empty-message";
+
+        noCharges.textContent =
+            "No charges assigned to this person.";
+
+        chargesContainer.appendChild(
+            noCharges
+        );
+
+    } else {
+
+        const chargeList =
+            document.createElement("ul");
+
+        chargeList.className =
+            "case-person-charge-list";
+
+
+        charges.forEach(
+            function(charge) {
+
+                const listItem =
+                    document.createElement("li");
+
+
+                const chargeName =
+                    document.createElement("span");
+
+                chargeName.textContent =
+                    getOffenseName(
+                        charge.offense_id
                     );
-                }
-            );
 
 
-            buttons.appendChild(
-                viewButton
-            );
-
-            buttons.appendChild(
-                removeButton
-            );
+                listItem.appendChild(
+                    chargeName
+                );
 
 
-            wrapper.appendChild(
-                buttons
-            );
+                /*
+                 * Remove charge button
+                 */
+
+                const removeChargeButton =
+                    document.createElement(
+                        "button"
+                    );
+
+                removeChargeButton.type =
+                    "button";
+
+                removeChargeButton.textContent =
+                    "Remove";
+
+                removeChargeButton.className =
+                    "danger";
 
 
-            casePeopleList.appendChild(
-                wrapper
+                removeChargeButton.style.marginLeft =
+                    "0.5rem";
+
+
+                removeChargeButton.addEventListener(
+                    "click",
+                    async function() {
+
+                        await removePersonCharge(
+                            charge.id
+                        );
+                    }
+                );
+
+
+                listItem.appendChild(
+                    removeChargeButton
+                );
+
+
+                chargeList.appendChild(
+                    listItem
+                );
+            }
+        );
+
+
+        chargesContainer.appendChild(
+            chargeList
+        );
+    }
+
+
+    info.appendChild(
+        chargesContainer
+    );
+
+
+    wrapper.appendChild(
+        info
+    );
+
+
+    /* -----------------------------------------
+       BUTTONS
+       ----------------------------------------- */
+
+    const buttons =
+        document.createElement("div");
+
+    buttons.className =
+        "case-person-buttons";
+
+
+    /* -----------------------------------------
+       VIEW PERSON
+       ----------------------------------------- */
+
+    const viewButton =
+        document.createElement("button");
+
+    viewButton.type =
+        "button";
+
+    viewButton.textContent =
+        "View Person";
+
+
+    viewButton.addEventListener(
+        "click",
+        function() {
+
+            viewPerson(
+                person.id
             );
         }
+    );
+
+
+    /* -----------------------------------------
+       EDIT CHARGES
+       ----------------------------------------- */
+
+    const editChargesButton =
+        document.createElement("button");
+
+    editChargesButton.type =
+        "button";
+
+    editChargesButton.textContent =
+        "Edit Charges";
+
+
+    editChargesButton.addEventListener(
+        "click",
+        function() {
+
+            openPersonChargeEditor(
+                entry,
+                chargeIds,
+                casePrimaryOffenseId
+            );
+        }
+    );
+
+
+    /* -----------------------------------------
+       REMOVE PERSON
+       ----------------------------------------- */
+
+    const removeButton =
+        document.createElement("button");
+
+    removeButton.type =
+        "button";
+
+    removeButton.textContent =
+        "Remove From Case";
+
+    removeButton.className =
+        "danger";
+
+
+    removeButton.addEventListener(
+        "click",
+        function() {
+
+            removePersonFromCase(
+                entry.id
+            );
+        }
+    );
+
+
+    buttons.appendChild(
+        viewButton
+    );
+
+    buttons.appendChild(
+        editChargesButton
+    );
+
+    buttons.appendChild(
+        removeButton
+    );
+
+
+    wrapper.appendChild(
+        buttons
+    );
+
+
+    peopleDisplay.appendChild(
+        wrapper
     );
 }
 
 
 /* =========================================
-   ADD EXISTING PERSON TO CASE
+   ADD PERSON
    ========================================= */
 
 async function addPerson(event) {
@@ -599,12 +1488,24 @@ async function addPerson(event) {
     }
 
 
+    const currentPersonSelector =
+        document.getElementById(
+            "person-selector"
+        );
+
+
+    const currentPersonRole =
+        document.getElementById(
+            "person-role"
+        );
+
+
     const personId =
-        personSelector?.value;
+        currentPersonSelector?.value;
 
 
     const role =
-        personRole?.value.trim();
+        currentPersonRole?.value.trim();
 
 
     if (!personId) {
@@ -617,11 +1518,6 @@ async function addPerson(event) {
         return;
     }
 
-
-    /*
-     * case_people.role is NOT NULL.
-     * Use Unknown if no role was supplied.
-     */
 
     const finalRole =
         role || "Unknown";
@@ -636,6 +1532,10 @@ async function addPerson(event) {
         }
     );
 
+
+    /* -----------------------------------------
+       INSERT CASE PERSON
+       ----------------------------------------- */
 
     const {
         data,
@@ -685,14 +1585,86 @@ async function addPerson(event) {
     );
 
 
+    /* -----------------------------------------
+       GET CHARGES
+       ----------------------------------------- */
+
+    const offenseIds =
+        getSelectedPersonOffenseIds();
+
+
+    /* -----------------------------------------
+       SAVE PERSON CHARGES
+       ----------------------------------------- */
+
+    if (offenseIds.length > 0) {
+
+        const chargeRows =
+            offenseIds.map(
+                function(offenseId) {
+
+                    return {
+                        case_people_id:
+                            data.id,
+
+                        offense_id:
+                            offenseId
+                    };
+                }
+            );
+
+
+        const {
+            error: chargeError
+        } = await peopleSupabase
+            .from("case_person_offenses")
+            .insert(
+                chargeRows
+            );
+
+
+        if (chargeError) {
+
+            console.error(
+                "Person added but charges could not be saved:",
+                chargeError
+            );
+
+
+            showCasePersonMessage(
+                "Person added, but the charges could not be saved: " +
+                chargeError.message,
+                "error"
+            );
+
+
+            await loadPeople(
+                caseId
+            );
+
+            return;
+        }
+    }
+
+
+    /* -----------------------------------------
+       SUCCESS
+       ----------------------------------------- */
+
     showCasePersonMessage(
-        "Person added to case.",
+        "Person and charges added successfully.",
         "success"
     );
 
 
-    if (casePersonForm) {
-        casePersonForm.reset();
+    const form =
+        document.getElementById(
+            "case-person-form"
+        );
+
+
+    if (form) {
+        form.reset();
     }
 
 
@@ -703,6 +1675,573 @@ async function addPerson(event) {
     await loadPeople(
         caseId
     );
+}
+
+
+/* =========================================
+   OPEN PERSON CHARGE EDITOR
+   ========================================= */
+
+async function openPersonChargeEditor(
+    entry,
+    existingChargeIds,
+    casePrimaryOffenseId
+) {
+
+    const existingEditor =
+        document.getElementById(
+            "person-charge-editor"
+        );
+
+
+    if (existingEditor) {
+        existingEditor.remove();
+    }
+
+
+    const editor =
+        document.createElement("div");
+
+    editor.id =
+        "person-charge-editor";
+
+    editor.className =
+        "management-card";
+
+
+    editor.innerHTML = `
+
+        <div class="management-card-header">
+
+            <h4>
+                Edit Charges
+            </h4>
+
+            <p>
+                ${escapeHTML(
+                    entry.people?.display_name ||
+                    "Person"
+                )}
+            </p>
+
+        </div>
+
+
+        <form id="person-charge-editor-form">
+
+            <div class="form-grid">
+
+
+                <div class="form-group">
+
+                    <label for="edit-person-primary-offense">
+
+                        Primary Offense
+
+                    </label>
+
+                    <select
+                        id="edit-person-primary-offense"
+                    >
+
+                        <option value="">
+                            -- Select Primary Offense --
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="edit-person-additional-offenses">
+
+                        Additional Charges
+
+                    </label>
+
+                    <select
+                        id="edit-person-additional-offenses"
+                        multiple
+                        size="7"
+                    ></select>
+
+                </div>
+
+            </div>
+
+
+            <div class="form-actions">
+
+                <button
+                    type="submit"
+                    class="primary-button"
+                >
+                    Save Charges
+                </button>
+
+                <button
+                    type="button"
+                    id="cancel-person-charge-edit"
+                    class="secondary-button"
+                >
+                    Cancel
+                </button>
+
+            </div>
+
+
+            <div
+                id="person-charge-edit-message"
+                class="manage-message"
+            ></div>
+
+        </form>
+
+    `;
+
+
+    const peopleDisplay =
+        document.getElementById(
+            "case-people-list"
+        );
+
+
+    if (!peopleDisplay) {
+        return;
+    }
+
+
+    peopleDisplay.insertBefore(
+        editor,
+        peopleDisplay.children[1] ||
+        null
+    );
+
+
+    const primarySelector =
+        document.getElementById(
+            "edit-person-primary-offense"
+        );
+
+
+    const additionalSelector =
+        document.getElementById(
+            "edit-person-additional-offenses"
+        );
+
+
+    casePersonOffenses.forEach(
+        function(offense) {
+
+            const name =
+                formatOffenseName(
+                    offense.name
+                );
+
+
+            const primaryOption =
+                document.createElement(
+                    "option"
+                );
+
+            primaryOption.value =
+                offense.id;
+
+            primaryOption.textContent =
+                name;
+
+            primarySelector.appendChild(
+                primaryOption
+            );
+
+
+            const additionalOption =
+                document.createElement(
+                    "option"
+                );
+
+            additionalOption.value =
+                offense.id;
+
+            additionalOption.textContent =
+                name;
+
+            additionalSelector.appendChild(
+                additionalOption
+            );
+        }
+    );
+
+
+    setPersonOffenseSelectorsForEditor(
+        existingChargeIds,
+        casePrimaryOffenseId,
+        primarySelector,
+        additionalSelector
+    );
+
+
+    const cancelButton =
+        document.getElementById(
+            "cancel-person-charge-edit"
+        );
+
+
+    cancelButton.addEventListener(
+        "click",
+        function() {
+
+            editor.remove();
+        }
+    );
+
+
+    const form =
+        document.getElementById(
+            "person-charge-editor-form"
+        );
+
+
+    form.addEventListener(
+        "submit",
+        async function(event) {
+
+            event.preventDefault();
+
+
+            await savePersonCharges(
+                entry.id,
+                primarySelector,
+                additionalSelector
+            );
+        }
+    );
+}
+
+
+/* =========================================
+   SET EDITOR OFFENSE VALUES
+   ========================================= */
+
+function setPersonOffenseSelectorsForEditor(
+    offenseIds,
+    casePrimaryOffenseId,
+    primarySelector,
+    additionalSelector
+) {
+
+    const ids =
+        (offenseIds || [])
+            .map(
+                function(id) {
+                    return String(id);
+                }
+            );
+
+
+    if (
+        casePrimaryOffenseId !== null &&
+        casePrimaryOffenseId !== undefined &&
+        ids.includes(
+            String(casePrimaryOffenseId)
+        )
+    ) {
+
+        primarySelector.value =
+            String(casePrimaryOffenseId);
+
+        ids.splice(
+            ids.indexOf(
+                String(casePrimaryOffenseId)
+            ),
+            1
+        );
+
+    } else if (ids.length > 0) {
+
+        /*
+         * If the case primary offense wasn't
+         * assigned to this person, use the first
+         * assigned offense as the person's primary.
+         */
+
+        primarySelector.value =
+            ids[0];
+
+        ids.shift();
+    }
+
+
+    ids.forEach(
+        function(id) {
+
+            const option =
+                Array.from(
+                    additionalSelector.options
+                ).find(
+                    function(item) {
+
+                        return String(item.value) ===
+                            String(id);
+                    }
+                );
+
+
+            if (option) {
+                option.selected = true;
+            }
+        }
+    );
+}
+
+
+/* =========================================
+   SAVE PERSON CHARGES
+   ========================================= */
+
+async function savePersonCharges(
+    casePeopleId,
+    primarySelector,
+    additionalSelector
+) {
+
+    const message =
+        document.getElementById(
+            "person-charge-edit-message"
+        );
+
+
+    const offenseIds =
+        [];
+
+
+    /* PRIMARY */
+
+    if (
+        primarySelector &&
+        primarySelector.value
+    ) {
+
+        offenseIds.push(
+            String(
+                primarySelector.value
+            )
+        );
+    }
+
+
+    /* ADDITIONAL */
+
+    if (additionalSelector) {
+
+        Array.from(
+            additionalSelector.selectedOptions
+        ).forEach(
+            function(option) {
+
+                const id =
+                    String(
+                        option.value
+                    );
+
+
+                if (
+                    id &&
+                    !offenseIds.includes(
+                        id
+                    )
+                ) {
+
+                    offenseIds.push(
+                        id
+                    );
+                }
+            }
+        );
+    }
+
+
+    /* -----------------------------------------
+       DELETE EXISTING CHARGES
+       ----------------------------------------- */
+
+    const {
+        error: deleteError
+    } = await peopleSupabase
+        .from("case_person_offenses")
+        .delete()
+        .eq(
+            "case_people_id",
+            casePeopleId
+        );
+
+
+    if (deleteError) {
+
+        console.error(
+            "Error deleting existing person charges:",
+            deleteError
+        );
+
+
+        if (message) {
+
+            message.textContent =
+                "Unable to update charges: " +
+                deleteError.message;
+
+            message.className =
+                "manage-message error";
+        }
+
+        return;
+    }
+
+
+    /* -----------------------------------------
+       INSERT NEW CHARGES
+       ----------------------------------------- */
+
+    if (offenseIds.length > 0) {
+
+        const rows =
+            offenseIds.map(
+                function(offenseId) {
+
+                    return {
+                        case_people_id:
+                            casePeopleId,
+
+                        offense_id:
+                            offenseId
+                    };
+                }
+            );
+
+
+        const {
+            error: insertError
+        } = await peopleSupabase
+            .from("case_person_offenses")
+            .insert(
+                rows
+            );
+
+
+        if (insertError) {
+
+            console.error(
+                "Error saving person charges:",
+                insertError
+            );
+
+
+            if (message) {
+
+                message.textContent =
+                    "Unable to save charges: " +
+                    insertError.message;
+
+                message.className =
+                    "manage-message error";
+            }
+
+            return;
+        }
+    }
+
+
+    /* -----------------------------------------
+       SUCCESS
+       ----------------------------------------- */
+
+    if (message) {
+
+        message.textContent =
+            "Charges updated successfully.";
+
+        message.className =
+            "manage-message success";
+    }
+
+
+    const caseId =
+        getCurrentCaseId();
+
+
+    if (caseId) {
+
+        await loadPeople(
+            caseId
+        );
+    }
+}
+
+
+/* =========================================
+   REMOVE INDIVIDUAL PERSON CHARGE
+   ========================================= */
+
+async function removePersonCharge(
+    chargeRecordId
+) {
+
+    if (!chargeRecordId) {
+        return;
+    }
+
+
+    const confirmed =
+        confirm(
+            "Remove this charge from this person?"
+        );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
+    const {
+        error
+    } = await peopleSupabase
+        .from("case_person_offenses")
+        .delete()
+        .eq(
+            "id",
+            chargeRecordId
+        );
+
+
+    if (error) {
+
+        console.error(
+            "Error removing person charge:",
+            error
+        );
+
+
+        alert(
+            "Unable to remove charge:\n\n" +
+            error.message
+        );
+
+        return;
+    }
+
+
+    const caseId =
+        getCurrentCaseId();
+
+
+    if (caseId) {
+
+        await loadPeople(
+            caseId
+        );
+    }
 }
 
 
@@ -721,10 +2260,6 @@ async function createPerson(event) {
         "CREATE PERSON STARTED"
     );
 
-
-    /* -----------------------------------------
-       INPUTS
-       ----------------------------------------- */
 
     const nameInput =
         document.getElementById(
@@ -770,10 +2305,6 @@ async function createPerson(event) {
         "";
 
 
-    /* -----------------------------------------
-       VALIDATE NAME
-       ----------------------------------------- */
-
     if (!displayName) {
 
         alert(
@@ -783,10 +2314,6 @@ async function createPerson(event) {
         return;
     }
 
-
-    /* -----------------------------------------
-       GET CASE ID BEFORE INSERTING PERSON
-       ----------------------------------------- */
 
     const caseId =
         getCurrentCaseId();
@@ -852,10 +2379,6 @@ async function createPerson(event) {
     );
 
 
-    /* -----------------------------------------
-       MAKE SURE PERSON WAS CREATED
-       ----------------------------------------- */
-
     if (!data || !data.id) {
 
         console.error(
@@ -882,21 +2405,11 @@ async function createPerson(event) {
         );
 
 
-        /*
-         * The person exists, but we don't know
-         * which case to connect them to.
-         */
-
         alert(
             "The person was created successfully, but CBRA could not determine the current case.\n\n" +
             "The person is now available in the People dropdown."
         );
 
-
-        /*
-         * Refresh selector so the new person
-         * appears immediately.
-         */
 
         await loadPeopleSelector(
             null
@@ -907,19 +2420,21 @@ async function createPerson(event) {
     }
 
 
-    /*
-     * case_people.role is NOT NULL.
-     */
+    const currentPersonRole =
+        document.getElementById(
+            "person-role"
+        );
+
 
     const finalRole =
-        personRole?.value.trim() ||
+        currentPersonRole?.value.trim() ||
         "Unknown";
 
 
     console.log(
         "ATTACHING NEW PERSON TO CASE:",
         {
-            caseId: caseId,
+            caseId,
             personId: data.id,
             role: finalRole
         }
@@ -950,30 +2465,11 @@ async function createPerson(event) {
         .single();
 
 
-    /* -----------------------------------------
-       CASE CONNECTION ERROR
-       ----------------------------------------- */
-
     if (casePersonError) {
 
         console.error(
             "PERSON CREATED BUT CASE CONNECTION FAILED:",
             casePersonError
-        );
-
-
-        console.error(
-            "Connection attempt used:",
-            {
-                caseId:
-                    caseId,
-
-                personId:
-                    data.id,
-
-                role:
-                    finalRole
-            }
         );
 
 
@@ -984,11 +2480,6 @@ async function createPerson(event) {
         );
 
 
-        /*
-         * The person remains in the people table,
-         * which is why it will appear in the dropdown.
-         */
-
         await loadPeopleSelector(
             caseId
         );
@@ -997,18 +2488,69 @@ async function createPerson(event) {
     }
 
 
-    /* -----------------------------------------
-       CONNECTION SUCCESS
-       ----------------------------------------- */
-
     console.log(
         "PERSON ATTACHED SUCCESSFULLY:",
         casePersonData
     );
 
 
+    /* -----------------------------------------
+       GET CHARGES FROM FORM
+       ----------------------------------------- */
+
+    const offenseIds =
+        getSelectedPersonOffenseIds();
+
+
+    /* -----------------------------------------
+       SAVE CHARGES
+       ----------------------------------------- */
+
+    if (offenseIds.length > 0) {
+
+        const chargeRows =
+            offenseIds.map(
+                function(offenseId) {
+
+                    return {
+                        case_people_id:
+                            casePersonData.id,
+
+                        offense_id:
+                            offenseId
+                    };
+                }
+            );
+
+
+        const {
+            error: chargeError
+        } = await peopleSupabase
+            .from("case_person_offenses")
+            .insert(
+                chargeRows
+            );
+
+
+        if (chargeError) {
+
+            console.error(
+                "Person attached but charges failed:",
+                chargeError
+            );
+
+
+            alert(
+                "The person was added to the case, but the charges could not be saved.\n\n" +
+                "Error: " +
+                chargeError.message
+            );
+        }
+    }
+
+
     showCasePersonMessage(
-        "Person created and attached to this case.",
+        "Person created, attached, and charges saved.",
         "success"
     );
 
@@ -1018,7 +2560,9 @@ async function createPerson(event) {
        ----------------------------------------- */
 
     if (newPersonForm) {
+
         newPersonForm.reset();
+
     } else {
 
         if (nameInput) {
@@ -1039,18 +2583,21 @@ async function createPerson(event) {
     }
 
 
-    /* -----------------------------------------
-       CLEAR ROLE
-       ----------------------------------------- */
-
-    if (personRole) {
-        personRole.value = "";
+    if (currentPersonRole) {
+        currentPersonRole.value = "";
     }
 
 
-    /* -----------------------------------------
-       REFRESH EVERYTHING
-       ----------------------------------------- */
+    const personForm =
+        document.getElementById(
+            "case-person-form"
+        );
+
+
+    if (personForm) {
+        personForm.reset();
+    }
+
 
     await loadPeopleSelector(
         caseId
@@ -1082,6 +2629,42 @@ async function removePersonFromCase(
 
 
     if (!confirmed) {
+        return;
+    }
+
+
+    /*
+     * case_person_offenses uses
+     * ON DELETE CASCADE if configured.
+     *
+     * We also explicitly delete the
+     * charges first so this works even
+     * if cascade behavior differs.
+     */
+
+    const {
+        error: chargeDeleteError
+    } = await peopleSupabase
+        .from("case_person_offenses")
+        .delete()
+        .eq(
+            "case_people_id",
+            casePersonId
+        );
+
+
+    if (chargeDeleteError) {
+
+        console.error(
+            "Error removing person charges:",
+            chargeDeleteError
+        );
+
+        alert(
+            "Unable to remove the person's charges:\n\n" +
+            chargeDeleteError.message
+        );
+
         return;
     }
 
@@ -1180,6 +2763,8 @@ async function refreshPeopleForCase(
     }
 
 
+    await loadCasePersonOffenses();
+
     await loadPeopleSelector(
         caseId
     );
@@ -1191,34 +2776,72 @@ async function refreshPeopleForCase(
 
 
 /* =========================================
+   INITIALIZE
+   ========================================= */
+
+async function initializeManagePeople() {
+
+    /*
+     * The HTML page doesn't contain the
+     * person form itself. We create it
+     * when a case is loaded.
+     */
+
+    await loadCasePersonOffenses();
+
+
+    /*
+     * If another script already created
+     * the form, connect its submit event.
+     */
+
+    const existingForm =
+        document.getElementById(
+            "case-person-form"
+        );
+
+
+    if (existingForm) {
+
+        existingForm.addEventListener(
+            "submit",
+            addPerson
+        );
+    }
+
+
+    /*
+     * Existing new-person form.
+     */
+
+    const existingNewPersonForm =
+        document.getElementById(
+            "new-person-form"
+        );
+
+
+    if (existingNewPersonForm) {
+
+        existingNewPersonForm.addEventListener(
+            "submit",
+            createPerson
+        );
+    }
+}
+
+
+/* =========================================
    EVENT LISTENERS
    ========================================= */
 
+document.addEventListener(
+    "DOMContentLoaded",
+    function() {
 
-/* -----------------------------------------
-   EXISTING PERSON FORM
-   ----------------------------------------- */
+        initializeManagePeople();
 
-if (casePersonForm) {
-
-    casePersonForm.addEventListener(
-        "submit",
-        addPerson
-    );
-}
-
-
-/* -----------------------------------------
-   NEW PERSON FORM
-   ----------------------------------------- */
-
-if (newPersonForm) {
-
-    newPersonForm.addEventListener(
-        "submit",
-        createPerson
-    );
-}
+    }
+);
 
 
 /* =========================================
@@ -1243,8 +2866,20 @@ window.createPerson =
 window.removePersonFromCase =
     removePersonFromCase;
 
+window.removePersonCharge =
+    removePersonCharge;
+
 window.viewPerson =
     viewPerson;
 
 window.refreshPeopleForCase =
     refreshPeopleForCase;
+
+window.loadCasePersonOffenses =
+    loadCasePersonOffenses;
+
+window.openPersonChargeEditor =
+    openPersonChargeEditor;
+
+window.savePersonCharges =
+    savePersonCharges;
