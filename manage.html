@@ -84,14 +84,16 @@
                 </h3>
 
                 <p>
-                    Sign in with your administrator account to manage the Criminal Behavior Research Archive.
+                    Sign in with your administrator account
+                    to manage the Criminal Behavior Research Archive.
                 </p>
 
             </div>
 
         </div>
 
-        <from id="login-form" class="admin-login-form">
+
+        <form id="login-form" class="admin-login-form">
 
             <div class="form-grid">
 
@@ -111,6 +113,7 @@
 
                 </div>
 
+
                 <div class="form-group">
 
                     <label for="login-password">
@@ -123,8 +126,8 @@
                         placeholder="Password"
                         autocomplete="current-password"
                         required
-
                     >
+
                 </div>
 
             </div>
@@ -141,12 +144,13 @@
 
             </div>
 
+
             <div
                 id="login-message"
                 class="manage-message"
             ></div>
 
-        </from>
+        </form>
 
     </section>
 
@@ -208,6 +212,7 @@
                     </option>
 
                 </select>
+
 
                 <div
                     id="case-selector-message"
@@ -1200,10 +1205,98 @@
             </div>
 
 
-            <div id="related-case-list">
+            <!-- ADD RELATED CASE -->
+
+            <div class="management-card">
+
+                <div class="management-card-header">
+
+                    <h4>
+                        Add Related Case
+                    </h4>
+
+                    <p>
+                        Connect the selected case to another case
+                        in the archive.
+                    </p>
+
+                </div>
+
+
+                <form id="related-case-form">
+
+                    <div class="form-grid">
+
+
+                        <!-- RELATED CASE -->
+
+                        <div class="form-group">
+
+                            <label for="related-case-selector">
+                                Related Case
+                            </label>
+
+                            <select id="related-case-selector">
+
+                                <option value="">
+                                    -- Select Related Case --
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <!-- RELATIONSHIP TYPE -->
+
+                        <div class="form-group">
+
+                            <label for="related-case-type">
+                                Relationship Type
+                            </label>
+
+                            <input
+                                type="text"
+                                id="related-case-type"
+                                placeholder="Example: Same investigation"
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-actions">
+
+                        <button
+                            type="submit"
+                            class="primary-button"
+                        >
+                            Add Related Case
+                        </button>
+
+                    </div>
+
+
+                    <div
+                        id="related-case-message"
+                        class="manage-message"
+                    ></div>
+
+                </form>
+
+            </div>
+
+
+            <!-- RELATED CASE LIST -->
+
+            <div
+                id="related-case-list"
+                class="manage-record-list"
+            >
 
                 <p class="empty-message">
-                    Select a case to view this information.
+                    Select a case to view related cases.
                 </p>
 
             </div>
