@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Manage | CBRA</title>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<header>
+
+    <div class="site-header">
+
+        <div>
+            <h1>Criminal Behavior Research Archive</h1>
+
+            <p>
+                An open research resource for the study of crime,
+                psychology, and human behavior.
+            </p>
+        </div>
+
+        <nav>
+
+            <a href="index.html">Home</a>
+            <a href="archive.html">Archive</a>
+            <a href="statistics.html">Statistics</a>
+            <a href="resources.html">Resources</a>
+            <a href="about.html">About</a>
+            <a href="manage.html" class="active">Manage</a>
+
+        </nav>
+
+    </div>
+
+</header>
+
+
+<main class="manage-page">
+
+    <div class="page-heading">
+
+        <div>
+
+            <p class="eyebrow">
+                ADMINISTRATION
+            </p>
+
+            <h2>
+                Manage Archive
+            </h2>
+
+            <p>
+                Create, edit, and manage cases, people,
+                research tags, sources, documents, and media.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         LOGIN / ADMIN MESSAGE
+         ===================================================== -->
+
+    <section id="login-section" class="manage-section">
+
+        <div class="section-header">
+
+            <div>
+
+                <p class="section-kicker">
+                    ACCESS
+                </p>
+
+                <h3>
+                    Administrator Access
+                </h3>
+
+            </div>
+
+        </div>
+
+        <div id="login-message" class="manage-message"></div>
+
+    </section>
+
+
+    <!-- =====================================================
+         MANAGEMENT CONTENT
+         ===================================================== -->
+
+    <div id="management-content">
+
+
+        <!-- =================================================
+             CASE MANAGEMENT
+             ================================================= -->
+
+        <section class="manage-section">
+
+            <div class="section-header">
+
+                <div>
+
+                    <p class="section-kicker">
+                        CASES
+                    </p>
+
+                    <h3>
+                        Manage Cases
+                    </h3>
+
+                    <p>
+                        Create a new case or select an existing case
+                        to edit its information.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="manage-controls">
+
+                <button
+                    type="button"
+                    id="new-case-button"
+                    class="primary-button"
+                >
+                    + Add New Case
+                </button>
+
+
+                <label for="case-selector">
+                    Select Case
+                </label>
+
+                <select id="case-selector">
+
+                    <option value="">
+                        -- Select Case --
+                    </option>
+
+                </select>
+
+                <div
+                    id="case-selector-message"
+                    class="manage-message"
+                ></div>
+
+            </div>
+
+
+            <form id="case-form">
+
+                <div class="form-grid">
+
+
+                    <!-- CASE NAME -->
+
+                    <div class="form-group form-group-full">
+
+                        <label for="case-name-input">
+                            Case Name
+                        </label>
+
+                        <input
+                            type="text"
+                            id="case-name-input"
+                            placeholder="Case name"
+                        >
+
+                    </div>
+
+
+                    <!-- CASE DATE -->
+
+                    <div class="form-group">
+
+                        <label for="case-date-input">
+                            Case Date
+                        </label>
+
+                        <input
+                            type="date"
+                            id="case-date-input"
+                        >
+
+                    </div>
+
+
+                    <!-- COUNTRY -->
+
+                    <div class="form-group">
+
+                        <label for="case-country-input">
+                            Country
+                        </label>
+
+                        <div class="controlled-field">
+
+                            <select id="case-country-input">
+
+                                <option value="">
+                                    -- Select Country --
+                                </option>
+
+                            </select>
+
+                            <button
+                                type="button"
+                                id="add-country-button"
+                                class="add-option-button"
+                            >
+                                + Add
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- STATE / PROVINCE -->
+
+                    <div class="form-group">
+
+                        <label for="case-state-input">
+                            State / Province
+                        </label>
+
+                        <div class="controlled-field">
+
+                            <select id="case-state-input">
+
+                                <option value="">
+                                    -- Select State / Province --
+                                </option>
+
+                            </select>
+
+                            <button
+                                type="button"
+                                id="add-state-button"
+                                class="add-option-button"
+                            >
+                                + Add
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- CITY -->
+
+                    <div class="form-group">
+
+                        <label for="case-city-input">
+                            City
+                        </label>
+
+                        <div class="controlled-field">
+
+                            <select id="case-city-input">
+
+                                <option value="">
+                                    -- Select City --
+                                </option>
+
+                            </select>
+
+                            <button
+                                type="button"
+                                id="add-city-button"
+                                class="add-option-button"
+                            >
+                                + Add
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- CLASSIFICATION -->
+
+                    <div class="form-group">
+
+                        <label for="case-classification-input">
+                            Classification
+                        </label>
+
+                        <div class="controlled-field">
+
+                            <select id="case-classification-input">
+
+                                <option value="">
+                                    -- Select Classification --
+                                </option>
+
+                            </select>
+
+                            <button
+                                type="button"
+                                id="add-classification-button"
+                                class="add-option-button"
+                            >
+                                + Add
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- PRIMARY OFFENSE -->
+
+                    <div class="form-group">
+
+                        <label for="case-offense-input">
+                            Primary Offense
+                        </label>
+
+                        <div class="controlled-field">
+
+                            <select id="case-offense-input">
+
+                                <option value="">
+                                    -- Select Primary Offense --
+                                </option>
+
+                            </select>
+
+                            <button
+                                type="button"
+                                id="add-offense-button"
+                                class="add-option-button"
+                            >
+                                + Add
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ADDITIONAL CHARGES -->
+
+                    <div class="form-group form-group-full">
+
+                        <label for="case-additional-offenses-input">
+                            Additional Charges
+                        </label>
+
+                        <div class="controlled-field controlled-field-multi">
+
+                            <select
+                                id="case-additional-offenses-input"
+                                multiple
+                            ></select>
+
+                            <button
+                                type="button"
+                                id="add-additional-offense-button"
+                                class="add-option-button"
+                            >
+                                + Add
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- OUTCOME -->
+
+                    <div class="form-group">
+
+                        <label for="case-outcome-input">
+                            Outcome
+                        </label>
+
+                        <div class="controlled-field">
+
+                            <select id="case-outcome-input">
+
+                                <option value="">
+                                    -- Select Outcome --
+                                </option>
+
+                            </select>
+
+                            <button
+                                type="button"
+                                id="add-outcome-button"
+                                class="add-option-button"
+                            >
+                                + Add
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- VICTIM COUNT -->
+
+                    <div class="form-group">
+
+                        <label for="case-victims-input">
+                            Victim Count
+                        </label>
+
+                        <input
+                            type="number"
+                            id="case-victims-input"
+                            min="0"
+                            placeholder="0"
+                        >
+
+                    </div>
+
+
+                    <!-- FATALITY COUNT -->
+
+                    <div class="form-group">
+
+                        <label for="case-fatalities-input">
+                            Fatality Count
+                        </label>
+
+                        <input
+                            type="number"
+                            id="case-fatalities-input"
+                            min="0"
+                            placeholder="0"
+                        >
+
+                    </div>
+
+
+                    <!-- DESCRIPTION -->
+
+                    <div class="form-group form-group-full">
+
+                        <label for="case-description-input">
+                            Description
+                        </label>
+
+                        <textarea
+                            id="case-description-input"
+                            rows="7"
+                            placeholder="Brief research-focused description of the case..."
+                        ></textarea>
+
+                    </div>
+
+
+                </div>
+
+
+                <div class="form-actions">
+
+                    <button
+                        type="submit"
+                        class="primary-button"
+                    >
+                        Save Case
+                    </button>
+
+                    <button
+                        type="button"
+                        id="cancel-case-button"
+                        class="secondary-button"
+                    >
+                        Cancel
+                    </button>
+
+                </div>
+
+
+                <div
+                    id="case-message"
+                    class="manage-message"
+                ></div>
+
+            </form>
+
+        </section>
+
+
+        <!-- =================================================
+             PEOPLE
+             ================================================= -->
+
+        <section class="manage-section">
+
+            <div class="section-header">
+
+                <div>
+
+                    <p class="section-kicker">
+                        PEOPLE
+                    </p>
+
+                    <h3>
+                        People
+                    </h3>
+
+                    <p>
+                        Add and manage people associated with the selected case.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div id="case-people-list">
+
+                <p class="empty-message">
+                    Select a case to view this information.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             TAGS
+             ================================================= -->
+
+        <section class="manage-section">
+
+            <div class="section-header">
+
+                <div>
+
+                    <p class="section-kicker">
+                        RESEARCH TAGS
+                    </p>
+
+                    <h3>
+                        Tags
+                    </h3>
+
+                    <p>
+                        Use tags for research characteristics,
+                        behavioral patterns, demographic information,
+                        influences, and documented mental-health factors.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- CREATE TAG -->
+
+            <div class="management-card">
+
+                <div class="management-card-header">
+
+                    <h4>
+                        Create New Tag
+                    </h4>
+
+                    <p>
+                        Create a reusable research tag for the archive.
+                    </p>
+
+                </div>
+
+
+                <form id="new-tag-form">
+
+                    <div class="form-grid">
+
+                        <div class="form-group">
+
+                            <label for="new-tag-name">
+                                Tag Name
+                            </label>
+
+                            <input
+                                type="text"
+                                id="new-tag-name"
+                                placeholder="Example: Domestic Violence"
+                                required
+                            >
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="new-tag-category">
+                                Category
+                            </label>
+
+                            <select
+                                id="new-tag-category"
+                                required
+                            >
+
+                                <option value="">
+                                    Select category...
+                                </option>
+
+                                <option value="crime">
+                                    Crime
+                                </option>
+
+                                <option value="influence">
+                                    Influence
+                                </option>
+
+                                <option value="mental_health">
+                                    Mental Health
+                                </option>
+
+                                <option value="demographic">
+                                    Demographic
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+
+                    <button
+                        type="submit"
+                        class="primary-button"
+                    >
+                        Create Tag
+                    </button>
+
+
+                    <div
+                        id="new-tag-message"
+                        class="manage-message"
+                    ></div>
+
+                </form>
+
+            </div>
+
+
+            <!-- CRIME TAGS -->
+
+            <div class="management-card">
+
+                <div class="management-card-header">
+
+                    <h4>
+                        Crime Tags
+                    </h4>
+
+                    <p>
+                        Research characteristics, behavioral patterns,
+                        victim patterns, and other case-related factors.
+                    </p>
+
+                </div>
+
+
+                <form id="crime-tag-form">
+
+                    <div class="controlled-field">
+
+                        <select id="crime-tag-selector">
+
+                            <option value="">
+                                Select a crime tag...
+                            </option>
+
+                        </select>
+
+                        <button
+                            type="submit"
+                            class="add-option-button"
+                        >
+                            + Add Tag
+                        </button>
+
+                    </div>
+
+                </form>
+
+
+                <div
+                    id="crime-tag-message"
+                    class="manage-message"
+                ></div>
+
+
+                <div
+                    id="crime-tag-list"
+                    class="tag-list"
+                ></div>
+
+            </div>
+
+
+            <!-- INFLUENCE TAGS -->
+
+            <div class="management-card">
+
+                <div class="management-card-header">
+
+                    <h4>
+                        Influence Tags
+                    </h4>
+
+                    <p>
+                        Documented substances, environmental factors,
+                        or other influences relevant to the case.
+                    </p>
+
+                </div>
+
+
+                <form id="influence-tag-form">
+
+                    <div class="controlled-field">
+
+                        <select id="influence-tag-selector">
+
+                            <option value="">
+                                Select an influence tag...
+                            </option>
+
+                        </select>
+
+                        <button
+                            type="submit"
+                            class="add-option-button"
+                        >
+                            + Add Tag
+                        </button>
+
+                    </div>
+
+                </form>
+
+
+                <div
+                    id="influence-tag-message"
+                    class="manage-message"
+                ></div>
+
+
+                <div
+                    id="influence-tag-list"
+                    class="tag-list"
+                ></div>
+
+            </div>
+
+
+            <!-- MENTAL HEALTH TAGS -->
+
+            <div class="management-card">
+
+                <div class="management-card-header">
+
+                    <h4>
+                        Mental Health Tags
+                    </h4>
+
+                    <p>
+                        Case-level mental-health factors supported by
+                        documented evidence. These tags do not represent
+                        an assumed diagnosis of an individual.
+                    </p>
+
+                </div>
+
+
+                <form id="mental-health-tag-form">
+
+                    <div class="controlled-field">
+
+                        <select id="mental-health-tag-selector">
+
+                            <option value="">
+                                Select a mental-health tag...
+                            </option>
+
+                        </select>
+
+                        <button
+                            type="submit"
+                            class="add-option-button"
+                        >
+                            + Add Tag
+                        </button>
+
+                    </div>
+
+                </form>
+
+
+                <div
+                    id="mental-health-tag-message"
+                    class="manage-message"
+                ></div>
+
+
+                <div
+                    id="mental-health-tag-list"
+                    class="tag-list"
+                ></div>
+
+            </div>
+
+
+            <!-- DEMOGRAPHIC TAGS -->
+
+            <div class="management-card">
+
+                <div class="management-card-header">
+
+                    <h4>
+                        Demographic Tags
+                    </h4>
+
+                    <p>
+                        Demographic, identity, age, occupation, or other
+                        documented characteristics relevant to the case.
+                    </p>
+
+                </div>
+
+
+                <form id="demographic-tag-form">
+
+                    <div class="controlled-field">
+
+                        <select id="demographic-tag-selector">
+
+                            <option value="">
+                                Select a demographic tag...
+                            </option>
+
+                        </select>
+
+                        <button
+                            type="submit"
+                            class="add-option-button"
+                        >
+                            + Add Tag
+                        </button>
+
+                    </div>
+
+                </form>
+
+
+                <div
+                    id="demographic-tag-message"
+                    class="manage-message"
+                ></div>
+
+
+                <div
+                    id="demographic-tag-list"
+                    class="tag-list"
+                ></div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             MUGSHOTS
+             ================================================= -->
+
+        <section class="manage-section">
+
+            <div class="section-header">
+
+                <div>
+
+                    <p class="section-kicker">
+                        PEOPLE / IMAGES
+                    </p>
+
+                    <h3>
+                        Mugshots
+                    </h3>
+
+                    <p>
+                        Manage mugshots associated with people in the archive.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div id="mugshot-management">
+
+                <div class="manage-placeholder">
+                    Select a case to manage mugshots.
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             MEDIA
+             ================================================= -->
+
+        <section class="manage-section">
+
+            <div class="section-header">
+
+                <div>
+
+                    <p class="section-kicker">
+                        CASE MEDIA
+                    </p>
+
+                    <h3>
+                        Media
+                    </h3>
+
+                    <p>
+                        Manage crime-scene photographs and other
+                        case-related media.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div id="media-list">
+
+                <p class="empty-message">
+                    Select a case to view this information.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             GENERAL MEDIA
+             ================================================= -->
+
+        <section class="manage-section">
+
+            <div class="section-header">
+
+                <div>
+
+                    <p class="section-kicker">
+                        GENERAL MEDIA
+                    </p>
+
+                    <h3>
+                        General Media
+                    </h3>
+
+                    <p>
+                        Manage additional photographs and media
+                        associated with the archive.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div id="general-media-management">
+
+                <div class="manage-placeholder">
+                    Select a case to manage general media.
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             DOCUMENTS
+             ================================================= -->
+
+        <section class="manage-section">
+
+            <div class="section-header">
+
+                <div>
+
+                    <p class="section-kicker">
+                        DOCUMENTS
+                    </p>
+
+                    <h3>
+                        Documents
+                    </h3>
+
+                    <p>
+                        Manage court filings, reports, records,
+                        and other research documents.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div id="documents-management">
+
+                <p class="empty-message">
+                    Select a case to view this information.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             SOURCES
+             ================================================= -->
+
+        <section class="manage-section">
+
+            <div class="section-header">
+
+                <div>
+
+                    <p class="section-kicker">
+                        SOURCES
+                    </p>
+
+                    <h3>
+                        Sources & References
+                    </h3>
+
+                    <p>
+                        Manage sources used to document cases and people.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div id="source-list">
+
+                <p class="empty-message">
+                    Select a case to view this information.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             LINKS
+             ================================================= -->
+
+        <section class="manage-section">
+
+            <div class="section-header">
+
+                <div>
+
+                    <p class="section-kicker">
+                        LINKS
+                    </p>
+
+                    <h3>
+                        Case Links
+                    </h3>
+
+                    <p>
+                        Manage external links associated with the case.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div id="link-list">
+
+                <p class="empty-message">
+                    Select a case to view this information.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             RELATED CASES
+             ================================================= -->
+
+        <section class="manage-section">
+
+            <div class="section-header">
+
+                <div>
+
+                    <p class="section-kicker">
+                        RELATIONSHIPS
+                    </p>
+
+                    <h3>
+                        Related Cases
+                    </h3>
+
+                    <p>
+                        Connect cases that have a documented relationship.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div id="related-case-list">
+
+                <p class="empty-message">
+                    Select a case to view this information.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             CRIME SCENE PHOTOS
+             ================================================= -->
+
+        <section class="manage-section">
+
+            <div class="section-header">
+
+                <div>
+
+                    <p class="section-kicker">
+                        CASE MEDIA
+                    </p>
+
+                    <h3>
+                        Crime Scene Photos
+                    </h3>
+
+                    <p>
+                        Manage crime scene photographs associated
+                        with the selected case.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div id="crime-scene-photo-list">
+
+                <p class="empty-message">
+                    Select a case to view this information.
+                </p>
+
+            </div>
+
+        </section>
+
+
+    </div>
+
+
+</main>
+
+
+<footer>
+
+    <div class="site-footer">
+
+        <p>
+            Criminal Behavior Research Archive
+        </p>
+
+        <p>
+            Research resource for crime, psychology,
+            and human behavior.
+        </p>
+
+    </div>
+
+</footer>
+
+
+<!-- =====================================================
+     SUPABASE
+     ===================================================== -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+
+<!-- =====================================================
+     CBRA MANAGEMENT SCRIPTS
+     ===================================================== -->
+
+<script src="js/manage.js"></script>
+
+<script src="js/manage-people.js"></script>
+
+<script src="js/manage-mugshots.js"></script>
+
+<script src="js/manage-tags.js"></script>
+
+<script src="js/manage-media.js"></script>
+
+<script src="js/manage-general-media.js"></script>
+
+<script src="js/manage-documents.js"></script>
+
+<script src="js/manage-sources.js"></script>
+
+<script src="js/manage-links.js"></script>
+
+<script src="js/manage-related.js"></script>
+
+
+</body>
+
+</html>

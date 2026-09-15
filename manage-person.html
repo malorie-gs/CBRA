@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Manage Person | CBRA</title>
+
+    <link rel="stylesheet" href="css/style.css">
+
+</head>
+
+<body>
+
+<header>
+    <h1>Criminal Behavior Research Archive</h1>
+    <p>Manage Person</p>
+
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="archive.html">Archive</a>
+        <a href="manage.html">Manage Cases</a>
+        <a href="statistics.html">Statistics</a>
+        <a href="resources.html">Resources</a>
+        <a href="about.html">About</a>
+    </nav>
+
+</header>
+
+<main>
+
+<section id="login-section">
+
+    <h2>Management Login</h2>
+
+    <form id="login-form">
+
+        <label for="login-email">Email</label>
+
+        <input
+            type="email"
+            id="login-email"
+            required
+        >
+
+        <label for="login-password">Password</label>
+
+        <input
+            type="password"
+            id="login-password"
+            required
+        >
+
+        <button type="submit">
+            Log In
+        </button>
+
+    </form>
+
+    <p id="login-message"></p>
+
+</section>
+
+
+<section id="management-section" style="display: none;">
+
+    <div class="management-header">
+
+        <h2>Person Management</h2>
+
+        <button id="logout-button" type="button">
+            Log Out
+        </button>
+
+    </div>
+
+
+    <section class="management-section">
+
+        <h2>Select Person</h2>
+
+        <label for="person-selector">
+            Person
+        </label>
+
+        <select id="person-selector">
+
+            <option value="">
+                Select a person...
+            </option>
+
+        </select>
+
+        <button
+            id="new-person-button"
+            type="button"
+            onclick="event.preventDefault(); event.stopPropagation(); alert('BUTTON WORKS');"
+        >
+            Create New Person
+        </button>
+
+        <p id="person-selector-message"></p>
+
+    </section>
+
+
+    <section class="management-section">
+
+        <h2>Personal Information</h2>
+
+        <form id="person-form">
+
+            <input
+                type="hidden"
+                id="person-id"
+            >
+
+            <label for="person-name-input">
+                Name
+            </label>
+
+            <input
+                type="text"
+                id="person-name-input"
+                required
+            >
+
+            <label for="person-age-input">
+                Age at Case
+            </label>
+
+            <input
+                type="number"
+                id="person-age-input"
+                min="0"
+            >
+
+            <label for="person-dob-input">
+                Date of Birth
+            </label>
+
+            <input
+                type="date"
+                id="person-dob-input"
+            >
+
+            <label for="person-gender-input">
+                Gender
+            </label>
+
+            <input
+                type="text"
+                id="person-gender-input"
+            >
+
+            <button type="submit">
+                Save Person
+            </button>
+
+            <button
+                type="button"
+                id="clear-person-button"
+            >
+                Clear
+            </button>
+
+        </form>
+
+        <p id="person-save-message"></p>
+
+    </section>
+
+
+    <section class="management-section">
+
+        <h2>Cases Involved In</h2>
+
+        <div id="person-cases-management">
+
+            <p>
+                Select a person to view their cases.
+            </p>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================================
+         MENTAL HEALTH & BEHAVIORAL INFORMATION
+         ========================================= -->
+
+    <section class="management-section">
+
+        <h2>Mental Health &amp; Behavioral Information</h2>
+
+        <p>
+            Mental health and behavioral information associated
+            with this person.
+        </p>
+
+
+        <!-- Mental Health Tags -->
+
+        <div class="subsection">
+
+            <h3>Mental Health / Behavioral Tags</h3>
+
+            <form id="mental-health-tag-form">
+
+                <label for="mental-health-tag-input">
+                    Tag
+                </label>
+
+                <input
+                    type="text"
+                    id="mental-health-tag-input"
+                    placeholder="Example: Diagnosed depression"
+                >
+
+                <button type="submit">
+                    Add Tag
+                </button>
+
+                <p id="mental-health-tag-message"></p>
+
+            </form>
+
+
+            <div id="mental-health-tag-list">
+
+                <p class="empty-message">
+                    Select a person to view their mental health tags.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- Mental Health Documents -->
+
+        <div class="subsection">
+
+            <h3>Mental Health / Behavioral Documents</h3>
+
+            <form id="mental-health-document-form">
+
+                <label for="mental-document-title">
+                    Title
+                </label>
+
+                <input
+                    type="text"
+                    id="mental-document-title"
+                    required
+                    placeholder="Example: Psychological assessment"
+                >
+
+
+                <label for="mental-document-type">
+                    Document Type
+                </label>
+
+                <input
+                    type="text"
+                    id="mental-document-type"
+                    placeholder="Example: Court Record"
+                >
+
+
+                <label for="mental-document-date">
+                    Publication Date
+                </label>
+
+                <input
+                    type="date"
+                    id="mental-document-date"
+                >
+
+
+                <label for="mental-document-url">
+                    Document URL
+                </label>
+
+                <input
+                    type="url"
+                    id="mental-document-url"
+                    required
+                    placeholder="https://..."
+                >
+
+
+                <label for="mental-document-description">
+                    Description
+                </label>
+
+                <textarea
+                    id="mental-document-description"
+                    rows="4"
+                    placeholder="Optional description"
+                ></textarea>
+
+
+                <label for="mental-document-source">
+                    Source
+                </label>
+
+                <select id="mental-document-source">
+
+                    <option value="">
+                        -- Select Source --
+                    </option>
+
+                </select>
+
+
+                <button type="submit">
+                    Add Document
+                </button>
+
+                <p id="mental-document-message"></p>
+
+            </form>
+
+
+            <div id="mental-health-document-list">
+
+                <p class="empty-message">
+                    Select a person to view their mental health documents.
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <section class="management-section">
+
+        <h2>Mugshots</h2>
+
+        <p>
+            Add and manage mugshots associated with this person.
+        </p>
+
+        <form id="mugshot-form">
+
+            <label for="mugshot-title">
+                Title
+            </label>
+
+            <input
+                type="text"
+                id="mugshot-title"
+                placeholder="Example: Booking photograph"
+            >
+
+            <label for="mugshot-date">
+                Date Taken
+            </label>
+
+            <input
+                type="date"
+                id="mugshot-date"
+            >
+
+            <label for="mugshot-image">
+                Image
+            </label>
+
+            <input
+                type="file"
+                id="mugshot-image"
+                accept="image/*"
+                required
+            >
+
+            <label for="mugshot-description">
+                Description
+            </label>
+
+            <textarea
+                id="mugshot-description"
+                rows="4"
+                placeholder="Optional description"
+            ></textarea>
+
+            <button type="submit">
+                Add Mugshot
+            </button>
+
+        </form>
+
+        <p id="mugshot-message"></p>
+
+        <div id="person-mugshots-management">
+
+            <p>
+                Select a person to view mugshots.
+            </p>
+
+        </div>
+
+    </section>
+
+
+    <section class="management-section">
+
+        <h2>Court Records &amp; Documents</h2>
+
+        <p>
+            Person-specific court records and documents will appear here.
+        </p>
+
+        <div id="person-documents-management">
+
+            <p>
+                No person documents available.
+            </p>
+
+        </div>
+
+    </section>
+
+
+    <section class="management-section">
+
+        <h2>Sources</h2>
+
+        <div id="person-sources-management">
+
+            <p>
+                Person-specific sources will appear here.
+            </p>
+
+        </div>
+
+    </section>
+
+
+    <section class="management-section">
+
+        <h2>Public Person Profile</h2>
+
+        <p>
+            View the public-facing profile for this person.
+        </p>
+
+        <a
+            id="public-person-link"
+            href="person.html"
+            target="_blank"
+            rel="noopener"
+        >
+            Open Person Profile
+        </a>
+
+    </section>
+
+</section>
+
+</main>
+
+<footer>
+
+    <p>Criminal Behavior Research Archive</p>
+
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="js/manage-person.js"></script>
+
+<!-- Mental health management must load after manage-person.js -->
+<script src="js/manage-mental-health.js"></script>
+
+</body>
+</html>

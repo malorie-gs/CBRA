@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
+
+<title>Case Archive | CBRA</title>
+
+<link
+    rel="stylesheet"
+    href="css/style.css"
+>
+
+</head>
+
+<body>
+
+<header>
+
+    <h1>
+        Criminal Behavior Research Archive
+    </h1>
+
+    <p>
+        An open research resource for the study of crime, psychology, and human behavior.
+    </p>
+
+    <nav>
+
+        <a href="index.html">
+            Home
+        </a>
+
+        <a href="archive.html">
+            Case Archive
+        </a>
+
+    </nav>
+
+</header>
+
+
+<main class="case-page">
+
+
+    <!-- =========================================
+         CASE HEADER
+         ========================================= -->
+
+    <section class="case-header">
+
+        <h2 id="case-name">
+            Loading case...
+        </h2>
+
+        <p id="case-location">
+            —
+        </p>
+
+        <p id="case-date-header">
+            —
+        </p>
+
+    </section>
+
+
+
+    <!-- =========================================
+         CASE INFORMATION
+         ========================================= -->
+
+    <section class="case-section">
+
+        <h2>
+            Case Information
+        </h2>
+
+
+        <div class="case-information-grid">
+
+
+            <div>
+
+                <strong>
+                    Date
+                </strong>
+
+                <span id="case-date">
+                    —
+                </span>
+
+            </div>
+
+
+            <div>
+
+                <strong>
+                    Country
+                </strong>
+
+                <span id="case-country">
+                    —
+                </span>
+
+            </div>
+
+
+            <div>
+
+                <strong>
+                    State / Province
+                </strong>
+
+                <span id="case-state">
+                    —
+                </span>
+
+            </div>
+
+
+            <div>
+
+                <strong>
+                    City
+                </strong>
+
+                <span id="case-city">
+                    —
+                </span>
+
+            </div>
+
+
+            <div>
+
+                <strong>
+                    Classification
+                </strong>
+
+                <span id="case-classification">
+                    —
+                </span>
+
+            </div>
+
+
+            <div>
+
+                <strong>
+                    Offense
+                </strong>
+
+                <span id="case-offense">
+                    —
+                </span>
+
+            </div>
+
+
+            <div>
+
+                <strong>
+                    Additional Offenses
+                </strong>
+
+                <span id="case-additional-offenses">
+                    —
+                </span>
+
+            </div>
+
+
+
+            <div>
+
+                <strong>
+                    Outcome
+                </strong>
+
+                <span id="case-outcome">
+                    —
+                </span>
+
+            </div>
+
+
+            <div>
+
+                <strong>
+                    Victim Count
+                </strong>
+
+                <span id="case-victims">
+                    —
+                </span>
+
+            </div>
+
+
+            <div>
+
+                <strong>
+                    Fatality Count
+                </strong>
+
+                <span id="case-fatalities">
+                    —
+                </span>
+
+            </div>
+
+
+        </div>
+
+
+        <div class="case-description">
+
+            <h3>
+                Description
+            </h3>
+
+            <p id="case-description">
+                —
+            </p>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =========================================
+         PEOPLE INVOLVED
+         ========================================= -->
+
+    <section class="case-section">
+
+        <h2>
+            People Involved
+        </h2>
+
+        <div id="case-people">
+
+            <p class="empty-message">
+                Loading people...
+            </p>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =========================================
+        RESEARCH TAGS
+        ========================================= -->
+
+    <section class="case-section">
+
+        <h2>
+            Research Tags
+        </h2>
+
+        <!-- -----------------------------------------
+             CRIME TAGS
+             ----------------------------------------- -->
+
+        <div class="case-tag-category">
+
+            <h3>
+                Crime Tags
+            </h3>
+
+            <p>
+                Crime characteristics, offenses, victim patterns, and other characteristics of the case.
+            </p>
+
+            <div id="case-crime-tags">
+
+                <p class="empty-message">
+                    Loading crime tags...
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- -----------------------------------------
+             INFLUENCE TAGS
+             ----------------------------------------- -->
+
+        <div class="case-tag-category">
+
+            <h3>
+                Influence Tags
+            </h3>
+
+            <p>
+                Documented factors or circumstances that may have influenced the behavior or events in the case.
+            </p>
+
+            <div id="case-influence-tags">
+
+                <p class="empty-message">
+                    Loading influence tags...
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- -----------------------------------------
+             MENTAL HEALTH TAGS
+             ----------------------------------------- -->
+
+        <div class="case-tag-category">
+
+            <h3>
+                Mental Health Tags
+            </h3>
+
+            <p>
+                Case-level mental-health factors supported by documented evidence. These tags do not represent an assumed diagnosis of an individual.
+            </p>
+
+            <div id="case-mental-health-tags">
+
+                <p class="empty-message">
+                    Loading mental-health tags...
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =========================================
+         CRIME SCENE PHOTOS
+         ========================================= -->
+
+    <section class="case-section">
+
+        <h2>
+            Crime Scene Photos
+        </h2>
+
+        <div
+            id="case-crime-scene-photos"
+            class="crime-scene-grid"
+        >
+
+            <p class="empty-message">
+                Loading crime scene photos...
+            </p>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =========================================
+         MEDIA & COVERAGE
+         ========================================= -->
+
+    <section class="case-section">
+
+        <h2>
+            Media &amp; Coverage
+        </h2>
+
+        <p>
+            Videos, news coverage, interviews, documentaries, audio, and other media related to this case.
+        </p>
+
+
+        <div
+            id="case-media"
+            class="media-list"
+        >
+
+            <p class="empty-message">
+                Loading media...
+            </p>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =========================================
+         COURT RECORDS & DOCUMENTS
+         ========================================= -->
+
+    <section class="case-section">
+
+        <h2>
+            Court Records &amp; Documents
+        </h2>
+
+        <div
+            id="case-documents"
+            class="document-list"
+        >
+
+            <p class="empty-message">
+                Loading documents...
+            </p>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =========================================
+         SOURCES & REFERENCES
+         ========================================= -->
+
+    <section class="case-section">
+
+        <h2>
+            Sources &amp; References
+        </h2>
+
+        <div
+            id="case-sources"
+            class="source-list"
+        >
+
+            <p class="empty-message">
+                Loading sources...
+            </p>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =========================================
+         EXTERNAL LINKS
+         ========================================= -->
+
+    <section class="case-section">
+
+        <h2>
+            External Links
+        </h2>
+
+        <div
+            id="case-links"
+            class="external-link-list"
+        >
+
+            <p class="empty-message">
+                Loading external links...
+            </p>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =========================================
+         RELATED CASES
+         ========================================= -->
+
+    <section class="case-section">
+
+        <h2>
+            Related Cases
+        </h2>
+
+        <div
+            id="case-related"
+            class="related-case-list"
+        >
+
+            <p class="empty-message">
+                Loading related cases...
+            </p>
+
+        </div>
+
+    </section>
+
+
+</main>
+
+
+
+<!-- =============================================
+     FOOTER
+     ============================================= -->
+
+<footer>
+
+    <p>
+        Criminal Behavior Research Archive
+    </p>
+
+</footer>
+
+
+
+<!-- =============================================
+     SUPABASE
+     ============================================= -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="js/case.js"></script>
+
+</body>
+
+</html>

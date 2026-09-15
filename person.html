@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Person | CBRA</title>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<header>
+    <h1>Criminal Behavior Research Archive</h1>
+    <p>Person Profile</p>
+
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="archive.html">Archive</a>
+        <a href="statistics.html">Statistics</a>
+        <a href="resources.html">Resources</a>
+        <a href="about.html">About</a>
+    </nav>
+</header>
+
+<main>
+
+    <!-- Loading -->
+    <section id="person-loading">
+        <p>Loading person...</p>
+    </section>
+
+    <!-- Error -->
+    <section id="person-error" style="display: none;">
+
+        <h2>Person Not Found</h2>
+
+        <p id="person-error-message">
+            This person could not be found.
+        </p>
+
+        <a href="archive.html">Return to Archive</a>
+
+    </section>
+
+    <!-- Person Profile -->
+    <section id="person-profile" style="display: none;">
+
+        <div class="case-header">
+
+            <h2 id="person-name"></h2>
+
+            <p id="person-basic-info"></p>
+
+        </div>
+
+        <!-- Personal Information -->
+        <section class="case-section">
+
+            <h2>Personal Information</h2>
+
+            <div class="case-details">
+
+                <div>
+                    <strong>Date of Birth</strong>
+                    <span id="person-dob">Not available</span>
+                </div>
+
+                <div>
+                    <strong>Age at Case</strong>
+                    <span id="person-age">Not available</span>
+                </div>
+
+                <div>
+                    <strong>Gender</strong>
+                    <span id="person-gender">Not available</span>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- Cases -->
+        <section class="case-section">
+
+            <h2>Cases Involved In</h2>
+
+            <div id="person-cases">
+
+                <p>No cases found.</p>
+
+            </div>
+
+        </section>
+
+        <!-- Mental Health & Behavioral Information -->
+        <section class="case-section">
+
+            <h2>Mental Health &amp; Behavioral Information</h2>
+
+            <div id="person-mental-health">
+
+                <p>No mental health or behavioral information available.</p>
+
+            </div>
+
+        </section>
+
+        <!-- Mugshots -->
+        <section class="case-section">
+
+            <h2>Mugshots</h2>
+
+            <div id="person-mugshots">
+
+                <p>No mugshots available.</p>
+
+            </div>
+
+        </section>
+
+        <!-- Court Records -->
+        <section class="case-section">
+
+            <h2>Court Records &amp; Documents</h2>
+
+            <div id="person-documents">
+
+                <p>No documents available.</p>
+
+            </div>
+
+        </section>
+
+        <!-- Sources -->
+        <section class="case-section">
+
+            <h2>Sources</h2>
+
+            <div id="person-sources">
+
+                <p>No sources available.</p>
+
+            </div>
+
+        </section>
+
+    </section>
+
+</main>
+
+<footer>
+
+    <p>Criminal Behavior Research Archive</p>
+
+</footer>
+
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- Person Page JavaScript -->
+<script src="js/person.js"></script>
+
+</body>
+</html>

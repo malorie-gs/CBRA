@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Data & Statistics | CBRA</title>
+
+    <link
+        rel="stylesheet"
+        href="css/style.css"
+    >
+
+</head>
+
+<body>
+
+<header>
+
+    <h1>
+        Criminal Behavior Research Archive
+    </h1>
+
+    <p>
+        CBRA
+    </p>
+
+</header>
+
+
+<nav>
+
+    <a href="index.html">
+        Home
+    </a>
+
+    <a href="archive.html">
+        Case Archive
+    </a>
+
+    <a href="statistics.html">
+        Data & Statistics
+    </a>
+
+    <a href="resources.html">
+        Research Resources
+    </a>
+
+    <a href="about.html">
+        About CBRA
+    </a>
+
+</nav>
+
+
+<main>
+
+    <h2>
+        Data & Statistics
+    </h2>
+
+
+    <div class="statistics-intro">
+
+        <p>
+            Explore patterns and relationships within the cases
+            documented in the Criminal Behavior Research Archive.
+        </p>
+
+        <p>
+            Statistics shown here describe only the cases currently
+            contained within the CBRA archive. They should not be
+            interpreted as representing crime as a whole.
+        </p>
+
+    </div>
+
+
+    <div class="statistics-filters">
+
+        <h3>
+            Build a Research Query
+        </h3>
+
+
+        <!-- =================================================
+             GENERAL FILTERS
+             ================================================= -->
+
+        <label for="stat-country">
+            Country
+        </label>
+
+        <select id="stat-country">
+
+            <option value="all">
+                All Countries
+            </option>
+
+        </select>
+
+
+        <label for="stat-state">
+            State / Province
+        </label>
+
+        <select id="stat-state">
+
+            <option value="all">
+                All States / Provinces
+            </option>
+
+        </select>
+
+
+        <label for="stat-city">
+            City
+        </label>
+
+        <select id="stat-city">
+
+            <option value="all">
+                All Cities
+            </option>
+
+        </select>
+
+
+        <!-- =================================================
+             OFFENSE
+             ================================================= -->
+
+        <label for="stat-offense">
+            Offenses
+        </label>
+
+        <select
+            id="stat-offense"
+            multiple
+            size="8"
+        ></select>
+
+        <p class="filter-help">
+            Select one or more offenses. A case is included if
+            the selected offense appears as either its primary
+            offense or an additional charge.
+        </p>
+
+
+        <label for="stat-classification">
+            Classification
+        </label>
+
+        <select id="stat-classification">
+
+            <option value="all">
+                All Classifications
+            </option>
+
+        </select>
+
+
+        <label for="stat-outcome">
+            Legal Outcome
+        </label>
+
+        <select id="stat-outcome">
+
+            <option value="all">
+                All Outcomes
+            </option>
+
+        </select>
+
+
+        <label for="stat-role">
+            Person Role
+        </label>
+
+        <select id="stat-role">
+
+            <option value="all">
+                All Roles
+            </option>
+
+        </select>
+
+
+        <label for="stat-gender">
+            Gender
+        </label>
+
+        <select id="stat-gender">
+
+            <option value="all">
+                All Genders
+            </option>
+
+        </select>
+
+
+        <!-- =================================================
+             RESEARCH TAG FILTERS
+             ================================================= -->
+
+        <div class="statistics-tag-filters">
+
+            <h4>
+                Research Tags
+            </h4>
+
+            <p class="filter-help">
+                Use the categories below to filter cases by
+                research tags. You can select multiple tags
+                within each category.
+            </p>
+
+
+            <!-- ---------------------------------------------
+                 CRIME TAGS
+                 --------------------------------------------- -->
+
+            <div class="statistics-tag-category">
+
+                <label for="stat-crime-tag">
+                    Crime Tags
+                </label>
+
+                <select
+                    id="stat-crime-tag"
+                    multiple
+                    size="8"
+                ></select>
+
+                <p class="filter-help">
+                    Research characteristics, behavioral patterns,
+                    victim patterns, and other case-related factors.
+                </p>
+
+            </div>
+
+
+            <!-- ---------------------------------------------
+                 INFLUENCE TAGS
+                 --------------------------------------------- -->
+
+            <div class="statistics-tag-category">
+
+                <label for="stat-influence-tag">
+                    Influence Tags
+                </label>
+
+                <select
+                    id="stat-influence-tag"
+                    multiple
+                    size="8"
+                ></select>
+
+                <p class="filter-help">
+                    Documented factors or circumstances that may
+                    have influenced the behavior or events in the case.
+                </p>
+
+            </div>
+
+
+            <!-- ---------------------------------------------
+                 MENTAL HEALTH TAGS
+                 --------------------------------------------- -->
+
+            <div class="statistics-tag-category">
+
+                <label for="stat-mental-health-tag">
+                    Mental Health Tags
+                </label>
+
+                <select
+                    id="stat-mental-health-tag"
+                    multiple
+                    size="8"
+                ></select>
+
+                <p class="filter-help">
+                    Case-level mental-health factors supported by
+                    documented evidence. These tags do not represent
+                    an assumed diagnosis of an individual.
+                </p>
+
+            </div>
+
+
+            <!-- ---------------------------------------------
+                 DEMOGRAPHIC TAGS
+                 --------------------------------------------- -->
+
+            <div class="statistics-tag-category">
+
+                <label for="stat-demographic-tag">
+                    Demographic Tags
+                </label>
+
+                <select
+                    id="stat-demographic-tag"
+                    multiple
+                    size="8"
+                ></select>
+
+                <p class="filter-help">
+                    Demographic, identity, age, occupation, or other
+                    documented characteristics relevant to the case.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             TAG MATCHING
+             ================================================= -->
+
+        <label for="tag-mode">
+            Tag Matching
+        </label>
+
+        <select id="tag-mode">
+
+            <option value="all">
+                ALL selected tags
+            </option>
+
+            <option value="any">
+                ANY selected tag
+            </option>
+
+        </select>
+
+        <p class="filter-help">
+
+            <strong>ALL</strong> requires a case to contain
+            every selected tag across all categories.
+
+            <br>
+
+            <strong>ANY</strong> includes cases containing at
+            least one selected tag.
+
+        </p>
+
+    </div>
+
+
+    <div class="statistics-results">
+
+        <h3>
+            Results
+        </h3>
+
+
+        <div class="stat-grid">
+
+
+            <div class="stat-card">
+
+                <strong id="case-count">
+                    0
+                </strong>
+
+                <span>
+                    matching cases
+                </span>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <strong id="case-percentage">
+                    0%
+                </strong>
+
+                <span>
+                    of all archived cases
+                </span>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <strong id="archive-total">
+                    0
+                </strong>
+
+                <span>
+                    total archived cases
+                </span>
+
+            </div>
+
+
+        </div>
+
+
+        <div class="statistics-summary">
+
+            <h3>
+                Current Research Query
+            </h3>
+
+            <p id="query-summary">
+                All cases in the archive
+            </p>
+
+        </div>
+
+
+        <!-- =================================================
+             LOCATION
+             ================================================= -->
+
+        <div class="statistics-chart-section">
+
+            <h3>
+                Cases by Country
+            </h3>
+
+            <div id="location-chart">
+
+                <p>
+                    No location data available.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             CLASSIFICATION
+             ================================================= -->
+
+        <div class="statistics-chart-section">
+
+            <h3>
+                Cases by Classification
+            </h3>
+
+            <div id="classification-chart">
+
+                <p>
+                    No classification data available.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             OUTCOME
+             ================================================= -->
+
+        <div class="statistics-chart-section">
+
+            <h3>
+                Cases by Legal Outcome
+            </h3>
+
+            <div id="outcome-chart">
+
+                <p>
+                    No outcome data available.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             CRIME TAG BREAKDOWN
+             ================================================= -->
+
+        <div class="statistics-chart-section">
+
+            <h3>
+                Crime Tag Breakdown
+            </h3>
+
+            <p class="chart-note">
+                Shows how many matching cases are associated
+                with each crime tag.
+            </p>
+
+            <div id="crime-tag-chart">
+
+                <p>
+                    No crime tag data available.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             INFLUENCE TAG BREAKDOWN
+             ================================================= -->
+
+        <div class="statistics-chart-section">
+
+            <h3>
+                Influence Tag Breakdown
+            </h3>
+
+            <p class="chart-note">
+                Shows how many matching cases are associated
+                with each influence tag.
+            </p>
+
+            <div id="influence-tag-chart">
+
+                <p>
+                    No influence tag data available.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             MENTAL HEALTH TAG BREAKDOWN
+             ================================================= -->
+
+        <div class="statistics-chart-section">
+
+            <h3>
+                Mental Health Tag Breakdown
+            </h3>
+
+            <p class="chart-note">
+                Shows how many matching cases are associated
+                with each mental-health tag.
+            </p>
+
+            <div id="mental-health-tag-chart">
+
+                <p>
+                    No mental-health tag data available.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             DEMOGRAPHIC TAG BREAKDOWN
+             ================================================= -->
+
+        <div class="statistics-chart-section">
+
+            <h3>
+                Demographic Tag Breakdown
+            </h3>
+
+            <p class="chart-note">
+                Shows how many matching cases are associated
+                with each demographic tag.
+            </p>
+
+            <div id="demographic-tag-chart">
+
+                <p>
+                    No demographic tag data available.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             CRIME TAG PERCENTAGES
+             ================================================= -->
+
+        <div class="statistics-chart-section">
+
+            <h3>
+                Crime Tag Percentages
+            </h3>
+
+            <p class="chart-note">
+                Percentage of matching cases associated with
+                each crime tag. A case may have multiple tags.
+            </p>
+
+            <div id="crime-tag-percentage-chart">
+
+                <p>
+                    No crime tag data available.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             INFLUENCE TAG PERCENTAGES
+             ================================================= -->
+
+        <div class="statistics-chart-section">
+
+            <h3>
+                Influence Tag Percentages
+            </h3>
+
+            <p class="chart-note">
+                Percentage of matching cases associated with
+                each influence tag. A case may have multiple tags.
+            </p>
+
+            <div id="influence-tag-percentage-chart">
+
+                <p>
+                    No influence tag data available.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             MENTAL HEALTH TAG PERCENTAGES
+             ================================================= -->
+
+        <div class="statistics-chart-section">
+
+            <h3>
+                Mental Health Tag Percentages
+            </h3>
+
+            <p class="chart-note">
+                Percentage of matching cases associated with
+                each mental-health tag. A case may have multiple tags.
+            </p>
+
+            <div id="mental-health-tag-percentage-chart">
+
+                <p>
+                    No mental-health tag data available.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             DEMOGRAPHIC TAG PERCENTAGES
+             ================================================= -->
+
+        <div class="statistics-chart-section">
+
+            <h3>
+                Demographic Tag Percentages
+            </h3>
+
+            <p class="chart-note">
+                Percentage of matching cases associated with
+                each demographic tag. A case may have multiple tags.
+            </p>
+
+            <div id="demographic-tag-percentage-chart">
+
+                <p>
+                    No demographic tag data available.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             MATCHING CASES
+             ================================================= -->
+
+        <div class="statistics-table-section">
+
+            <h3>
+                Matching Cases
+            </h3>
+
+            <div id="matching-cases">
+
+                <p>
+                    No cases found.
+                </p>
+
+            </div>
+
+        </div>
+
+
+    </div>
+
+</main>
+
+
+<script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+></script>
+
+<script
+    src="js/statistics.js"
+></script>
+
+
+</body>
+
+</html>

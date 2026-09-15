@@ -1,0 +1,132 @@
+<!DOCTYPE html><html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Case Archive | CBRA</title>
+    <link rel="stylesheet" href="css/style.css">
+</head><body><header>
+    <h1>Criminal Behavior Research Archive</h1>
+    <p>CBRA</p>
+</header><nav>
+    <a href="index.html">Home</a>
+    <a href="archive.html">Case Archive</a>
+    <a href="statistics.html">Data & Statistics</a>
+    <a href="resources.html">Research Resources</a>
+    <a href="about.html">About CBRA</a>
+</nav><main><h2>Case Archive</h2>
+
+<p>
+    Browse documented cases within the Criminal Behavior Research Archive.
+</p>
+
+<div class="archive-panel">
+
+    <div class="archive-search">
+
+        <input
+            id="case-search"
+            type="text"
+            placeholder="Search cases, offenses, locations, or tags..."
+        >
+
+    </div>
+
+    <div class="archive-filters">
+
+        <div class="archive-filter">
+            <label for="sort-filter">Sort</label>
+
+            <select id="sort-filter">
+                <option value="date">Newest First</option>
+                <option value="name">Name A–Z</option>
+                <option value="location">Location A–Z</option>
+            </select>
+        </div>
+
+        <div class="archive-filter">
+            <label for="offense-filter">Offense</label>
+
+            <select id="offense-filter">
+                <option value="all">All Offenses</option>
+            </select>
+        </div>
+
+        <div class="archive-filter">
+            <label for="classification-filter">Classification</label>
+
+            <select id="classification-filter">
+                <option value="all">All Classifications</option>
+            </select>
+        </div>
+
+        <div class="archive-filter">
+            <label for="status-filter">Case Status</label>
+
+            <select id="status-filter">
+                <option value="all">All Case Statuses</option>
+            </select>
+        </div>
+
+        <div class="archive-filter">
+            <label for="outcome-filter">Legal Outcome</label>
+
+            <select id="outcome-filter">
+                <option value="all">All Outcomes</option>
+            </select>
+        </div>
+
+        <div class="archive-filter">
+            <label for="country-filter">Country</label>
+
+            <select id="country-filter">
+                <option value="all">All Countries</option>
+            </select>
+        </div>
+
+        <div class="archive-filter">
+            <label for="state-filter">State / Province</label>
+
+            <select id="state-filter">
+                <option value="all">All States / Provinces</option>
+            </select>
+        </div>
+
+        <div class="archive-filter">
+            <label for="city-filter">City</label>
+
+            <select id="city-filter">
+                <option value="all">All Cities</option>
+            </select>
+        </div>
+
+        <div class="archive-filter">
+            <label for="tag-filter">Research Tag</label>
+
+            <select id="tag-filter">
+                <option value="all">All Research Tags</option>
+            </select>
+        </div>
+
+    </div>
+
+    <button id="clear-filters" type="button">
+        Clear Filters
+    </button>
+
+</div>
+
+<div class="archive-results-header">
+
+    <strong id="case-count">
+        0 cases found
+    </strong>
+
+    <span id="filter-summary">
+        Showing all archived cases
+    </span>
+
+</div>
+
+<div class="case-list"></div>
+
+</main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="js/archive.js"></script></body>
+</html>
