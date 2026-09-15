@@ -1,16 +1,28 @@
-const SUPABASE_URL = "https://xjbysfrceqtljatsijsy.supabase.co";
-
-const SUPABASE_KEY = "sb_publishable_iRC9CutWA2fMgucVMtiOEw_f7uSu-3W";
-
-const supabaseClient = window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY
-);
+/* =========================================
+   CBRA — CASE PAGE
+   ========================================= */
 
 
-// --------------------------------------------------
-// BASIC HELPERS
-// --------------------------------------------------
+/* -----------------------------------------
+   SUPABASE
+   ----------------------------------------- */
+
+const SUPABASE_URL =
+    "https://xjbysfrceqtljatsijsy.supabase.co";
+
+const SUPABASE_KEY =
+    "sb_publishable_iRC9CutWA2fMgucVMtiOEw_f7uSu-3W";
+
+const supabaseClient =
+    window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY
+    );
+
+
+/* -----------------------------------------
+   BASIC HELPERS
+   ----------------------------------------- */
 
 function setText(id, value) {
 
@@ -22,19 +34,23 @@ function setText(id, value) {
     if (
         value === null ||
         value === undefined ||
-        value === ""
+        String(value).trim() === ""
     ) {
 
         element.textContent = "—";
 
-    } else {
-
-        element.textContent = value;
+        return;
 
     }
 
+    element.textContent = value;
+
 }
 
+
+/* -----------------------------------------
+   ESCAPE HTML
+   ----------------------------------------- */
 
 function escapeHTML(value) {
 
@@ -57,28 +73,28 @@ function escapeHTML(value) {
 }
 
 
-function formatDate(date) {
+/* -----------------------------------------
+   FORMAT DATE
+   ----------------------------------------- */
 
-    if (!date) {
+function formatDate(dateValue) {
+
+    if (!dateValue) {
 
         return "—";
 
     }
 
-    const parsed =
-        new Date(date);
+    const date =
+        new Date(dateValue);
 
-    if (
-        Number.isNaN(
-            parsed.getTime()
-        )
-    ) {
+    if (Number.isNaN(date.getTime())) {
 
-        return date;
+        return dateValue;
 
     }
 
-    return parsed.toLocaleDateString(
+    return date.toLocaleDateString(
         "en-US",
         {
             year: "numeric",
@@ -90,9 +106,13 @@ function formatDate(date) {
 }
 
 
+/* -----------------------------------------
+   EXTERNAL LINK
+   ----------------------------------------- */
+
 function createExternalLink(
     url,
-    text
+    label = "View Source"
 ) {
 
     if (!url) {
@@ -107,16 +127,20 @@ function createExternalLink(
             target="_blank"
             rel="noopener noreferrer"
         >
-            ${escapeHTML(text || url)}
+            ${escapeHTML(label)}
         </a>
     `;
 
 }
 
 
+/* -----------------------------------------
+   EMPTY STATE
+   ----------------------------------------- */
+
 function showEmpty(
     containerId,
-    message
+    message = "No information available."
 ) {
 
     const container =
@@ -127,290 +151,264 @@ function showEmpty(
     if (!container) return;
 
     container.innerHTML = `
-        <p class="empty-message">
+        <div class="empty-state">
             ${escapeHTML(message)}
-        </p>
+        </div>
     `;
 
 }
 
 
-// --------------------------------------------------
-// GET CASE ID
-// --------------------------------------------------
+/* -----------------------------------------
+   ADDITIONAL OFFENSES
+   ----------------------------------------- */
 
-const urlParams =
+function renderAdditionalOffenses(value) {
+
+    const container =
+        document.getElementById(
+            "case-additional-offenses"
+        );
+
+    if (!container) return;
+
+    if (
+        value === null ||
+        value === undefined ||
+        String(value).trim() === ""
+    ) {
+
+        container.textContent = "—";
+
+        return;
+
+    }
+
+    const offenses =
+        String(value)
+            .split(/\s*(?:,|;|\n)\s*/)
+            .map(offense => offense.trim())
+            .filter(Boolean);
+
+    if (offenses.length === 0) {
+
+        container.textContent = "—";
+
+        return;
+
+    }
+
+    container.innerHTML = `
+        <ul class="additional-offenses-list">
+
+            ${offenses
+                .map(
+                    offense => `
+                        <li>
+                            ${escapeHTML(offense)}
+                        </li>
+                    `
+                )
+                .join("")
+            }
+
+        </ul>
+    `;
+
+}
+
+
+/* -----------------------------------------
+   GET CASE ID
+   ----------------------------------------- */
+
+const params =
     new URLSearchParams(
         window.location.search
     );
 
 const caseId =
-    urlParams.get("id");
+    params.get("id");
 
 
-if (!caseId) {
+/* -----------------------------------------
+   LOAD CASE
+   ----------------------------------------- */
 
-    document.title =
-        "Case Not Found | CBRA";
+async function loadCase() {
 
-    const nameElement =
-        document.getElementById(
-            "case-name"
+    if (!caseId) {
+
+        console.error(
+            "CBRA: No case ID was provided."
         );
 
-    if (nameElement) {
-
-        nameElement.textContent =
-            "Case not found";
+        return;
 
     }
 
-    throw new Error(
-        "No case ID was supplied in the URL."
+    const {
+        data: caseData,
+        error
+    } =
+        await supabaseClient
+            .from("cases")
+            .select(`
+                id,
+                case_name,
+                case_date,
+                country,
+                state_province,
+                city,
+                description,
+                offense,
+                additional_offenses,
+                classification,
+                outcome,
+                victim_count,
+                fatality_count
+            `)
+            .eq("id", caseId)
+            .single();
+
+
+    /* -----------------------------------------
+       ERROR
+       ----------------------------------------- */
+
+    if (error) {
+
+        console.error(
+            "CBRA: Error loading case:",
+            error
+        );
+
+        return;
+
+    }
+
+    if (!caseData) {
+
+        console.error(
+            "CBRA: Case not found."
+        );
+
+        return;
+
+    }
+
+
+    /* -----------------------------------------
+       CASE HEADER
+       ----------------------------------------- */
+
+    setText(
+        "case-name",
+        caseData.case_name
+    );
+
+    setText(
+        "case-date",
+        formatDate(
+            caseData.case_date
+        )
+    );
+
+
+    /* -----------------------------------------
+       CASE LOCATION
+       ----------------------------------------- */
+
+    setText(
+        "case-country",
+        caseData.country
+    );
+
+    setText(
+        "case-state-province",
+        caseData.state_province
+    );
+
+    setText(
+        "case-city",
+        caseData.city
+    );
+
+
+    /* -----------------------------------------
+       CASE DESCRIPTION
+       ----------------------------------------- */
+
+    setText(
+        "case-description",
+        caseData.description
+    );
+
+
+    /* -----------------------------------------
+       CLASSIFICATION
+       ----------------------------------------- */
+
+    setText(
+        "case-classification",
+        caseData.classification
+    );
+
+
+    /* -----------------------------------------
+       PRIMARY OFFENSE
+       ----------------------------------------- */
+
+    setText(
+        "case-offense",
+        caseData.offense
+    );
+
+
+    /* -----------------------------------------
+       ADDITIONAL OFFENSES
+       ----------------------------------------- */
+
+    renderAdditionalOffenses(
+        caseData.additional_offenses
+    );
+
+
+    /* -----------------------------------------
+       OUTCOME
+       ----------------------------------------- */
+
+    setText(
+        "case-outcome",
+        caseData.outcome
+    );
+
+
+    /* -----------------------------------------
+       VICTIM COUNT
+       ----------------------------------------- */
+
+    setText(
+        "case-victim-count",
+        caseData.victim_count
+    );
+
+
+    /* -----------------------------------------
+       FATALITY COUNT
+       ----------------------------------------- */
+
+    setText(
+        "case-fatality-count",
+        caseData.fatality_count
     );
 
 }
 
 
-// --------------------------------------------------
-// LOAD CASE
-// --------------------------------------------------
-
-async function loadCase() {
-
-    try {
-
-        const {
-            data: caseData,
-            error
-        } =
-            await supabaseClient
-                .from("cases")
-                .select(`
-                    id,
-                    case_name,
-                    case_date,
-                    country,
-                    state_province,
-                    city,
-                    description,
-                    offense,
-                    additional_offenses,
-                    classification,
-                    outcome,
-                    victim_count,
-                    fatality_count
-                `)
-                .eq(
-                    "id",
-                    caseId
-                )
-                .single();
-
-
-        if (error) {
-
-            throw error;
-
-        }
-
-
-        if (!caseData) {
-
-            throw new Error(
-                "Case not found."
-            );
-
-        }
-
-
-        // ------------------------------------------
-        // PAGE TITLE
-        // ------------------------------------------
-
-        document.title =
-            `${caseData.case_name} | CBRA`;
-
-
-        // ------------------------------------------
-        // HEADER
-        // ------------------------------------------
-
-        setText(
-            "case-name",
-            caseData.case_name
-        );
-
-
-        const locationParts = [
-
-            caseData.city,
-            caseData.state_province,
-            caseData.country
-
-        ].filter(Boolean);
-
-
-        setText(
-            "case-location",
-            locationParts.length
-                ? locationParts.join(", ")
-                : "Location not documented"
-        );
-
-
-        setText(
-            "case-date-header",
-            formatDate(
-                caseData.case_date
-            )
-        );
-
-
-        // ------------------------------------------
-        // CASE INFORMATION
-        // ------------------------------------------
-
-        setText(
-            "case-date",
-            formatDate(
-                caseData.case_date
-            )
-        );
-
-
-        setText(
-            "case-country",
-            caseData.country
-        );
-
-
-        setText(
-            "case-state",
-            caseData.state_province
-        );
-
-
-        setText(
-            "case-city",
-            caseData.city
-        );
-
-
-        setText(
-            "case-classification",
-            caseData.classification
-        );
-
-
-        setText(
-            "case-offense",
-            caseData.offense
-        );
-
-
-        setText(
-            "case-additional-offenses",
-            caseData.additional_offenses
-        );
-
-
-        setText(
-            "case-outcome",
-            caseData.outcome
-        );
-
-
-        setText(
-            "case-victims",
-            caseData.victim_count
-        );
-
-
-        setText(
-            "case-fatalities",
-            caseData.fatality_count
-        );
-
-
-        // ------------------------------------------
-        // DESCRIPTION
-        // ------------------------------------------
-
-        setText(
-            "case-description",
-            caseData.description
-        );
-
-
-        // ------------------------------------------
-        // LOAD CASE SECTIONS
-        // ------------------------------------------
-
-        await Promise.all([
-
-            loadPeople(),
-
-            loadTags(),
-
-            loadCrimeScenePhotos(),
-
-            loadMedia(),
-
-            loadDocuments(),
-
-            loadSources(),
-
-            loadLinks(),
-
-            loadRelatedCases()
-
-        ]);
-
-
-    } catch (error) {
-
-        console.error(
-            "Error loading case:",
-            error
-        );
-
-
-        const nameElement =
-            document.getElementById(
-                "case-name"
-            );
-
-
-        if (nameElement) {
-
-            nameElement.textContent =
-                "Unable to load case";
-
-        }
-
-
-        const locationElement =
-            document.getElementById(
-                "case-location"
-            );
-
-
-        if (locationElement) {
-
-            locationElement.textContent =
-                "There was a problem loading this case.";
-
-        }
-
-    }
-
-}
-
-
-// --------------------------------------------------
-// PEOPLE INVOLVED
-// --------------------------------------------------
+/* -----------------------------------------
+   LOAD PEOPLE
+   ----------------------------------------- */
 
 async function loadPeople() {
 
@@ -421,7 +419,6 @@ async function loadPeople() {
 
     if (!container) return;
 
-
     const {
         data,
         error
@@ -429,14 +426,12 @@ async function loadPeople() {
         await supabaseClient
             .from("case_people")
             .select(`
-                id,
                 role,
-                person_id,
                 people (
                     id,
-                    display_name,
-                    age_at_case,
+                    name,
                     date_of_birth,
+                    age,
                     gender
                 )
             `)
@@ -445,225 +440,102 @@ async function loadPeople() {
                 caseId
             );
 
-
     if (error) {
 
         console.error(
-            "Error loading people:",
+            "CBRA: Error loading people:",
             error
         );
 
-
         showEmpty(
             "case-people",
-            "Unable to load people associated with this case."
+            "Unable to load people."
         );
 
         return;
 
     }
 
-
-    if (
-        !data ||
-        data.length === 0
-    ) {
+    if (!data || data.length === 0) {
 
         showEmpty(
             "case-people",
-            "No people have been added to this case."
+            "No people are linked to this case."
         );
 
         return;
 
     }
-
-
-    const sortedPeople =
-        [...data].sort(
-            (a, b) => {
-
-                const roleA =
-                    (a.role || "")
-                        .toLowerCase();
-
-                const roleB =
-                    (b.role || "")
-                        .toLowerCase();
-
-                return roleA.localeCompare(
-                    roleB
-                );
-
-            }
-        );
-
 
     container.innerHTML =
-        sortedPeople
-            .map(
-                connection => {
+        data
+            .map(item => {
 
-                    const person =
-                        connection.people;
+                const person =
+                    item.people;
 
-                    if (!person) {
+                if (!person) {
 
-                        return "";
-
-                    }
-
-
-                    const personId =
-                        person.id;
-
-
-                    const personName =
-                        person.display_name ||
-                        "Unnamed Person";
-
-
-                    return `
-
-                        <article class="person-card">
-
-                            <a
-                                class="person-card-link"
-                                href="person.html?id=${encodeURIComponent(personId)}"
-                            >
-
-                                <h3>
-                                    ${escapeHTML(personName)}
-                                </h3>
-
-                            </a>
-
-
-                            <div class="person-card-details">
-
-                                ${
-                                    connection.role
-                                        ? `
-                                            <div>
-
-                                                <span class="person-detail-label">
-                                                    Role
-                                                </span>
-
-                                                <span>
-                                                    ${escapeHTML(connection.role)}
-                                                </span>
-
-                                            </div>
-                                        `
-                                        : ""
-                                }
-
-
-                                ${
-                                    person.age_at_case !== null &&
-                                    person.age_at_case !== undefined
-                                        ? `
-                                            <div>
-
-                                                <span class="person-detail-label">
-                                                    Age at Case
-                                                </span>
-
-                                                <span>
-                                                    ${escapeHTML(person.age_at_case)}
-                                                </span>
-
-                                            </div>
-                                        `
-                                        : ""
-                                }
-
-
-                                ${
-                                    person.date_of_birth
-                                        ? `
-                                            <div>
-
-                                                <span class="person-detail-label">
-                                                    Date of Birth
-                                                </span>
-
-                                                <span>
-                                                    ${escapeHTML(
-                                                        formatDate(
-                                                            person.date_of_birth
-                                                        )
-                                                    )}
-                                                </span>
-
-                                            </div>
-                                        `
-                                        : ""
-                                }
-
-
-                                ${
-                                    person.gender
-                                        ? `
-                                            <div>
-
-                                                <span class="person-detail-label">
-                                                    Gender
-                                                </span>
-
-                                                <span>
-                                                    ${escapeHTML(person.gender)}
-                                                </span>
-
-                                            </div>
-                                        `
-                                        : ""
-                                }
-
-                            </div>
-
-                        </article>
-
-                    `;
+                    return "";
 
                 }
-            )
+
+                return `
+                    <div class="person-card">
+
+                        <h3>
+                            <a
+                                href="person.html?id=${encodeURIComponent(person.id)}"
+                            >
+                                ${escapeHTML(person.name)}
+                            </a>
+                        </h3>
+
+                        <p>
+                            <strong>Role:</strong>
+                            ${escapeHTML(item.role || "—")}
+                        </p>
+
+                        <p>
+                            <strong>Age:</strong>
+                            ${escapeHTML(person.age ?? "—")}
+                        </p>
+
+                        <p>
+                            <strong>Date of Birth:</strong>
+                            ${escapeHTML(
+                                person.date_of_birth
+                                    ? formatDate(person.date_of_birth)
+                                    : "—"
+                            )}
+                        </p>
+
+                        <p>
+                            <strong>Gender:</strong>
+                            ${escapeHTML(person.gender || "—")}
+                        </p>
+
+                    </div>
+                `;
+
+            })
             .join("");
 
 }
 
 
-// --------------------------------------------------
-// CASE RESEARCH TAGS
-// --------------------------------------------------
+/* -----------------------------------------
+   LOAD TAGS
+   ----------------------------------------- */
 
 async function loadTags() {
 
-    const crimeContainer =
+    const container =
         document.getElementById(
-            "case-crime-tags"
+            "case-tags"
         );
 
-    const influenceContainer =
-        document.getElementById(
-            "case-influence-tags"
-        );
-
-    const mentalHealthContainer =
-        document.getElementById(
-            "case-mental-health-tags"
-        );
-
-    const demographicContainer =
-        document.getElementById(
-            "case-demographic-tags"
-        );
-
-
-    // ------------------------------------------
-    // LOAD TAG CONNECTIONS
-    // ------------------------------------------
+    if (!container) return;
 
     const {
         data,
@@ -684,248 +556,112 @@ async function loadTags() {
                 caseId
             );
 
-
     if (error) {
 
         console.error(
-            "Error loading case research tags:",
+            "CBRA: Error loading tags:",
             error
         );
 
-
-        if (crimeContainer) {
-
-            showEmpty(
-                "case-crime-tags",
-                "Unable to load crime tags."
-            );
-
-        }
-
-
-        if (influenceContainer) {
-
-            showEmpty(
-                "case-influence-tags",
-                "Unable to load influence tags."
-            );
-
-        }
-
-
-        if (mentalHealthContainer) {
-
-            showEmpty(
-                "case-mental-health-tags",
-                "Unable to load mental-health tags."
-            );
-
-        }
-
-
-        if (demographicContainer) {
-
-            showEmpty(
-                "case-demographic-tags",
-                "Unable to load demographic tags."
-            );
-
-        }
+        showEmpty(
+            "case-tags",
+            "Unable to load tags."
+        );
 
         return;
 
     }
 
+    if (!data || data.length === 0) {
 
-    // ------------------------------------------
-    // ORGANIZE BY CATEGORY
-    // ------------------------------------------
+        showEmpty(
+            "case-tags",
+            "No tags are linked to this case."
+        );
 
-    const crimeTags = [];
-
-    const influenceTags = [];
-
-    const mentalHealthTags = [];
-
-    const demographicTags = [];
-
-
-    (data || []).forEach(
-        item => {
-
-            if (
-                !item.tags ||
-                !item.tags.id ||
-                !item.tags.name
-            ) {
-
-                return;
-
-            }
-
-
-            const tag =
-                item.tags;
-
-
-            if (
-                tag.category === "crime"
-            ) {
-
-                crimeTags.push(tag);
-
-            } else if (
-                tag.category === "influence"
-            ) {
-
-                influenceTags.push(tag);
-
-            } else if (
-                tag.category === "mental_health"
-            ) {
-
-                mentalHealthTags.push(tag);
-
-            } else if (
-                tag.category === "demographic"
-            ) {
-
-                demographicTags.push(tag);
-
-            }
-
-        }
-    );
-
-
-    // ------------------------------------------
-    // SORT TAGS
-    // ------------------------------------------
-
-    const sortTags =
-        tags => {
-
-            return tags.sort(
-                (a, b) =>
-                    (a.name || "")
-                        .localeCompare(
-                            b.name || ""
-                        )
-            );
-
-        };
-
-
-    sortTags(crimeTags);
-
-    sortTags(influenceTags);
-
-    sortTags(mentalHealthTags);
-
-    sortTags(demographicTags);
-
-
-    // ------------------------------------------
-    // DISPLAY HELPER
-    // ------------------------------------------
-
-    function renderTags(
-        container,
-        tags,
-        emptyMessage
-    ) {
-
-        if (!container) return;
-
-
-        if (
-            !tags ||
-            tags.length === 0
-        ) {
-
-            showEmpty(
-                container.id,
-                emptyMessage
-            );
-
-            return;
-
-        }
-
-
-        container.innerHTML = `
-            <div class="tag-list">
-
-                ${
-                    tags
-                        .map(
-                            tag => `
-                                <a
-                                    class="case-tag"
-                                    href="archive.html?tag=${encodeURIComponent(
-                                        tag.id
-                                    )}"
-                                >
-                                    ${escapeHTML(tag.name)}
-                                </a>
-                            `
-                        )
-                        .join("")
-                }
-
-            </div>
-        `;
+        return;
 
     }
 
+    const categoryOrder = {
 
-    // ------------------------------------------
-    // DISPLAY EACH CATEGORY
-    // ------------------------------------------
+        crime: 1,
+        influence: 2,
+        mental_health: 3,
+        demographic: 4
 
-    renderTags(
-        crimeContainer,
-        crimeTags,
-        "No crime tags have been added."
+    };
+
+    data.sort(
+        (a, b) => {
+
+            const aCategory =
+                a.tags?.category || "";
+
+            const bCategory =
+                b.tags?.category || "";
+
+            const aOrder =
+                categoryOrder[aCategory] || 99;
+
+            const bOrder =
+                categoryOrder[bCategory] || 99;
+
+            if (aOrder !== bOrder) {
+
+                return aOrder - bOrder;
+
+            }
+
+            return (
+                a.tags?.name || ""
+            ).localeCompare(
+                b.tags?.name || ""
+            );
+
+        }
     );
 
+    container.innerHTML =
+        data
+            .map(item => {
 
-    renderTags(
-        influenceContainer,
-        influenceTags,
-        "No influence tags have been added."
-    );
+                const tag =
+                    item.tags;
 
+                if (!tag) {
 
-    renderTags(
-        mentalHealthContainer,
-        mentalHealthTags,
-        "No mental-health tags have been added."
-    );
+                    return "";
 
+                }
 
-    renderTags(
-        demographicContainer,
-        demographicTags,
-        "No demographic tags have been added."
-    );
+                return `
+                    <a
+                        class="case-tag"
+                        href="archive.html?tag=${encodeURIComponent(tag.name)}"
+                    >
+                        ${escapeHTML(tag.name)}
+                    </a>
+                `;
+
+            })
+            .join("");
 
 }
 
 
-// --------------------------------------------------
-// CRIME SCENE PHOTOS
-// --------------------------------------------------
+/* -----------------------------------------
+   LOAD CRIME SCENE PHOTOS
+   ----------------------------------------- */
 
 async function loadCrimeScenePhotos() {
 
     const container =
         document.getElementById(
-            "case-crime-scene-photos"
+            "crime-scene-photos"
         );
 
     if (!container) return;
-
 
     const {
         data,
@@ -946,133 +682,109 @@ async function loadCrimeScenePhotos() {
             .eq(
                 "case_id",
                 caseId
-            )
-            .order(
-                "date_taken",
-                {
-                    ascending: true,
-                    nullsFirst: false
-                }
             );
-
 
     if (error) {
 
         console.error(
-            "Crime scene photos are not available yet:",
+            "CBRA: Error loading crime scene photos:",
             error
         );
 
-
         showEmpty(
-            "case-crime-scene-photos",
-            "No crime scene photos have been added to this case."
+            "crime-scene-photos",
+            "Unable to load crime scene photos."
         );
 
         return;
 
     }
 
-
-    if (
-        !data ||
-        data.length === 0
-    ) {
+    if (!data || data.length === 0) {
 
         showEmpty(
-            "case-crime-scene-photos",
-            "No crime scene photos have been added to this case."
+            "crime-scene-photos",
+            "No crime scene photos are available."
         );
 
         return;
 
     }
 
+    data.sort(
+        (a, b) => {
+
+            if (!a.date_taken) return 1;
+
+            if (!b.date_taken) return -1;
+
+            return (
+                new Date(a.date_taken) -
+                new Date(b.date_taken)
+            );
+
+        }
+    );
 
     container.innerHTML =
         data
-            .map(
-                photo => {
+            .map(photo => {
 
-                    return `
+                return `
+                    <div class="crime-scene-photo-card">
 
-                        <article class="crime-scene-photo-card">
+                        <div class="crime-scene-photo-image">
 
-                            <div class="crime-scene-image-wrapper">
+                            <img
+                                src="${escapeHTML(photo.image_url)}"
+                                alt="${escapeHTML(photo.title || "Crime scene photo")}"
+                                loading="lazy"
+                            >
 
-                                <a
-                                    href="${escapeHTML(photo.image_url)}"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                >
+                        </div>
 
-                                    <img
-                                        src="${escapeHTML(photo.image_url)}"
-                                        alt="${escapeHTML(
-                                            photo.title ||
-                                            "Crime scene photograph"
-                                        )}"
-                                        loading="lazy"
-                                    >
+                        <div class="crime-scene-photo-info">
 
-                                </a>
+                            <h3>
+                                ${escapeHTML(
+                                    photo.title ||
+                                    "Untitled Photo"
+                                )}
+                            </h3>
 
-                            </div>
-
-
-                            <div class="crime-scene-photo-info">
-
-                                <h3>
-                                    ${escapeHTML(
-                                        photo.title ||
-                                        "Untitled Photograph"
-                                    )}
-                                </h3>
-
-
-                                ${
-                                    photo.date_taken
-                                        ? `
-                                            <p class="photo-date">
-                                                ${escapeHTML(
-                                                    formatDate(
-                                                        photo.date_taken
-                                                    )
-                                                )}
-                                            </p>
-                                        `
-                                        : ""
+                            <p>
+                                <strong>Date Taken:</strong>
+                                ${photo.date_taken
+                                    ? escapeHTML(
+                                        formatDate(
+                                            photo.date_taken
+                                        )
+                                    )
+                                    : "—"
                                 }
+                            </p>
 
+                            <p>
+                                ${escapeHTML(
+                                    photo.description ||
+                                    ""
+                                )}
+                            </p>
 
-                                ${
-                                    photo.description
-                                        ? `
-                                            <p>
-                                                ${escapeHTML(
-                                                    photo.description
-                                                )}
-                                            </p>
-                                        `
-                                        : ""
-                                }
+                        </div>
 
-                            </div>
+                    </div>
+                `;
 
-                        </article>
-
-                    `;
-
-                }
-            )
+            })
             .join("");
 
 }
 
 
-// --------------------------------------------------
-// GENERAL MEDIA
-// --------------------------------------------------
+/* -----------------------------------------
+   LOAD MEDIA
+   ----------------------------------------- */
 
 async function loadMedia() {
 
@@ -1083,46 +795,35 @@ async function loadMedia() {
 
     if (!container) return;
 
-
     const {
         data,
         error
     } =
         await supabaseClient
-            .from(
-                "case_media"
-            )
+            .from("case_media")
             .select(`
                 id,
                 title,
-                description,
-                media_url,
                 media_type,
-                source_id,
+                description,
+                url,
                 sources (
                     id,
-                    title
+                    title,
+                    url
                 )
             `)
             .eq(
                 "case_id",
                 caseId
-            )
-            .order(
-                "created_at",
-                {
-                    ascending: false
-                }
             );
-
 
     if (error) {
 
         console.error(
-            "Error loading media:",
+            "CBRA: Error loading media:",
             error
         );
-
 
         showEmpty(
             "case-media",
@@ -1133,123 +834,67 @@ async function loadMedia() {
 
     }
 
-
-    if (
-        !data ||
-        data.length === 0
-    ) {
+    if (!data || data.length === 0) {
 
         showEmpty(
             "case-media",
-            "No media has been added to this case."
+            "No media is available."
         );
 
         return;
 
     }
 
-
     container.innerHTML =
         data
-            .map(
-                media => {
+            .map(media => {
 
-                    const source =
-                        media.sources;
+                return `
+                    <div class="media-card">
 
+                        <h3>
+                            ${escapeHTML(
+                                media.title ||
+                                "Untitled Media"
+                            )}
+                        </h3>
 
-                    return `
+                        <p>
+                            <strong>Type:</strong>
+                            ${escapeHTML(
+                                media.media_type ||
+                                "—"
+                            )}
+                        </p>
 
-                        <article class="media-card">
+                        <p>
+                            ${escapeHTML(
+                                media.description ||
+                                ""
+                            )}
+                        </p>
 
-                            <h3>
-                                ${escapeHTML(
-                                    media.title ||
-                                    "Untitled Media"
-                                )}
-                            </h3>
+                        ${
+                            media.url
+                                ? createExternalLink(
+                                    media.url,
+                                    "Open Media"
+                                )
+                                : ""
+                        }
 
+                    </div>
+                `;
 
-                            ${
-                                media.media_type
-                                    ? `
-                                        <span class="media-type">
-                                            ${escapeHTML(
-                                                media.media_type
-                                            )}
-                                        </span>
-                                    `
-                                    : ""
-                            }
-
-
-                            ${
-                                media.description
-                                    ? `
-                                        <p>
-                                            ${escapeHTML(
-                                                media.description
-                                            )}
-                                        </p>
-                                    `
-                                    : ""
-                            }
-
-
-                            ${
-                                source
-                                    ? `
-                                        <p class="media-source">
-
-                                            <strong>
-                                                Source:
-                                            </strong>
-
-                                            ${
-                                                source.title
-                                                    ? escapeHTML(
-                                                        source.title
-                                                    )
-                                                    : "Source"
-                                            }
-
-                                        </p>
-                                    `
-                                    : ""
-                            }
-
-
-                            ${
-                                media.media_url
-                                    ? `
-                                        <a
-                                            class="media-link"
-                                            href="${escapeHTML(
-                                                media.media_url
-                                            )}"
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                        >
-                                            Open Media
-                                        </a>
-                                    `
-                                    : ""
-                            }
-
-                        </article>
-
-                    `;
-
-                }
-            )
+            })
             .join("");
 
 }
 
 
-// --------------------------------------------------
-// CASE DOCUMENTS / COURT RECORDS
-// --------------------------------------------------
+/* -----------------------------------------
+   LOAD DOCUMENTS
+   ----------------------------------------- */
 
 async function loadDocuments() {
 
@@ -1260,14 +905,9 @@ async function loadDocuments() {
 
     if (!container) return;
 
-
-    // ------------------------------------------
-    // GET DOCUMENTS CONNECTED TO THIS CASE
-    // ------------------------------------------
-
     const {
-        data: connections,
-        error: connectionError
+        data: documentCases,
+        error: documentCaseError
     } =
         await supabaseClient
             .from("document_cases")
@@ -1279,86 +919,59 @@ async function loadDocuments() {
                 caseId
             );
 
-
-    if (connectionError) {
+    if (documentCaseError) {
 
         console.error(
-            "Error loading document connections:",
-            connectionError
+            "CBRA: Error loading document links:",
+            documentCaseError
         );
-
 
         showEmpty(
             "case-documents",
-            "Unable to load court records and documents."
+            "Unable to load documents."
         );
 
         return;
 
     }
 
-
     if (
-        !connections ||
-        connections.length === 0
+        !documentCases ||
+        documentCases.length === 0
     ) {
 
         showEmpty(
             "case-documents",
-            "No court records or documents have been added."
+            "No documents are linked to this case."
         );
 
         return;
 
     }
-
-
-    // ------------------------------------------
-    // GET DOCUMENT IDS
-    // ------------------------------------------
 
     const documentIds =
-        connections
-            .map(
-                connection =>
-                    connection.document_id
-            )
-            .filter(Boolean);
-
-
-    if (documentIds.length === 0) {
-
-        showEmpty(
-            "case-documents",
-            "No court records or documents have been added."
+        documentCases.map(
+            item => item.document_id
         );
-
-        return;
-
-    }
-
-
-    // ------------------------------------------
-    // LOAD DOCUMENT INFORMATION
-    // ------------------------------------------
 
     const {
         data: documents,
-        error: documentError
+        error
     } =
         await supabaseClient
             .from("documents")
             .select(`
                 id,
                 title,
-                description,
-                document_url,
                 document_type,
                 publication_date,
+                description,
+                url,
                 source_id,
                 sources (
                     id,
-                    title
+                    title,
+                    url
                 )
             `)
             .in(
@@ -1366,209 +979,110 @@ async function loadDocuments() {
                 documentIds
             );
 
-
-    if (documentError) {
+    if (error) {
 
         console.error(
-            "Error loading documents:",
-            documentError
+            "CBRA: Error loading documents:",
+            error
         );
-
 
         showEmpty(
             "case-documents",
-            "Unable to load court records and documents."
+            "Unable to load documents."
         );
 
         return;
 
     }
 
-
-    if (
-        !documents ||
-        documents.length === 0
-    ) {
+    if (!documents || documents.length === 0) {
 
         showEmpty(
             "case-documents",
-            "No court records or documents have been added."
+            "No documents are available."
         );
 
         return;
 
     }
 
+    documents.sort(
+        (a, b) => {
 
-    // ------------------------------------------
-    // SORT BY PUBLICATION DATE
-    // ------------------------------------------
+            if (!a.publication_date) return 1;
 
-    const sortedDocuments =
-        [...documents].sort(
-            (a, b) => {
+            if (!b.publication_date) return -1;
 
-                if (
-                    !a.publication_date &&
-                    !b.publication_date
-                ) {
+            return (
+                new Date(b.publication_date) -
+                new Date(a.publication_date)
+            );
 
-                    return 0;
-
-                }
-
-
-                if (!a.publication_date) {
-
-                    return 1;
-
-                }
-
-
-                if (!b.publication_date) {
-
-                    return -1;
-
-                }
-
-
-                return new Date(
-                    b.publication_date
-                ) -
-                new Date(
-                    a.publication_date
-                );
-
-            }
-        );
-
-
-    // ------------------------------------------
-    // DISPLAY DOCUMENTS
-    // ------------------------------------------
+        }
+    );
 
     container.innerHTML =
-        sortedDocuments
-            .map(
-                documentItem => {
+        documents
+            .map(document => {
 
-                    const source =
-                        documentItem.sources;
+                return `
+                    <div class="document-card">
 
+                        <h3>
+                            ${escapeHTML(
+                                document.title ||
+                                "Untitled Document"
+                            )}
+                        </h3>
 
-                    return `
+                        <p>
+                            <strong>Type:</strong>
+                            ${escapeHTML(
+                                document.document_type ||
+                                "—"
+                            )}
+                        </p>
 
-                        <article class="document-card">
-
-                            <h3>
-                                ${escapeHTML(
-                                    documentItem.title ||
-                                    "Untitled Document"
-                                )}
-                            </h3>
-
-
-                            ${
-                                documentItem.document_type
-                                    ? `
-                                        <span class="document-type">
-                                            ${escapeHTML(
-                                                documentItem.document_type
-                                            )}
-                                        </span>
-                                    `
-                                    : ""
+                        <p>
+                            <strong>Publication Date:</strong>
+                            ${document.publication_date
+                                ? escapeHTML(
+                                    formatDate(
+                                        document.publication_date
+                                    )
+                                )
+                                : "—"
                             }
+                        </p>
 
+                        <p>
+                            ${escapeHTML(
+                                document.description ||
+                                ""
+                            )}
+                        </p>
 
-                            ${
-                                documentItem.publication_date
-                                    ? `
-                                        <p>
+                        ${
+                            document.url
+                                ? createExternalLink(
+                                    document.url,
+                                    "View Document"
+                                )
+                                : ""
+                        }
 
-                                            <strong>
-                                                Date:
-                                            </strong>
+                    </div>
+                `;
 
-                                            ${escapeHTML(
-                                                formatDate(
-                                                    documentItem.publication_date
-                                                )
-                                            )}
-
-                                        </p>
-                                    `
-                                    : ""
-                            }
-
-
-                            ${
-                                documentItem.description
-                                    ? `
-                                        <p>
-                                            ${escapeHTML(
-                                                documentItem.description
-                                            )}
-                                        </p>
-                                    `
-                                    : ""
-                            }
-
-
-                            ${
-                                source
-                                    ? `
-                                        <p class="document-source">
-
-                                            <strong>
-                                                Source:
-                                            </strong>
-
-                                            ${
-                                                source.title
-                                                    ? escapeHTML(
-                                                        source.title
-                                                    )
-                                                    : "Source"
-                                            }
-
-                                        </p>
-                                    `
-                                    : ""
-                            }
-
-
-                            ${
-                                documentItem.document_url
-                                    ? `
-                                        <a
-                                            href="${escapeHTML(
-                                                documentItem.document_url
-                                            )}"
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            class="document-link"
-                                        >
-                                            View Document
-                                        </a>
-                                    `
-                                    : ""
-                            }
-
-                        </article>
-
-                    `;
-
-                }
-            )
+            })
             .join("");
 
 }
 
 
-// --------------------------------------------------
-// SOURCES & REFERENCES
-// --------------------------------------------------
+/* -----------------------------------------
+   LOAD SOURCES
+   ----------------------------------------- */
 
 async function loadSources() {
 
@@ -1579,14 +1093,9 @@ async function loadSources() {
 
     if (!container) return;
 
-
-    // ------------------------------------------
-    // GET SOURCES CONNECTED TO THIS CASE
-    // ------------------------------------------
-
     const {
-        data: connections,
-        error: connectionError
+        data: sourceCases,
+        error: sourceCaseError
     } =
         await supabaseClient
             .from("source_cases")
@@ -1598,14 +1107,12 @@ async function loadSources() {
                 caseId
             );
 
-
-    if (connectionError) {
+    if (sourceCaseError) {
 
         console.error(
-            "Error loading case source connections:",
-            connectionError
+            "CBRA: Error loading case sources:",
+            sourceCaseError
         );
-
 
         showEmpty(
             "case-sources",
@@ -1616,77 +1123,49 @@ async function loadSources() {
 
     }
 
-
     if (
-        !connections ||
-        connections.length === 0
+        !sourceCases ||
+        sourceCases.length === 0
     ) {
 
         showEmpty(
             "case-sources",
-            "No sources have been added."
+            "No sources are linked to this case."
         );
 
         return;
 
     }
-
-
-    // ------------------------------------------
-    // GET SOURCE IDS
-    // ------------------------------------------
 
     const sourceIds =
-        connections
-            .map(
-                connection =>
-                    connection.source_id
-            )
-            .filter(Boolean);
-
-
-    if (sourceIds.length === 0) {
-
-        showEmpty(
-            "case-sources",
-            "No sources have been added."
+        sourceCases.map(
+            item => item.source_id
         );
-
-        return;
-
-    }
-
-
-    // ------------------------------------------
-    // LOAD SOURCES
-    // ------------------------------------------
 
     const {
         data: sources,
-        error: sourceError
+        error
     } =
         await supabaseClient
             .from("sources")
             .select(`
                 id,
                 title,
-                url,
-                source_type,
-                publication_date
+                publisher,
+                publication_date,
+                url
             `)
             .in(
                 "id",
                 sourceIds
             );
 
-
-    if (sourceError) {
+    if (error) {
 
         console.error(
-            "Error loading sources:",
-            sourceError
+            "CBRA: Error loading sources:",
+            error
         );
-
 
         showEmpty(
             "case-sources",
@@ -1697,149 +1176,87 @@ async function loadSources() {
 
     }
 
-
-    if (
-        !sources ||
-        sources.length === 0
-    ) {
+    if (!sources || sources.length === 0) {
 
         showEmpty(
             "case-sources",
-            "No sources have been added."
+            "No sources are available."
         );
 
         return;
 
     }
 
+    sources.sort(
+        (a, b) => {
 
-    // ------------------------------------------
-    // SORT SOURCES
-    // ------------------------------------------
+            if (!a.publication_date) return 1;
 
-    const sortedSources =
-        [...sources].sort(
-            (a, b) => {
+            if (!b.publication_date) return -1;
 
-                if (
-                    !a.publication_date &&
-                    !b.publication_date
-                ) {
+            return (
+                new Date(b.publication_date) -
+                new Date(a.publication_date)
+            );
 
-                    return 0;
-
-                }
-
-
-                if (!a.publication_date) {
-
-                    return 1;
-
-                }
-
-
-                if (!b.publication_date) {
-
-                    return -1;
-
-                }
-
-
-                return new Date(
-                    b.publication_date
-                ) -
-                new Date(
-                    a.publication_date
-                );
-
-            }
-        );
-
-
-    // ------------------------------------------
-    // DISPLAY SOURCES
-    // ------------------------------------------
+        }
+    );
 
     container.innerHTML =
-        sortedSources
-            .map(
-                source => {
+        sources
+            .map(source => {
 
-                    return `
+                return `
+                    <div class="source-card">
 
-                        <article class="source-card">
+                        <h3>
+                            ${escapeHTML(
+                                source.title ||
+                                "Untitled Source"
+                            )}
+                        </h3>
 
-                            <h3>
+                        <p>
+                            <strong>Publisher:</strong>
+                            ${escapeHTML(
+                                source.publisher ||
+                                "—"
+                            )}
+                        </p>
 
-                                ${
-                                    source.url
-                                        ? createExternalLink(
-                                            source.url,
-                                            source.title ||
-                                            "View Source"
-                                        )
-                                        : escapeHTML(
-                                            source.title ||
-                                            "Untitled Source"
-                                        )
-                                }
-
-                            </h3>
-
-
-                            ${
-                                source.source_type
-                                    ? `
-                                        <p>
-
-                                            <strong>
-                                                Type:
-                                            </strong>
-
-                                            ${escapeHTML(
-                                                source.source_type
-                                            )}
-
-                                        </p>
-                                    `
-                                    : ""
+                        <p>
+                            <strong>Publication Date:</strong>
+                            ${source.publication_date
+                                ? escapeHTML(
+                                    formatDate(
+                                        source.publication_date
+                                    )
+                                )
+                                : "—"
                             }
+                        </p>
 
+                        ${
+                            source.url
+                                ? createExternalLink(
+                                    source.url,
+                                    "View Source"
+                                )
+                                : ""
+                        }
 
-                            ${
-                                source.publication_date
-                                    ? `
-                                        <p>
+                    </div>
+                `;
 
-                                            <strong>
-                                                Publication Date:
-                                            </strong>
-
-                                            ${escapeHTML(
-                                                formatDate(
-                                                    source.publication_date
-                                                )
-                                            )}
-
-                                        </p>
-                                    `
-                                    : ""
-                            }
-
-                        </article>
-
-                    `;
-
-                }
-            )
+            })
             .join("");
 
 }
 
 
-// --------------------------------------------------
-// EXTERNAL LINKS
-// --------------------------------------------------
+/* -----------------------------------------
+   LOAD LINKS
+   ----------------------------------------- */
 
 async function loadLinks() {
 
@@ -1850,20 +1267,16 @@ async function loadLinks() {
 
     if (!container) return;
 
-
     const {
         data,
         error
     } =
         await supabaseClient
-            .from(
-                "case_links"
-            )
+            .from("case_links")
             .select(`
                 id,
                 title,
                 url,
-                link_type,
                 description
             `)
             .eq(
@@ -1871,149 +1284,109 @@ async function loadLinks() {
                 caseId
             );
 
-
     if (error) {
 
         console.error(
-            "Error loading external links:",
+            "CBRA: Error loading links:",
             error
         );
 
-
         showEmpty(
             "case-links",
-            "Unable to load external links."
+            "Unable to load links."
         );
 
         return;
 
     }
 
-
-    if (
-        !data ||
-        data.length === 0
-    ) {
+    if (!data || data.length === 0) {
 
         showEmpty(
             "case-links",
-            "No external links have been added."
+            "No additional links are available."
         );
 
         return;
 
     }
-
 
     container.innerHTML =
         data
-            .map(
-                link => {
+            .map(link => {
 
-                    return `
+                return `
+                    <div class="case-link-card">
 
-                        <article class="external-link-card">
+                        <h3>
+                            ${escapeHTML(
+                                link.title ||
+                                "Untitled Link"
+                            )}
+                        </h3>
 
-                            <h3>
+                        <p>
+                            ${escapeHTML(
+                                link.description ||
+                                ""
+                            )}
+                        </p>
 
-                                ${createExternalLink(
+                        ${
+                            link.url
+                                ? createExternalLink(
                                     link.url,
-                                    link.title ||
-                                    "External Link"
-                                )}
+                                    "Open Link"
+                                )
+                                : ""
+                        }
 
-                            </h3>
+                    </div>
+                `;
 
-
-                            ${
-                                link.link_type
-                                    ? `
-                                        <span class="link-type">
-                                            ${escapeHTML(
-                                                link.link_type
-                                            )}
-                                        </span>
-                                    `
-                                    : ""
-                            }
-
-
-                            ${
-                                link.description
-                                    ? `
-                                        <p>
-                                            ${escapeHTML(
-                                                link.description
-                                            )}
-                                        </p>
-                                    `
-                                    : ""
-                            }
-
-                        </article>
-
-                    `;
-
-                }
-            )
+            })
             .join("");
 
 }
 
 
-// --------------------------------------------------
-// RELATED CASES
-// --------------------------------------------------
+/* -----------------------------------------
+   LOAD RELATED CASES
+   ----------------------------------------- */
 
 async function loadRelatedCases() {
 
     const container =
         document.getElementById(
-            "case-related"
+            "related-cases"
         );
 
     if (!container) return;
 
-
-    /*
-        We intentionally load the related cases
-        separately instead of using a Supabase
-        relationship query.
-
-        This avoids problems with foreign-key
-        relationship names.
-    */
-
-
     const {
-        data: connections,
-        error: connectionError
+        data: relationships,
+        error: relationshipError
     } =
         await supabaseClient
-            .from(
-                "related_cases"
-            )
+            .from("related_cases")
             .select(`
-                id,
-                relationship_type,
-                related_case_id
+                related_case_id,
+                relationship_type
             `)
             .eq(
                 "case_id",
                 caseId
             );
 
-
-    if (connectionError) {
+    if (relationshipError) {
 
         console.error(
-            "Error loading related cases:",
-            connectionError
+            "CBRA: Error loading related cases:",
+            relationshipError
         );
 
-
         showEmpty(
-            "case-related",
+            "related-cases",
             "Unable to load related cases."
         );
 
@@ -2021,39 +1394,28 @@ async function loadRelatedCases() {
 
     }
 
-
     if (
-        !connections ||
-        connections.length === 0
+        !relationships ||
+        relationships.length === 0
     ) {
 
         showEmpty(
-            "case-related",
-            "No related cases have been added."
+            "related-cases",
+            "No related cases are linked."
         );
 
         return;
 
     }
 
-
-    // ------------------------------------------
-    // GET RELATED CASE IDS
-    // ------------------------------------------
-
     const relatedCaseIds =
-        connections.map(
-            connection =>
-                connection.related_case_id
+        relationships.map(
+            relationship =>
+                relationship.related_case_id
         );
 
-
-    // ------------------------------------------
-    // LOAD CASE INFORMATION
-    // ------------------------------------------
-
     const {
-        data: relatedCases,
+        data: cases,
         error: caseError
     } =
         await supabaseClient
@@ -2062,191 +1424,138 @@ async function loadRelatedCases() {
                 id,
                 case_name,
                 case_date,
-                city,
-                state_province,
-                country
+                classification,
+                offense
             `)
             .in(
                 "id",
                 relatedCaseIds
             );
 
-
     if (caseError) {
 
         console.error(
-            "Error loading related case information:",
+            "CBRA: Error loading related case details:",
             caseError
         );
 
-
         showEmpty(
-            "case-related",
-            "Unable to load related case information."
+            "related-cases",
+            "Unable to load related cases."
         );
 
         return;
 
     }
 
+    if (!cases || cases.length === 0) {
 
-    // ------------------------------------------
-    // CREATE LOOKUP
-    // ------------------------------------------
-
-    const caseMap = {};
-
-
-    (relatedCases || [])
-        .forEach(
-            relatedCase => {
-
-                caseMap[
-                    String(
-                        relatedCase.id
-                    )
-                ] =
-                    relatedCase;
-
-            }
+        showEmpty(
+            "related-cases",
+            "No related cases were found."
         );
 
+        return;
 
-    // ------------------------------------------
-    // DISPLAY
-    // ------------------------------------------
+    }
 
-    const cards =
-        connections
-            .map(
-                connection => {
+    const caseMap =
+        new Map(
+            cases.map(
+                relatedCase => [
+                    relatedCase.id,
+                    relatedCase
+                ]
+            )
+        );
 
-                    const relatedCase =
-                        caseMap[
-                            String(
-                                connection.related_case_id
-                            )
-                        ];
+    container.innerHTML =
+        relationships
+            .map(relationship => {
 
+                const relatedCase =
+                    caseMap.get(
+                        relationship.related_case_id
+                    );
 
-                    if (!relatedCase) {
+                if (!relatedCase) {
 
-                        return "";
+                    return "";
 
-                    }
+                }
 
+                return `
+                    <div class="related-case-card">
 
-                    const locationParts = [
-
-                        relatedCase.city,
-                        relatedCase.state_province,
-                        relatedCase.country
-
-                    ].filter(Boolean);
-
-
-                    return `
-
-                        <article class="related-case-card">
+                        <h3>
 
                             <a
                                 href="case.html?id=${encodeURIComponent(
                                     relatedCase.id
                                 )}"
                             >
-
-                                <h3>
-                                    ${escapeHTML(
-                                        relatedCase.case_name ||
-                                        "Unnamed Case"
-                                    )}
-                                </h3>
-
+                                ${escapeHTML(
+                                    relatedCase.case_name
+                                )}
                             </a>
 
+                        </h3>
 
-                            ${
-                                connection.relationship_type
-                                    ? `
-                                        <p>
+                        <p>
+                            <strong>Relationship:</strong>
+                            ${escapeHTML(
+                                relationship.relationship_type ||
+                                "—"
+                            )}
+                        </p>
 
-                                            <strong>
-                                                Relationship:
-                                            </strong>
-
-                                            ${escapeHTML(
-                                                connection.relationship_type
-                                            )}
-
-                                        </p>
-                                    `
-                                    : ""
+                        <p>
+                            <strong>Date:</strong>
+                            ${relatedCase.case_date
+                                ? escapeHTML(
+                                    formatDate(
+                                        relatedCase.case_date
+                                    )
+                                )
+                                : "—"
                             }
+                        </p>
 
+                        <p>
+                            <strong>Classification:</strong>
+                            ${escapeHTML(
+                                relatedCase.classification ||
+                                "—"
+                            )}
+                        </p>
 
-                            ${
-                                relatedCase.case_date
-                                    ? `
-                                        <p>
+                        <p>
+                            <strong>Primary Offense:</strong>
+                            ${escapeHTML(
+                                relatedCase.offense ||
+                                "—"
+                            )}
+                        </p>
 
-                                            <strong>
-                                                Date:
-                                            </strong>
+                    </div>
+                `;
 
-                                            ${escapeHTML(
-                                                formatDate(
-                                                    relatedCase.case_date
-                                                )
-                                            )}
-
-                                        </p>
-                                    `
-                                    : ""
-                            }
-
-
-                            ${
-                                locationParts.length
-                                    ? `
-                                        <p>
-                                            ${escapeHTML(
-                                                locationParts.join(", ")
-                                            )}
-                                        </p>
-                                    `
-                                    : ""
-                            }
-
-                        </article>
-
-                    `;
-
-                }
-            )
-            .filter(Boolean)
+            })
             .join("");
-
-
-    if (!cards) {
-
-        showEmpty(
-            "case-related",
-            "No related cases have been added."
-        );
-
-        return;
-
-    }
-
-
-    container.innerHTML =
-        cards;
 
 }
 
 
-// --------------------------------------------------
-// START
-// --------------------------------------------------
+/* -----------------------------------------
+   LOAD EVERYTHING
+   ----------------------------------------- */
 
 loadCase();
+loadPeople();
+loadTags();
+loadCrimeScenePhotos();
+loadMedia();
+loadDocuments();
+loadSources();
+loadLinks();
+loadRelatedCases();

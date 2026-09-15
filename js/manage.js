@@ -101,32 +101,6 @@ function normalizeValue(value) {
    OFFENSE FORMATTING
    ----------------------------------------- */
 
-/*
-   Formats offense names for display.
-
-   Example:
-
-   MURDER
-   → Murder
-
-   ATTEMPTED MURDER
-   → Attempted Murder
-
-   MURDER OF A CHILD
-   → Murder of a Child
-
-   BREAK AND ENTER
-   → Break and Enter
-
-   ASSAULT WITH A WEAPON
-   → Assault with a Weapon
-
-   THEFT BY DECEPTION
-   → Theft by Deception
-
-   Connector words remain lowercase.
-*/
-
 function formatOffenseName(value) {
 
     const rawName =
@@ -152,10 +126,9 @@ function formatOffenseName(value) {
 }
 
 
-/*
-   Determines whether a select is one
-   of the offense dropdowns.
-*/
+/* -----------------------------------------
+   OFFENSE SELECT CHECK
+   ----------------------------------------- */
 
 function isOffenseSelect(selectId) {
 
@@ -224,18 +197,9 @@ function clearSelect(
 }
 
 
-/*
-   Populate a select from lookup data.
-
-   IMPORTANT:
-   This function ALWAYS uses the complete
-   array supplied to it.
-
-   OFFENSE DROPDOWNS:
-   The displayed offense name is formatted
-   into Title Case while keeping connector
-   words lowercase.
-*/
+/* -----------------------------------------
+   POPULATE SIMPLE SELECT
+   ----------------------------------------- */
 
 function populateSimpleSelect(
     selectId,
@@ -270,23 +234,14 @@ function populateSimpleSelect(
                 return;
             }
 
-
-            /*
-               Only format offense dropdowns.
-               Everything else keeps its original
-               database value.
-            */
-
             const cleanName =
                 isOffenseSelect(selectId)
                     ? formatOffenseName(rawName)
                     : rawName;
 
-
             if (!cleanName) {
                 return;
             }
-
 
             const option =
                 document.createElement(
@@ -309,11 +264,9 @@ function populateSimpleSelect(
 }
 
 
-/*
-   Make sure an existing case value is
-   available without deleting the normal
-   lookup options.
-*/
+/* -----------------------------------------
+   ENSURE OPTION EXISTS
+   ----------------------------------------- */
 
 function ensureOptionExists(
     selectId,
@@ -352,18 +305,10 @@ function ensureOptionExists(
         return;
     }
 
-
-    /*
-       Format missing offense values too.
-       This handles older cases whose offense
-       was stored in uppercase or another style.
-    */
-
     const displayValue =
         isOffenseSelect(selectId)
             ? formatOffenseName(cleanValue)
             : cleanValue;
-
 
     const option =
         document.createElement(
@@ -383,10 +328,9 @@ function ensureOptionExists(
 }
 
 
-/*
-   Select a value without rebuilding
-   the dropdown.
-*/
+/* -----------------------------------------
+   SELECT VALUE
+   ----------------------------------------- */
 
 function selectValue(
     selectId,
@@ -443,10 +387,9 @@ function selectValue(
 }
 
 
-/*
-   Get all selected values from a
-   multi-select.
-*/
+/* -----------------------------------------
+   GET SELECTED VALUES
+   ----------------------------------------- */
 
 function getSelectedValues(
     selectId
@@ -486,17 +429,10 @@ function updateAdditionalChargesSummary() {
         return;
     }
 
-
-    /*
-       Create the summary automatically
-       if it does not already exist.
-    */
-
     let summary =
         getElement(
             "additional-charges-summary"
         );
-
 
     if (!summary) {
 
@@ -518,7 +454,6 @@ function updateAdditionalChargesSummary() {
 
     }
 
-
     const selected =
         Array.from(
             select.selectedOptions
@@ -529,18 +464,8 @@ function updateAdditionalChargesSummary() {
             )
             .filter(Boolean);
 
-
-    /*
-       Clear the previous summary.
-    */
-
     summary.innerHTML =
         "";
-
-
-    /*
-       Summary label.
-    */
 
     const label =
         document.createElement(
@@ -556,11 +481,6 @@ function updateAdditionalChargesSummary() {
     summary.appendChild(
         label
     );
-
-
-    /*
-       Nothing selected.
-    */
 
     if (
         selected.length === 0
@@ -584,12 +504,6 @@ function updateAdditionalChargesSummary() {
         return;
 
     }
-
-
-    /*
-       Display every selected charge
-       as a visible tag.
-    */
 
     selected.forEach(
         charge => {
@@ -616,7 +530,7 @@ function updateAdditionalChargesSummary() {
 
 
 /* -----------------------------------------
-   ADDITIONAL OFFENSE PARSER
+   PARSE ADDITIONAL OFFENSES
    ----------------------------------------- */
 
 function parseAdditionalOffenses(
@@ -630,25 +544,170 @@ function parseAdditionalOffenses(
         return [];
     }
 
-    if (raw.includes(";")) {
-
-        return raw
-            .split(";")
-            .map(
-                item =>
-                    item.trim()
-            )
-            .filter(Boolean);
-
-    }
-
     return raw
-        .split(",")
+        .split(/\s*(?:,|;|\n)\s*/)
         .map(
             item =>
                 item.trim()
         )
         .filter(Boolean);
+
+}
+
+
+/* -----------------------------------------
+   BUILD COMPLETE OFFENSE LIST
+   ----------------------------------------- */
+
+/*
+   IMPORTANT:
+
+   The Additional Offenses dropdown should
+   contain EVERY offense known to CBRA.
+
+   That includes:
+
+   1. case_offenses
+   2. primary offenses already used by cases
+   3. additional offenses already stored
+      in cases.additional_offenses
+
+   This prevents older/additional offenses
+   from disappearing simply because they
+   weren't manually added to case_offenses.
+*/
+
+async function loadCompleteOffenseList() {
+
+    const offenseMap =
+        new Map();
+
+
+    /* -------------------------------------
+       OFFENSE LOOKUP TABLE
+       ------------------------------------- */
+
+    (caseLookupData.offenses || [])
+        .forEach(
+            offense => {
+
+                const name =
+                    String(
+                        offense.name || ""
+                    ).trim();
+
+                if (!name) {
+                    return;
+                }
+
+                offenseMap.set(
+                    normalizeValue(name),
+                    name
+                );
+
+            }
+        );
+
+
+    /* -------------------------------------
+       ALL CASE PRIMARY + ADDITIONAL OFFENSES
+       ------------------------------------- */
+
+    const {
+        data: cases,
+        error
+    } =
+        await supabaseClient
+            .from("cases")
+            .select(
+                `
+                offense,
+                additional_offenses
+                `
+            );
+
+
+    if (error) {
+
+        console.error(
+            "Could not load offenses from cases:",
+            error
+        );
+
+    } else {
+
+        (cases || [])
+            .forEach(
+                caseItem => {
+
+                    /* -------------------------
+                       PRIMARY OFFENSE
+                       ------------------------- */
+
+                    const primary =
+                        String(
+                            caseItem.offense || ""
+                        ).trim();
+
+                    if (primary) {
+
+                        offenseMap.set(
+                            normalizeValue(primary),
+                            primary
+                        );
+
+                    }
+
+
+                    /* -------------------------
+                       ADDITIONAL OFFENSES
+                       ------------------------- */
+
+                    const additional =
+                        parseAdditionalOffenses(
+                            caseItem.additional_offenses
+                        );
+
+                    additional.forEach(
+                        offense => {
+
+                            offenseMap.set(
+                                normalizeValue(offense),
+                                offense
+                            );
+
+                        }
+                    );
+
+                }
+            );
+
+    }
+
+
+    /*
+       Convert back into the same structure
+       used by the dropdown system.
+    */
+
+    const completeOffenses =
+        Array.from(
+            offenseMap.values()
+        )
+            .map(
+                name => ({
+                    name
+                })
+            );
+
+
+    caseLookupData.offenses =
+        sortByName(
+            completeOffenses
+        );
+
+
+    return caseLookupData.offenses;
 
 }
 
@@ -1019,7 +1078,7 @@ async function loadCaseLookups() {
 
         console.error(
             "Could not load outcomes:",
-            outcomesError
+        outcomesError
         );
 
     } else {
@@ -1028,6 +1087,13 @@ async function loadCaseLookups() {
             outcomes || [];
 
     }
+
+
+    /* -------------------------------------
+       BUILD COMPLETE OFFENSE LIST
+       ------------------------------------- */
+
+    await loadCompleteOffenseList();
 
 
     /* -------------------------------------
@@ -1059,11 +1125,6 @@ async function loadCaseLookups() {
     );
 
 
-    /*
-       Immediately create/update the
-       additional-charge summary.
-    */
-
     updateAdditionalChargesSummary();
 
 
@@ -1073,11 +1134,6 @@ async function loadCaseLookups() {
         "-- Select Outcome --"
     );
 
-
-    /*
-       States and cities are dependent
-       dropdowns, so they start empty.
-    */
 
     clearSelect(
         "case-state-input",
@@ -1148,36 +1204,19 @@ function populateStatesForCountry(
         "-- Select State / Province --"
     );
 
-
-    /*
-       Whenever states are rebuilt,
-       cities are also reset.
-    */
-
     clearSelect(
         "case-city-input",
         "-- Select City --"
     );
 
-
     if (!selectedValue) {
         return;
     }
-
-
-    /*
-       Select the existing case's state.
-    */
 
     selectValue(
         "case-state-input",
         selectedValue
     );
-
-
-    /*
-       Find the actual lookup record.
-    */
 
     const selectedState =
         sortedStates.find(
@@ -1190,16 +1229,9 @@ function populateStatesForCountry(
                 )
         );
 
-
     if (!selectedState) {
         return;
     }
-
-
-    /*
-       Populate every city belonging
-       to that state.
-    */
 
     populateCitiesForState(
         selectedState.id
@@ -1239,7 +1271,6 @@ function populateCitiesForState(
         sortedCities,
         "-- Select City --"
     );
-
 
     if (selectedValue) {
 
@@ -1293,11 +1324,6 @@ async function addSimpleLookupValue(
         );
 
     if (existing) {
-
-        /*
-           Rebuild from the COMPLETE
-           lookup array.
-        */
 
         populateSimpleSelect(
             selectId,
@@ -1369,10 +1395,6 @@ async function addSimpleLookupValue(
         );
 
 
-    /*
-       Rebuild the COMPLETE dropdown.
-    */
-
     populateSimpleSelect(
         selectId,
         caseLookupData[
@@ -1388,16 +1410,18 @@ async function addSimpleLookupValue(
     );
 
 
-    /*
-       If the changed lookup was offenses,
-       keep the additional-charge display
-       synchronized.
-    */
-
     if (
         selectId ===
         "case-offense-input"
     ) {
+
+        await loadCompleteOffenseList();
+
+        populateSimpleSelect(
+            "case-offense-input",
+            caseLookupData.offenses,
+            "-- Select Primary Offense --"
+        );
 
         populateSimpleSelect(
             "case-additional-offenses-input",
@@ -1462,7 +1486,6 @@ async function addState() {
 
     }
 
-
     const country =
         caseLookupData.countries.find(
             item =>
@@ -1484,7 +1507,6 @@ async function addState() {
 
     }
 
-
     const value =
         prompt(
             `Enter the new state/province for ${country.name}:`
@@ -1493,7 +1515,6 @@ async function addState() {
     if (value === null) {
         return;
     }
-
 
     const cleanValue =
         value.trim();
@@ -1507,7 +1528,6 @@ async function addState() {
         return;
 
     }
-
 
     const existing =
         caseLookupData.states.find(
@@ -1525,7 +1545,6 @@ async function addState() {
                     cleanValue
                 )
         );
-
 
     if (existing) {
 
@@ -1546,7 +1565,6 @@ async function addState() {
 
     }
 
-
     const {
         data,
         error
@@ -1564,7 +1582,6 @@ async function addState() {
             )
             .single();
 
-
     if (error) {
 
         console.error(
@@ -1580,16 +1597,13 @@ async function addState() {
 
     }
 
-
     caseLookupData.states.push(
         data
     );
 
-
     populateStatesForCountry(
         country.id
     );
-
 
     selectValue(
         "case-state-input",
@@ -1615,7 +1629,6 @@ async function addCity() {
             "case-state-input"
         ).trim();
 
-
     if (!countryName) {
 
         alert(
@@ -1626,7 +1639,6 @@ async function addCity() {
 
     }
 
-
     if (!stateName) {
 
         alert(
@@ -1636,7 +1648,6 @@ async function addCity() {
         return;
 
     }
-
 
     const country =
         caseLookupData.countries.find(
@@ -1659,7 +1670,6 @@ async function addCity() {
 
     }
 
-
     const state =
         caseLookupData.states.find(
             item =>
@@ -1677,7 +1687,6 @@ async function addCity() {
                 )
         );
 
-
     if (!state) {
 
         alert(
@@ -1688,7 +1697,6 @@ async function addCity() {
 
     }
 
-
     const value =
         prompt(
             `Enter the new city for ${state.name}, ${country.name}:`
@@ -1697,7 +1705,6 @@ async function addCity() {
     if (value === null) {
         return;
     }
-
 
     const cleanValue =
         value.trim();
@@ -1711,7 +1718,6 @@ async function addCity() {
         return;
 
     }
-
 
     const existing =
         caseLookupData.cities.find(
@@ -1729,7 +1735,6 @@ async function addCity() {
                     cleanValue
                 )
         );
-
 
     if (existing) {
 
@@ -1750,7 +1755,6 @@ async function addCity() {
 
     }
 
-
     const {
         data,
         error
@@ -1768,7 +1772,6 @@ async function addCity() {
             )
             .single();
 
-
     if (error) {
 
         console.error(
@@ -1784,16 +1787,13 @@ async function addCity() {
 
     }
 
-
     caseLookupData.cities.push(
         data
     );
 
-
     populateCitiesForState(
         state.id
     );
-
 
     selectValue(
         "case-city-input",
@@ -1844,7 +1844,6 @@ async function addOffense() {
         return;
     }
 
-
     const newOffense =
         await addSimpleLookupValue(
             "case_offenses",
@@ -1854,16 +1853,17 @@ async function addOffense() {
             "-- Select Primary Offense --"
         );
 
-
     if (!newOffense) {
         return;
     }
 
+    await loadCompleteOffenseList();
 
-    /*
-       Refresh additional offenses with
-       the COMPLETE offense list.
-    */
+    populateSimpleSelect(
+        "case-offense-input",
+        caseLookupData.offenses,
+        "-- Select Primary Offense --"
+    );
 
     populateSimpleSelect(
         "case-additional-offenses-input",
@@ -1871,6 +1871,10 @@ async function addOffense() {
         null
     );
 
+    selectValue(
+        "case-offense-input",
+        newOffense.name
+    );
 
     updateAdditionalChargesSummary();
 
@@ -1892,7 +1896,6 @@ async function addAdditionalOffense() {
         return;
     }
 
-
     const cleanValue =
         value.trim();
 
@@ -1906,7 +1909,6 @@ async function addAdditionalOffense() {
 
     }
 
-
     const existing =
         caseLookupData.offenses.find(
             item =>
@@ -1918,7 +1920,6 @@ async function addAdditionalOffense() {
                 )
         );
 
-
     if (existing) {
 
         populateSimpleSelect(
@@ -1927,12 +1928,10 @@ async function addAdditionalOffense() {
             null
         );
 
-
         const additionalSelect =
             getElement(
                 "case-additional-offenses-input"
             );
-
 
         if (additionalSelect) {
 
@@ -1960,9 +1959,7 @@ async function addAdditionalOffense() {
 
         }
 
-
         updateAdditionalChargesSummary();
-
 
         alert(
             `"${existing.name}" already exists.`
@@ -1971,7 +1968,6 @@ async function addAdditionalOffense() {
         return;
 
     }
-
 
     const {
         data,
@@ -1988,7 +1984,6 @@ async function addAdditionalOffense() {
             )
             .single();
 
-
     if (error) {
 
         console.error(
@@ -2004,21 +1999,11 @@ async function addAdditionalOffense() {
 
     }
 
-
     caseLookupData.offenses.push(
         data
     );
 
-
-    caseLookupData.offenses =
-        sortByName(
-            caseLookupData.offenses
-        );
-
-
-    /*
-       Rebuild BOTH offense dropdowns.
-    */
+    await loadCompleteOffenseList();
 
     populateSimpleSelect(
         "case-offense-input",
@@ -2026,19 +2011,16 @@ async function addAdditionalOffense() {
         "-- Select Primary Offense --"
     );
 
-
     populateSimpleSelect(
         "case-additional-offenses-input",
         caseLookupData.offenses,
         null
     );
 
-
     const additionalSelect =
         getElement(
             "case-additional-offenses-input"
         );
-
 
     if (additionalSelect) {
 
@@ -2065,7 +2047,6 @@ async function addAdditionalOffense() {
         );
 
     }
-
 
     updateAdditionalChargesSummary();
 
@@ -2113,10 +2094,8 @@ async function loadCaseList() {
         return;
     }
 
-
     const previousValue =
         selector.value;
-
 
     const {
         data,
@@ -2127,7 +2106,6 @@ async function loadCaseList() {
             .select(
                 "id, case_name, case_date"
             );
-
 
     if (error) {
 
@@ -2144,11 +2122,6 @@ async function loadCaseList() {
         return;
 
     }
-
-
-    /*
-       CASES ARE ALWAYS SORTED A → Z.
-    */
 
     const sortedCases =
         [...(data || [])].sort(
@@ -2172,10 +2145,8 @@ async function loadCaseList() {
                     )
         );
 
-
     selector.innerHTML =
         "";
-
 
     const placeholder =
         document.createElement(
@@ -2192,7 +2163,6 @@ async function loadCaseList() {
         placeholder
     );
 
-
     sortedCases.forEach(
         caseItem => {
 
@@ -2204,11 +2174,9 @@ async function loadCaseList() {
             option.value =
                 caseItem.id;
 
-
             let label =
                 caseItem.case_name ||
                 "Unnamed Case";
-
 
             if (
                 caseItem.case_date
@@ -2219,7 +2187,6 @@ async function loadCaseList() {
 
             }
 
-
             option.textContent =
                 label;
 
@@ -2229,11 +2196,6 @@ async function loadCaseList() {
 
         }
     );
-
-
-    /*
-       Restore the selected case.
-    */
 
     if (
         previousValue &&
@@ -2252,7 +2214,6 @@ async function loadCaseList() {
             previousValue;
 
     }
-
 
     setText(
         "case-selector-message",
@@ -2273,7 +2234,6 @@ async function loadCase(
     if (!caseId) {
         return;
     }
-
 
     const {
         data,
@@ -2304,7 +2264,6 @@ async function loadCase(
             )
             .single();
 
-
     if (error) {
 
         console.error(
@@ -2321,10 +2280,8 @@ async function loadCase(
 
     }
 
-
     isCreatingNewCase =
         false;
-
 
     setText(
         "case-message",
@@ -2348,7 +2305,6 @@ async function loadCase(
 
     }
 
-
     const dateInput =
         getElement(
             "case-date-input"
@@ -2366,16 +2322,10 @@ async function loadCase(
        COUNTRY
        ------------------------------------- */
 
-    /*
-       DO NOT rebuild the country dropdown.
-       It already contains ALL countries.
-    */
-
     selectValue(
         "case-country-input",
         data.country
     );
-
 
     const country =
         caseLookupData.countries.find(
@@ -2400,13 +2350,6 @@ async function loadCase(
             data.state_province
         );
 
-
-        /*
-           The state function has populated
-           cities for the selected state.
-           Now select the case city.
-        */
-
         if (data.city) {
 
             selectValue(
@@ -2418,12 +2361,6 @@ async function loadCase(
 
     } else {
 
-        /*
-           Preserve an old country/state/city
-           value if it doesn't exist in the
-           lookup tables.
-        */
-
         ensureOptionExists(
             "case-country-input",
             data.country
@@ -2434,18 +2371,15 @@ async function loadCase(
             data.country
         );
 
-
         clearSelect(
             "case-state-input",
             "-- Select State / Province --"
         );
 
-
         clearSelect(
             "case-city-input",
             "-- Select City --"
         );
-
 
         if (data.state_province) {
 
@@ -2460,7 +2394,6 @@ async function loadCase(
             );
 
         }
-
 
         if (data.city) {
 
@@ -2483,11 +2416,6 @@ async function loadCase(
        CLASSIFICATION
        ------------------------------------- */
 
-    /*
-       DO NOT rebuild this dropdown.
-       It already contains ALL classifications.
-    */
-
     selectValue(
         "case-classification-input",
         data.classification
@@ -2497,11 +2425,6 @@ async function loadCase(
     /* -------------------------------------
        PRIMARY OFFENSE
        ------------------------------------- */
-
-    /*
-       DO NOT rebuild this dropdown.
-       It already contains ALL offenses.
-    */
 
     selectValue(
         "case-offense-input",
@@ -2518,20 +2441,19 @@ async function loadCase(
             data.additional_offenses
         );
 
-
     const additionalSelect =
         getElement(
             "case-additional-offenses-input"
         );
 
-
     if (additionalSelect) {
 
         /*
-           IMPORTANT:
-           Start with the COMPLETE offense
-           vocabulary.
+           Rebuild using the COMPLETE offense
+           list from all sources.
         */
+
+        await loadCompleteOffenseList();
 
         populateSimpleSelect(
             "case-additional-offenses-input",
@@ -2541,8 +2463,8 @@ async function loadCase(
 
 
         /*
-           Preserve old values that aren't
-           in the lookup table.
+           Make absolutely sure every offense
+           already saved on this case exists.
         */
 
         additionalOffenses.forEach(
@@ -2558,7 +2480,7 @@ async function loadCase(
 
 
         /*
-           Select only this case's offenses.
+           Select the saved offenses.
         */
 
         Array.from(
@@ -2581,10 +2503,6 @@ async function loadCase(
         );
 
 
-        /*
-           Update the visible summary.
-        */
-
         updateAdditionalChargesSummary();
 
     }
@@ -2593,11 +2511,6 @@ async function loadCase(
     /* -------------------------------------
        OUTCOME
        ------------------------------------- */
-
-    /*
-       DO NOT rebuild the outcome dropdown.
-       It already contains ALL outcomes.
-    */
 
     selectValue(
         "case-outcome-input",
@@ -2702,7 +2615,6 @@ function clearCaseForm() {
 
     ];
 
-
     fields.forEach(
         id => {
 
@@ -2727,20 +2639,11 @@ function clearCaseForm() {
 
     if (countrySelect) {
 
-        /*
-           Keep ALL countries.
-           Only clear the selection.
-        */
-
         countrySelect.value =
             "";
 
     }
 
-
-    /*
-       State and city are dependent.
-    */
 
     clearSelect(
         "case-state-input",
@@ -2799,11 +2702,6 @@ function clearCaseForm() {
 
     }
 
-
-    /*
-       Keep the summary visible and make
-       it show that nothing is selected.
-    */
 
     updateAdditionalChargesSummary();
 
@@ -2871,7 +2769,6 @@ async function startNewCase() {
     isCreatingNewCase =
         true;
 
-
     const selector =
         getElement(
             "case-selector"
@@ -2884,14 +2781,8 @@ async function startNewCase() {
 
     }
 
-
     clearCaseForm();
 
-
-    /*
-       If lookup data somehow hasn't loaded,
-       load it now.
-    */
 
     if (
         caseLookupData.countries.length === 0
@@ -2935,7 +2826,6 @@ async function cancelNewCase() {
     isCreatingNewCase =
         false;
 
-
     const newCaseButton =
         getElement(
             "new-case-button"
@@ -2948,21 +2838,17 @@ async function cancelNewCase() {
 
     }
 
-
     setText(
         "case-selector-message",
         ""
     );
 
-
     clearCaseForm();
-
 
     const selector =
         getElement(
             "case-selector"
         );
-
 
     if (
         selector &&
@@ -3004,7 +2890,6 @@ function clearManagementSections() {
 
     ];
 
-
     sectionIds.forEach(
         id => {
 
@@ -3039,7 +2924,6 @@ function getCaseData() {
             "case-additional-offenses-input"
         );
 
-
     return {
 
         case_name:
@@ -3047,54 +2931,45 @@ function getCaseData() {
                 "case-name-input"
             ).trim(),
 
-
         case_date:
             getValue(
                 "case-date-input"
             ) || null,
-
 
         country:
             getValue(
                 "case-country-input"
             ).trim() || null,
 
-
         state_province:
             getValue(
                 "case-state-input"
             ).trim() || null,
-
 
         city:
             getValue(
                 "case-city-input"
             ).trim() || null,
 
-
         classification:
             getValue(
                 "case-classification-input"
             ).trim() || null,
-
 
         offense:
             getValue(
                 "case-offense-input"
             ).trim() || null,
 
-
         additional_offenses:
             additionalOffenses.length > 0
                 ? additionalOffenses.join("; ")
                 : null,
 
-
         outcome:
             getValue(
                 "case-outcome-input"
             ).trim() || null,
-
 
         victim_count:
             getValue(
@@ -3107,7 +2982,6 @@ function getCaseData() {
                 )
                 : null,
 
-
         fatality_count:
             getValue(
                 "case-fatalities-input"
@@ -3118,7 +2992,6 @@ function getCaseData() {
                     )
                 )
                 : null,
-
 
         description:
             getValue(
@@ -3155,7 +3028,6 @@ async function updateExistingCase(
             .select()
             .single();
 
-
     if (error) {
 
         console.error(
@@ -3172,12 +3044,10 @@ async function updateExistingCase(
 
     }
 
-
     setText(
         "case-message",
         "Case saved successfully."
     );
-
 
     return data;
 
@@ -3204,7 +3074,6 @@ async function createNewCase(
             .select()
             .single();
 
-
     if (error) {
 
         console.error(
@@ -3221,12 +3090,10 @@ async function createNewCase(
 
     }
 
-
     setText(
         "case-message",
         "New case created successfully."
     );
-
 
     return data;
 
@@ -3247,10 +3114,8 @@ async function saveCase(
 
     }
 
-
     const caseData =
         getCaseData();
-
 
     if (!caseData.case_name) {
 
@@ -3275,21 +3140,17 @@ async function saveCase(
             "Creating case..."
         );
 
-
         const newCase =
             await createNewCase(
                 caseData
             );
 
-
         if (!newCase) {
             return;
         }
 
-
         isCreatingNewCase =
             false;
-
 
         const newCaseButton =
             getElement(
@@ -3303,9 +3164,7 @@ async function saveCase(
 
         }
 
-
         await loadCaseList();
-
 
         const selector =
             getElement(
@@ -3319,17 +3178,14 @@ async function saveCase(
 
         }
 
-
         await loadCase(
             newCase.id
         );
-
 
         setText(
             "case-selector-message",
             "New case created."
         );
-
 
         return;
 
@@ -3343,7 +3199,6 @@ async function saveCase(
     const caseId =
         getCurrentCaseId();
 
-
     if (!caseId) {
 
         setText(
@@ -3355,12 +3210,10 @@ async function saveCase(
 
     }
 
-
     setText(
         "case-message",
         "Saving case..."
     );
-
 
     const updatedCase =
         await updateExistingCase(
@@ -3368,14 +3221,11 @@ async function saveCase(
             caseData
         );
 
-
     if (!updatedCase) {
         return;
     }
 
-
     await loadCaseList();
-
 
     const selector =
         getElement(
@@ -3715,23 +3565,19 @@ async function handleCountryChange() {
             "case-country-input"
         ).trim();
 
-
     clearSelect(
         "case-state-input",
         "-- Select State / Province --"
     );
-
 
     clearSelect(
         "case-city-input",
         "-- Select City --"
     );
 
-
     if (!countryName) {
         return;
     }
-
 
     const country =
         caseLookupData.countries.find(
@@ -3744,11 +3590,9 @@ async function handleCountryChange() {
                 )
         );
 
-
     if (!country) {
         return;
     }
-
 
     populateStatesForCountry(
         country.id
@@ -3768,18 +3612,15 @@ async function handleStateChange() {
             "case-country-input"
         ).trim();
 
-
     const stateName =
         getValue(
             "case-state-input"
         ).trim();
 
-
     clearSelect(
         "case-city-input",
         "-- Select City --"
     );
-
 
     if (
         !countryName ||
@@ -3789,7 +3630,6 @@ async function handleStateChange() {
         return;
 
     }
-
 
     const country =
         caseLookupData.countries.find(
@@ -3802,11 +3642,9 @@ async function handleStateChange() {
                 )
         );
 
-
     if (!country) {
         return;
     }
-
 
     const state =
         caseLookupData.states.find(
@@ -3825,11 +3663,9 @@ async function handleStateChange() {
                 )
         );
 
-
     if (!state) {
         return;
     }
-
 
     populateCitiesForState(
         state.id
@@ -3940,16 +3776,13 @@ document.addEventListener(
                     const caseId =
                         caseSelector.value;
 
-
                     isCreatingNewCase =
                         false;
-
 
                     const button =
                         getElement(
                             "new-case-button"
                         );
-
 
                     if (button) {
 
@@ -3957,7 +3790,6 @@ document.addEventListener(
                             "+ Add New Case";
 
                     }
-
 
                     if (!caseId) {
 
@@ -3968,7 +3800,6 @@ document.addEventListener(
                         return;
 
                     }
-
 
                     await loadCase(
                         caseId
@@ -4204,7 +4035,6 @@ document.addEventListener(
                     event
                 );
 
-
                 if (
                     event ===
                     "SIGNED_IN"
@@ -4220,13 +4050,11 @@ document.addEventListener(
                         false
                     );
 
-
                     await loadCaseLookups();
 
                     await loadCaseList();
 
                 }
-
 
                 if (
                     event ===
