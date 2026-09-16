@@ -3334,17 +3334,17 @@ async function loadCaseManagementData(caseId) {
 
 
     /* -------------------------------------
-       SOURCES
-       ------------------------------------- */
+        SOURCES
+        ------------------------------------- */
 
     if (
-        typeof window.loadSources ===
+        typeof window.loadManageSources ===
         "function"
     ) {
 
         try {
 
-            await window.loadSources(
+            await window.loadManageSources(
                 caseId
             );
 
@@ -3358,8 +3358,6 @@ async function loadCaseManagementData(caseId) {
         }
 
     }
-
-
     /* -------------------------------------
        CRIME SCENE PHOTO SOURCES
        ------------------------------------- */
