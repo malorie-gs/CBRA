@@ -1855,3 +1855,9 @@ window.cancelGeneralMediaEdit =
 
 window.removeGeneralMedia =
     removeGeneralMedia;
+
+window.loadMediaSources =
+    loadGeneralMediaSources;
+
+window.loadMedia =
+    loadGeneralMedia;
