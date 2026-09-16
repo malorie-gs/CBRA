@@ -1081,10 +1081,17 @@ async function loadDocuments() {
 
 
 /* -----------------------------------------
-   LOAD SOURCES
+   LOAD CASE SOURCES
+   -----------------------------------------
+   
+   IMPORTANT:
+   This is intentionally named
+   loadCaseSources() instead of loadSources()
+   so it cannot conflict with the
+   Manage Sources system.
    ----------------------------------------- */
 
-async function loadSources() {
+async function loadCaseSources() {
 
     const container =
         document.getElementById(
@@ -1556,6 +1563,6 @@ loadTags();
 loadCrimeScenePhotos();
 loadMedia();
 loadDocuments();
-loadSources();
+loadCaseSources();
 loadLinks();
 loadRelatedCases();
