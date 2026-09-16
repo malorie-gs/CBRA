@@ -3241,136 +3241,19 @@ async function saveCase(
 
 }
 
-
 /* -----------------------------------------
    LOAD CASE MANAGEMENT DATA
    ----------------------------------------- */
 
 async function loadCaseManagementData(caseId) {
 
-    if (
-        typeof window.loadPeopleSelector ===
-        "function"
-    ) {
-
-        await window.loadPeopleSelector(
-            caseId
-        );
-
-    }
-
-    if (
-        typeof window.loadPeople ===
-        "function"
-    ) {
-
-        await window.loadPeople(
-            caseId
-        );
-
-    }
-
-    if (
-        typeof window.loadTags ===
-        "function"
-    ) { 
-
-        await window.loadTags(
-            caseId
-        );
-    
-    }
-    
-    if (
-        typeof window.loadSources ===
-        "function"
-    ) {
-
-        await window.loadSources(
-            caseId
-        );
-
-    }
-
-    if (typeof window.loadCrimeScenePhotoSources ===
-        "function"
-    ) {
-
-        await window.loadCrimeScenePhotoSources(
-            caseId
-        );
-
-    }
-
-    if (
-        typeof window.loadCrimeScenePhotos ===
-        "function"
-    ) {
-
-        await window.loadCrimeScenePhotos(
-            caseId
-        );
-
-    }
-    
-    if (
-        typeof window.loadGeneralMediaSources ===
-        "function"
-    ) {
-
-        await window.loadMediaSources(
-            caseId
-        );
-
-    }
-
-    if (
-        typeof window.loadGeneralMedia ===
-        "function"
-    ) {
-
-        await window.loadGeneralMedia(
-            caseId
-        );
-
-    }
-
-    if (
-        typeof window.loadDocuments ===
-        "function"
-    ) {
-
-        await window.loadDocuments(
-            caseId
-        );
-
-    }
-
-    if (
-        typeof window.loadLinks ===
-        "function"
-    ) {
-
-        await window.loadLinks(
-            caseId
-        );
-
-    }
-
-    if (
-        typeof window.loadRelatedCaseOptions ===
-        "function"
-    ) {
-
-        await window.loadRelatedCaseOptions(
-            caseId
-        );
-
+    if (!caseId) {
+        return;
     }
 
 
     /* -------------------------------------
-       PEOPLE
+       PEOPLE SELECTOR
        ------------------------------------- */
 
     if (
@@ -3395,6 +3278,10 @@ async function loadCaseManagementData(caseId) {
 
     }
 
+
+    /* -------------------------------------
+       PEOPLE
+       ------------------------------------- */
 
     if (
         typeof window.loadPeople ===
@@ -3528,24 +3415,24 @@ async function loadCaseManagementData(caseId) {
 
 
     /* -------------------------------------
-       MEDIA SOURCES
+       GENERAL MEDIA SOURCES
        ------------------------------------- */
 
     if (
-        typeof window.loadMediaSources ===
+        typeof window.loadGeneralMediaSources ===
         "function"
     ) {
 
         try {
 
-            await window.loadMediaSources(
+            await window.loadGeneralMediaSources(
                 caseId
             );
 
         } catch (error) {
 
             console.error(
-                "Error loading media sources:",
+                "Error loading general media sources:",
                 error
             );
 
@@ -3555,24 +3442,24 @@ async function loadCaseManagementData(caseId) {
 
 
     /* -------------------------------------
-       MEDIA
+       GENERAL MEDIA
        ------------------------------------- */
 
     if (
-        typeof window.loadMedia ===
+        typeof window.loadGeneralMedia ===
         "function"
     ) {
 
         try {
 
-            await window.loadMedia(
+            await window.loadGeneralMedia(
                 caseId
             );
 
         } catch (error) {
 
             console.error(
-                "Error loading media:",
+                "Error loading general media:",
                 error
             );
 
