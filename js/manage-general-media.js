@@ -1,14 +1,13 @@
 /* =========================================
    CBRA — GENERAL MEDIA MANAGEMENT
    =========================================
-   
+
    Handles:
-   - Loading case media
+   - General case media
    - Loading sources through source_cases
    - Adding media
    - Editing media
    - Deleting media
-   - Reliable source selection during Edit
    - Cancel Edit
    ========================================= */
 
@@ -34,26 +33,20 @@ let generalMediaEditingId = null;
 
 function getGeneralMediaCaseId() {
 
-    /*
-       Prefer the shared CBRA case selector.
-    */
-
     const selector =
         document.getElementById(
             "case-selector"
         );
 
-    if (selector && selector.value) {
+    if (
+        selector &&
+        selector.value
+    ) {
 
         return selector.value;
 
     }
 
-
-    /*
-       Fall back to the global helper if one
-       exists.
-    */
 
     if (
         typeof window.getCurrentCaseId ===
@@ -71,7 +64,7 @@ function getGeneralMediaCaseId() {
 
 
 /* -----------------------------------------
-   MESSAGE HELPER
+   MESSAGE
    ----------------------------------------- */
 
 function setGeneralMediaMessage(
@@ -85,9 +78,7 @@ function setGeneralMediaMessage(
         );
 
     if (!element) {
-
         return;
-
     }
 
 
@@ -104,6 +95,269 @@ function setGeneralMediaMessage(
 
 
 /* -----------------------------------------
+   BUILD GENERAL MEDIA FORM
+   ----------------------------------------- */
+
+function buildGeneralMediaForm() {
+
+    const container =
+        document.getElementById(
+            "general-media-management"
+        );
+
+
+    if (!container) {
+        return;
+    }
+
+
+    /*
+       Do not rebuild the form if it already
+       exists.
+    */
+
+    if (
+        document.getElementById(
+            "media-form"
+        )
+    ) {
+
+        return;
+
+    }
+
+
+    container.innerHTML = `
+        <div class="management-card">
+
+            <div class="management-card-header">
+
+                <h4>
+                    Add General Media
+                </h4>
+
+                <p>
+                    Add photographs, videos, articles,
+                    broadcasts, or other external media
+                    associated with the selected case.
+                </p>
+
+            </div>
+
+
+            <form id="media-form">
+
+                <div class="form-grid">
+
+
+                    <!-- TITLE -->
+
+                    <div class="form-group">
+
+                        <label for="media-title">
+                            Media Title
+                        </label>
+
+                        <input
+                            type="text"
+                            id="media-title"
+                            placeholder="Media title"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- MEDIA TYPE -->
+
+                    <div class="form-group">
+
+                        <label for="media-type">
+                            Media Type
+                        </label>
+
+                        <select id="media-type">
+
+                            <option value="">
+                                -- Select Type --
+                            </option>
+
+                            <option value="Photograph">
+                                Photograph
+                            </option>
+
+                            <option value="Video">
+                                Video
+                            </option>
+
+                            <option value="News Article">
+                                News Article
+                            </option>
+
+                            <option value="Broadcast">
+                                Broadcast
+                            </option>
+
+                            <option value="Interview">
+                                Interview
+                            </option>
+
+                            <option value="Social Media">
+                                Social Media
+                            </option>
+
+                            <option value="Other">
+                                Other
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- URL -->
+
+                    <div class="form-group form-group-full">
+
+                        <label for="media-url">
+                            Media URL
+                        </label>
+
+                        <input
+                            type="url"
+                            id="media-url"
+                            placeholder="https://..."
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- DESCRIPTION -->
+
+                    <div class="form-group form-group-full">
+
+                        <label for="media-description">
+                            Description
+                        </label>
+
+                        <textarea
+                            id="media-description"
+                            rows="4"
+                            placeholder="Briefly describe the media..."
+                        ></textarea>
+
+                    </div>
+
+
+                    <!-- SOURCE -->
+
+                    <div class="form-group form-group-full">
+
+                        <label for="media-source">
+                            Source
+                        </label>
+
+                        <select id="media-source">
+
+                            <option value="">
+                                -- No Source --
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                </div>
+
+
+                <div class="form-actions">
+
+                    <button
+                        type="submit"
+                        id="media-submit-button"
+                        class="primary-button"
+                    >
+                        Add Media
+                    </button>
+
+
+                    <button
+                        type="button"
+                        id="media-cancel-button"
+                        class="secondary-button"
+                        style="display: none;"
+                    >
+                        Cancel Edit
+                    </button>
+
+                </div>
+
+
+                <div
+                    id="media-message"
+                    class="manage-message"
+                ></div>
+
+            </form>
+
+        </div>
+
+
+        <div
+            id="media-list"
+            class="manage-record-list"
+        >
+
+            <p class="empty-message">
+                Select a case to view general media.
+            </p>
+
+        </div>
+    `;
+
+
+    const form =
+        document.getElementById(
+            "media-form"
+        );
+
+
+    const cancelButton =
+        document.getElementById(
+            "media-cancel-button"
+        );
+
+
+    if (form) {
+
+        form.addEventListener(
+            "submit",
+            saveGeneralMedia
+        );
+
+    }
+
+
+    if (cancelButton) {
+
+        cancelButton.addEventListener(
+            "click",
+            cancelGeneralMediaEdit
+        );
+
+    }
+
+
+    setGeneralMediaEditMode(
+        false
+    );
+
+}
+
+
+/* -----------------------------------------
    FORM STATE
    ----------------------------------------- */
 
@@ -115,6 +369,7 @@ function setGeneralMediaEditMode(
         document.getElementById(
             "media-submit-button"
         );
+
 
     const cancelButton =
         document.getElementById(
@@ -155,6 +410,7 @@ function resetGeneralMediaForm() {
             "media-form"
         );
 
+
     if (form) {
 
         form.reset();
@@ -179,22 +435,7 @@ function resetGeneralMediaForm() {
 
 
 /* -----------------------------------------
-   LOAD SOURCES FOR CURRENT CASE
-   -----------------------------------------
-
-   IMPORTANT:
-
-   Sources are NOT loaded directly from
-   sources.case_id anymore.
-
-   They are connected through:
-
-       source_cases
-           ↓
-       sources
-
-   This is the same central system now used
-   by the crime-scene photo selector.
+   LOAD SOURCES
    ----------------------------------------- */
 
 async function loadGeneralMediaSources(
@@ -209,20 +450,16 @@ async function loadGeneralMediaSources(
 
 
     if (!selector) {
-
         return;
-
     }
 
 
     selector.innerHTML =
-        '<option value="">-- Select Source --</option>';
+        '<option value="">-- No Source --</option>';
 
 
     if (!caseId) {
-
         return;
-
     }
 
 
@@ -250,9 +487,7 @@ async function loadGeneralMediaSources(
 
 
         if (error) {
-
             throw error;
-
         }
 
 
@@ -277,9 +512,7 @@ async function loadGeneralMediaSources(
 
 
         /*
-           Remove duplicate source IDs just in
-           case the relationship table contains
-           duplicate rows.
+           Remove duplicate sources.
         */
 
         const uniqueSources =
@@ -302,7 +535,7 @@ async function loadGeneralMediaSources(
 
 
         /*
-           Sort alphabetically.
+           Alphabetical order.
         */
 
         uniqueSources.sort(
@@ -349,13 +582,7 @@ async function loadGeneralMediaSources(
 
 
         /*
-           IMPORTANT:
-
-           Only set the selected value AFTER
-           the options have finished loading.
-
-           This is what makes Edit reliably
-           restore the correct source.
+           Restore selected source when editing.
         */
 
         if (
@@ -413,12 +640,15 @@ async function loadGeneralMediaSources(
 
 
 /* -----------------------------------------
-   LOAD MEDIA
+   LOAD GENERAL MEDIA
    ----------------------------------------- */
 
 async function loadGeneralMedia(
     caseId
 ) {
+
+    buildGeneralMediaForm();
+
 
     const list =
         document.getElementById(
@@ -427,16 +657,14 @@ async function loadGeneralMedia(
 
 
     if (!list) {
-
         return;
-
     }
 
 
     if (!caseId) {
 
         list.innerHTML =
-            '<p class="empty-message">Select a case to view media.</p>';
+            '<p class="empty-message">Select a case to view general media.</p>';
 
         return;
 
@@ -448,15 +676,6 @@ async function loadGeneralMedia(
 
 
     try {
-
-        /*
-           Do NOT rely on a direct sources
-           relationship here.
-
-           source_id belongs to the media record,
-           while the source itself is a central
-           source record.
-        */
 
         const {
             data,
@@ -480,9 +699,7 @@ async function loadGeneralMedia(
 
 
         if (error) {
-
             throw error;
-
         }
 
 
@@ -496,7 +713,7 @@ async function loadGeneralMedia(
         ) {
 
             list.innerHTML =
-                '<p class="empty-message">No media added yet.</p>';
+                '<p class="empty-message">No general media added yet.</p>';
 
             return;
 
@@ -504,8 +721,7 @@ async function loadGeneralMedia(
 
 
         /*
-           Get all source IDs used by these
-           media records.
+           Gather source IDs.
         */
 
         const sourceIds =
@@ -543,17 +759,13 @@ async function loadGeneralMedia(
             );
 
 
-        /*
-           Load the source titles separately.
-
-           This avoids depending on an old
-           foreign-key relationship from media
-           directly to sources.
-        */
-
         let sourceMap =
             new Map();
 
+
+        /*
+           Load source names.
+        */
 
         if (
             sourceIds.length > 0
@@ -605,7 +817,7 @@ async function loadGeneralMedia(
 
 
         /*
-           BUILD MEDIA CARDS
+           BUILD CARDS
         */
 
         data.forEach(
@@ -619,16 +831,6 @@ async function loadGeneralMedia(
 
                 card.className =
                     "manage-record";
-
-
-                /*
-                   INFORMATION
-                */
-
-                const info =
-                    document.createElement(
-                        "div"
-                    );
 
 
                 /*
@@ -646,13 +848,13 @@ async function loadGeneralMedia(
                     "Untitled Media";
 
 
-                info.appendChild(
+                card.appendChild(
                     title
                 );
 
 
                 /*
-                   MEDIA TYPE
+                   TYPE
                 */
 
                 if (
@@ -670,7 +872,7 @@ async function loadGeneralMedia(
                         media.media_type;
 
 
-                    info.appendChild(
+                    card.appendChild(
                         type
                     );
 
@@ -695,7 +897,7 @@ async function loadGeneralMedia(
                         media.description;
 
 
-                    info.appendChild(
+                    card.appendChild(
                         description
                     );
 
@@ -736,7 +938,7 @@ async function loadGeneralMedia(
                         );
 
 
-                    info.appendChild(
+                    card.appendChild(
                         sourceElement
                     );
 
@@ -773,20 +975,15 @@ async function loadGeneralMedia(
                         "noopener noreferrer";
 
 
-                    info.appendChild(
+                    card.appendChild(
                         link
                     );
 
                 }
 
 
-                card.appendChild(
-                    info
-                );
-
-
                 /*
-                   BUTTON CONTAINER
+                   ACTIONS
                 */
 
                 const actions =
@@ -800,7 +997,7 @@ async function loadGeneralMedia(
 
 
                 /*
-                   EDIT BUTTON
+                   EDIT
                 */
 
                 const editButton =
@@ -835,7 +1032,7 @@ async function loadGeneralMedia(
 
 
                 /*
-                   REMOVE BUTTON
+                   REMOVE
                 */
 
                 const removeButton =
@@ -891,7 +1088,7 @@ async function loadGeneralMedia(
 
 
         list.innerHTML =
-            '<p class="form-message">Unable to load media.</p>';
+            '<p class="form-message">Unable to load general media.</p>';
 
     }
 
@@ -899,7 +1096,7 @@ async function loadGeneralMedia(
 
 
 /* -----------------------------------------
-   EDIT MEDIA
+   EDIT GENERAL MEDIA
    ----------------------------------------- */
 
 async function editGeneralMedia(
@@ -907,9 +1104,7 @@ async function editGeneralMedia(
 ) {
 
     if (!mediaId) {
-
         return;
-
     }
 
 
@@ -952,7 +1147,7 @@ async function editGeneralMedia(
     ) {
 
         console.error(
-            "General media edit form elements could not be found."
+            "General media form elements could not be found."
         );
 
         return;
@@ -966,10 +1161,6 @@ async function editGeneralMedia(
             "Loading media..."
         );
 
-
-        /*
-           Fetch the complete media record.
-        */
 
         const {
             data: media,
@@ -988,9 +1179,7 @@ async function editGeneralMedia(
 
 
         if (error) {
-
             throw error;
-
         }
 
 
@@ -1002,13 +1191,6 @@ async function editGeneralMedia(
 
         }
 
-
-        /*
-           Get the current case.
-
-           The media record's case_id is the
-           authoritative case for this edit.
-        */
 
         const caseId =
             media.case_id ||
@@ -1024,11 +1206,6 @@ async function editGeneralMedia(
         }
 
 
-        /*
-           Enter edit mode BEFORE loading the
-           source options.
-        */
-
         generalMediaEditingId =
             media.id;
 
@@ -1037,10 +1214,6 @@ async function editGeneralMedia(
             true
         );
 
-
-        /*
-           Fill ordinary fields first.
-        */
 
         titleElement.value =
             media.title || "";
@@ -1059,11 +1232,7 @@ async function editGeneralMedia(
 
 
         /*
-           CRITICAL:
-
-           Wait for source_cases to finish
-           populating the dropdown before
-           assigning source_id.
+           Wait for sources.
         */
 
         await loadGeneralMediaSources(
@@ -1071,10 +1240,6 @@ async function editGeneralMedia(
             media.source_id || ""
         );
 
-
-        /*
-           Scroll the form into view.
-        */
 
         const form =
             document.getElementById(
@@ -1125,7 +1290,7 @@ async function editGeneralMedia(
 
 
 /* -----------------------------------------
-   ADD / UPDATE MEDIA
+   SAVE GENERAL MEDIA
    ----------------------------------------- */
 
 async function saveGeneralMedia(
@@ -1246,10 +1411,6 @@ async function saveGeneralMedia(
     }
 
 
-    /*
-       Validate URL.
-    */
-
     try {
 
         new URL(
@@ -1290,7 +1451,7 @@ async function saveGeneralMedia(
 
     try {
 
-        const mediaPayload = {
+        const payload = {
 
             case_id:
                 caseId,
@@ -1329,22 +1490,7 @@ async function saveGeneralMedia(
                         "case_media"
                     )
                     .update(
-                        {
-                            title:
-                                mediaPayload.title,
-
-                            media_type:
-                                mediaPayload.media_type,
-
-                            media_url:
-                                mediaPayload.media_url,
-
-                            description:
-                                mediaPayload.description,
-
-                            source_id:
-                                mediaPayload.source_id
-                        }
+                        payload
                     )
                     .eq(
                         "id",
@@ -1353,9 +1499,7 @@ async function saveGeneralMedia(
 
 
             if (error) {
-
                 throw error;
-
             }
 
 
@@ -1380,14 +1524,12 @@ async function saveGeneralMedia(
                         "case_media"
                     )
                     .insert(
-                        mediaPayload
+                        payload
                     );
 
 
             if (error) {
-
                 throw error;
-
             }
 
 
@@ -1398,10 +1540,6 @@ async function saveGeneralMedia(
         }
 
 
-        /*
-           Reset edit state.
-        */
-
         generalMediaEditingId =
             null;
 
@@ -1410,10 +1548,6 @@ async function saveGeneralMedia(
             false
         );
 
-
-        /*
-           Clear form.
-        */
 
         titleElement.value =
             "";
@@ -1435,19 +1569,10 @@ async function saveGeneralMedia(
             "";
 
 
-        /*
-           Reload source selector in normal
-           state.
-        */
-
         await loadGeneralMediaSources(
             caseId
         );
 
-
-        /*
-           Reload media list.
-        */
 
         await loadGeneralMedia(
             caseId
@@ -1494,10 +1619,6 @@ async function saveGeneralMedia(
 
 function cancelGeneralMediaEdit() {
 
-    generalMediaEditingId =
-        null;
-
-
     resetGeneralMediaForm();
 
 
@@ -1522,7 +1643,7 @@ function cancelGeneralMediaEdit() {
 
 
 /* -----------------------------------------
-   REMOVE MEDIA
+   REMOVE GENERAL MEDIA
    ----------------------------------------- */
 
 async function removeGeneralMedia(
@@ -1530,9 +1651,7 @@ async function removeGeneralMedia(
 ) {
 
     if (!mediaId) {
-
         return;
-
     }
 
 
@@ -1564,17 +1683,9 @@ async function removeGeneralMedia(
 
 
         if (error) {
-
             throw error;
-
         }
 
-
-        /*
-           If the item being deleted is
-           currently being edited, reset the
-           form.
-        */
 
         if (
             String(
@@ -1628,88 +1739,12 @@ async function removeGeneralMedia(
 
 function initializeGeneralMedia() {
 
-    const form =
-        document.getElementById(
-            "media-form"
-        );
-
-
-    const cancelButton =
-        document.getElementById(
-            "media-cancel-button"
-        );
-
-
-    if (form) {
-
-        /*
-           Remove any previous listener that may
-           have been attached by another version
-           of this file.
-
-           Cloning is safer here because this
-           script may be reloaded while testing.
-        */
-
-        const freshForm =
-            form.cloneNode(
-                true
-            );
-
-
-        form.parentNode.replaceChild(
-            freshForm,
-            form
-        );
-
-
-        freshForm.addEventListener(
-            "submit",
-            saveGeneralMedia
-        );
-
-    }
-
-
     /*
-       Re-fetch the cancel button because the
-       form was cloned above.
+       The form is built dynamically.
     */
 
-    const freshCancelButton =
-        document.getElementById(
-            "media-cancel-button"
-        );
+    buildGeneralMediaForm();
 
-
-    if (freshCancelButton) {
-
-        freshCancelButton.addEventListener(
-            "click",
-            cancelGeneralMediaEdit
-        );
-
-    }
-
-
-    /*
-       Initial form state.
-    */
-
-    generalMediaEditingId =
-        null;
-
-
-    setGeneralMediaEditMode(
-        false
-    );
-
-
-    /*
-       If a case is already selected when this
-       script initializes, load its sources and
-       media immediately.
-    */
 
     const caseId =
         getGeneralMediaCaseId();
@@ -1732,7 +1767,7 @@ function initializeGeneralMedia() {
 
 
 /* -----------------------------------------
-   CASE SELECTOR CHANGED
+   CASE SELECTOR LISTENER
    ----------------------------------------- */
 
 function initializeGeneralMediaCaseListener() {
@@ -1744,20 +1779,13 @@ function initializeGeneralMediaCaseListener() {
 
 
     if (!selector) {
-
         return;
-
     }
 
 
     selector.addEventListener(
         "change",
         async function() {
-
-            /*
-               Changing cases must always leave
-               Edit mode.
-            */
 
             generalMediaEditingId =
                 null;

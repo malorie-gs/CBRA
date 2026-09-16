@@ -3246,15 +3246,125 @@ async function saveCase(
    LOAD CASE MANAGEMENT DATA
    ----------------------------------------- */
 
-async function loadCaseManagementData(
-    caseId
-) {
+async function loadCaseManagementData(caseId) {
 
-    if (!caseId) {
+    if (
+        typeof window.loadPeopleSelector ===
+        "function"
+    ) {
 
-        clearManagementSections();
+        await window.loadPeopleSelector(
+            caseId
+        );
 
-        return;
+    }
+
+    if (
+        typeof window.loadPeople ===
+        "function"
+    ) {
+
+        await window.loadPeople(
+            caseId
+        );
+
+    }
+
+    if (
+        typeof window.loadTags ===
+        "function"
+    ) { 
+
+        await window.loadTags(
+            caseId
+        );
+    
+    }
+    
+    if (
+        typeof window.loadSources ===
+        "function"
+    ) {
+
+        await window.loadSources(
+            caseId
+        );
+
+    }
+
+    if (typeof window.loadCrimeScenePhotoSources ===
+        "function"
+    ) {
+
+        await window.loadCrimeScenePhotoSources(
+            caseId
+        );
+
+    }
+
+    if (
+        typeof window.loadCrimeScenePhotos ===
+        "function"
+    ) {
+
+        await window.loadCrimeScenePhotos(
+            caseId
+        );
+
+    }
+    
+    if (
+        typeof window.loadGeneralMediaSources ===
+        "function"
+    ) {
+
+        await window.loadMediaSources(
+            caseId
+        );
+
+    }
+
+    if (
+        typeof window.loadGeneralMedia ===
+        "function"
+    ) {
+
+        await window.loadGeneralMedia(
+            caseId
+        );
+
+    }
+
+    if (
+        typeof window.loadDocuments ===
+        "function"
+    ) {
+
+        await window.loadDocuments(
+            caseId
+        );
+
+    }
+
+    if (
+        typeof window.loadLinks ===
+        "function"
+    ) {
+
+        await window.loadLinks(
+            caseId
+        );
+
+    }
+
+    if (
+        typeof window.loadRelatedCaseOptions ===
+        "function"
+    ) {
+
+        await window.loadRelatedCaseOptions(
+            caseId
+        );
 
     }
 
