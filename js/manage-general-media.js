@@ -182,24 +182,16 @@ function buildGeneralMediaForm() {
                                 -- Select Type --
                             </option>
 
-                            <option value="Photograph">
-                                Photograph
-                            </option>
-
-                            <option value="Video">
-                                Video
+                            <option value="Bodycam">
+                                Bodycam
                             </option>
 
                             <option value="News Article">
                                 News Article
                             </option>
 
-                            <option value="Broadcast">
-                                Broadcast
-                            </option>
-
-                            <option value="Interview">
-                                Interview
+                            <option value="Interrogation">
+                                Interrogation
                             </option>
 
                             <option value="Social Media">
