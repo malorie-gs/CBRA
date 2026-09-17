@@ -7,7 +7,8 @@
    SUPABASE
    ----------------------------------------- */
 
-const peopleSupabase = window.supabaseClient;
+const peopleSupabase =
+    window.supabaseClient;
 
 
 /* -----------------------------------------
@@ -52,9 +53,14 @@ function formatDate(dateValue) {
         return "";
     }
 
-    const date = new Date(dateValue);
+    const date =
+        new Date(dateValue);
 
-    if (Number.isNaN(date.getTime())) {
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
         return dateValue;
     }
 
@@ -79,16 +85,24 @@ function getOffenseName(offenseId) {
     const offense =
         casePersonOffenses.find(
             function(item) {
+
                 return String(item.id) ===
                     String(offenseId);
+
             }
         );
 
+
     if (!offense) {
+
         return "Unknown Offense";
+
     }
 
-    return formatOffenseName(offense.name);
+
+    return formatOffenseName(
+        offense.name
+    );
 }
 
 
@@ -99,15 +113,21 @@ function getOffenseName(offenseId) {
 function getCurrentCaseId() {
 
     const selectors = [
+
         "case-selector",
         "case-select",
         "manage-case-selector"
+
     ];
 
-    for (const id of selectors) {
+
+    for (
+        const id of selectors
+    ) {
 
         const element =
             document.getElementById(id);
+
 
         if (
             element &&
@@ -117,12 +137,20 @@ function getCurrentCaseId() {
             const value =
                 element.value;
 
-            if (/^\d+$/.test(value)) {
+
+            if (
+                /^\d+$/.test(value)
+            ) {
+
                 return Number(value);
+
             }
 
+
             return value;
+
         }
+
     }
 
 
@@ -141,12 +169,20 @@ function getCurrentCaseId() {
             const value =
                 element.value;
 
-            if (/^\d+$/.test(value)) {
+
+            if (
+                /^\d+$/.test(value)
+            ) {
+
                 return Number(value);
+
             }
 
+
             return value;
+
         }
+
     }
 
 
@@ -184,26 +220,64 @@ function showPeopleMessage(
 
 
 /* =========================================
-   LOAD OFFENSES
+   LOAD / SYNCHRONIZE OFFENSES
    ========================================= */
+
+/*
+   IMPORTANT
+
+   The main Case Editor uses a COMPLETE offense
+   list.
+
+   That list comes from:
+
+   1. case_offenses
+   2. cases.offense
+   3. cases.additional_offenses
+
+   Previously Manage People only loaded
+   case_offenses.
+
+   That caused the Person Primary Offense and
+   Additional Charges dropdowns to contain fewer
+   options than the main Case Editor.
+
+   This function now:
+
+   1. Loads case_offenses.
+   2. Loads every primary offense used by cases.
+   3. Loads every additional offense stored in cases.
+   4. Finds any offense names missing from
+      case_offenses.
+   5. Adds those missing names to case_offenses.
+   6. Reloads case_offenses.
+   7. Uses that synchronized list everywhere
+      in Manage People.
+
+   This is important because
+   case_person_offenses.offense_id references
+   case_offenses.id.
+
+   Therefore every selectable person charge needs
+   an actual case_offenses record.
+*/
 
 async function loadCasePersonOffenses() {
 
-    const allOffenses = [];
-
-    const pageSize = 1000;
-
-    let from = 0;
-
-    let hasMore = true;
+    const offenseMap =
+        new Map();
 
 
-    while (hasMore) {
+    /* -----------------------------------------
+       STEP 1
+       LOAD EXISTING CASE OFFENSES
+       ----------------------------------------- */
 
-        const {
-            data,
-            error
-        } = await peopleSupabase
+    const {
+        data: existingOffenses,
+        error: offenseError
+    } =
+        await peopleSupabase
             .from("case_offenses")
             .select(`
                 id,
@@ -214,67 +288,396 @@ async function loadCasePersonOffenses() {
                 {
                     ascending: true
                 }
-            )
-            .range(
-                from,
-                from + pageSize - 1
             );
 
 
-        if (error) {
+    if (offenseError) {
 
-            console.error(
-                "Error loading case offenses:",
-                error
-            );
+        console.error(
+            "Error loading case offenses:",
+            offenseError
+        );
 
-            casePersonOffenses = [];
+        casePersonOffenses = [];
 
-            return [];
-        }
+        return [];
 
-
-        const page =
-            data || [];
+    }
 
 
-        allOffenses.push(
-            ...page
+    (existingOffenses || [])
+        .forEach(
+            function(offense) {
+
+                const name =
+                    String(
+                        offense.name || ""
+                    ).trim();
+
+
+                if (!name) {
+                    return;
+                }
+
+
+                offenseMap.set(
+                    name.toLowerCase(),
+                    {
+                        id:
+                            offense.id,
+
+                        name:
+                            name
+                    }
+                );
+
+            }
         );
 
 
-        /*
-         * If fewer than 1,000 were returned,
-         * we have reached the end.
-         */
+    /* -----------------------------------------
+       STEP 2
+       LOAD ALL CASE OFFENSE VALUES
+       ----------------------------------------- */
 
-        if (
-            page.length < pageSize
+    const {
+        data: cases,
+        error: casesError
+    } =
+        await peopleSupabase
+            .from("cases")
+            .select(`
+                offense,
+                additional_offenses
+            `);
+
+
+    if (casesError) {
+
+        console.error(
+            "Error loading case offense values:",
+            casesError
+        );
+
+    } else {
+
+        (cases || [])
+            .forEach(
+                function(caseItem) {
+
+                    /* -------------------------
+                       PRIMARY OFFENSE
+                       ------------------------- */
+
+                    const primary =
+                        String(
+                            caseItem.offense || ""
+                        ).trim();
+
+
+                    if (primary) {
+
+                        const key =
+                            primary.toLowerCase();
+
+
+                        if (
+                            !offenseMap.has(key)
+                        ) {
+
+                            offenseMap.set(
+                                key,
+                                {
+                                    id: null,
+                                    name: primary
+                                }
+                            );
+
+                        }
+
+                    }
+
+
+                    /* -------------------------
+                       ADDITIONAL OFFENSES
+                       ------------------------- */
+
+                    const additional =
+                        String(
+                            caseItem.additional_offenses ||
+                            ""
+                        )
+                            .split(
+                                /\s*(?:,|;|\n)\s*/
+                            )
+                            .map(
+                                function(item) {
+
+                                    return String(
+                                        item || ""
+                                    ).trim();
+
+                                }
+                            )
+                            .filter(Boolean);
+
+
+                    additional.forEach(
+                        function(offenseName) {
+
+                            const key =
+                                offenseName.toLowerCase();
+
+
+                            if (
+                                !offenseMap.has(key)
+                            ) {
+
+                                offenseMap.set(
+                                    key,
+                                    {
+                                        id: null,
+                                        name:
+                                            offenseName
+                                    }
+                                );
+
+                            }
+
+                        }
+                    );
+
+                }
+            );
+
+    }
+
+
+    /* -----------------------------------------
+       STEP 3
+       FIND MISSING OFFENSES
+       ----------------------------------------- */
+
+    const missingOffenses =
+        Array.from(
+            offenseMap.values()
+        )
+            .filter(
+                function(offense) {
+
+                    return (
+                        offense.id === null ||
+                        offense.id === undefined
+                    );
+
+                }
+            );
+
+
+    console.log(
+        "CBRA offenses missing from case_offenses:",
+        missingOffenses
+    );
+
+
+    /* -----------------------------------------
+       STEP 4
+       ADD MISSING OFFENSES TO LOOKUP TABLE
+       ----------------------------------------- */
+
+    if (
+        missingOffenses.length > 0
+    ) {
+
+        for (
+            const offense of missingOffenses
         ) {
 
-            hasMore = false;
+            const {
+                data: inserted,
+                error: insertError
+            } =
+                await peopleSupabase
+                    .from("case_offenses")
+                    .insert({
+                        name:
+                            offense.name
+                    })
+                    .select(`
+                        id,
+                        name
+                    `)
+                    .single();
 
-        } else {
 
-            from += pageSize;
+            if (insertError) {
+
+                /*
+                   Another record may already exist
+                   with the same name.
+
+                   If so, try loading the existing
+                   record instead of stopping.
+                */
+
+                console.error(
+                    "Error synchronizing offense:",
+                    offense.name,
+                    insertError
+                );
+
+
+                const {
+                    data: existingMatch,
+                    error: lookupError
+                } =
+                    await peopleSupabase
+                        .from("case_offenses")
+                        .select(`
+                            id,
+                            name
+                        `)
+                        .ilike(
+                            "name",
+                            offense.name
+                        )
+                        .maybeSingle();
+
+
+                if (
+                    !lookupError &&
+                    existingMatch
+                ) {
+
+                    offenseMap.set(
+                        offense.name.toLowerCase(),
+                        {
+                            id:
+                                existingMatch.id,
+
+                            name:
+                                existingMatch.name
+                        }
+                    );
+
+                }
+
+
+                continue;
+
+            }
+
+
+            if (
+                inserted &&
+                inserted.id
+            ) {
+
+                offenseMap.set(
+                    offense.name.toLowerCase(),
+                    {
+                        id:
+                            inserted.id,
+
+                        name:
+                            inserted.name
+                    }
+                );
+
+            }
 
         }
 
     }
 
 
+    /* -----------------------------------------
+       STEP 5
+       RELOAD THE REAL CASE OFFENSE TABLE
+       ----------------------------------------- */
+
+    const {
+        data: finalOffenses,
+        error: finalError
+    } =
+        await peopleSupabase
+            .from("case_offenses")
+            .select(`
+                id,
+                name
+            `)
+            .order(
+                "name",
+                {
+                    ascending: true
+                }
+            );
+
+
+    if (finalError) {
+
+        console.error(
+            "Error reloading synchronized offenses:",
+            finalError
+        );
+
+        /*
+           Fall back to whatever we successfully
+           built above.
+        */
+
+        casePersonOffenses =
+            Array.from(
+                offenseMap.values()
+            )
+                .filter(
+                    function(offense) {
+
+                        return (
+                            offense.id !== null &&
+                            offense.id !== undefined
+                        );
+
+                    }
+                )
+                .sort(
+                    function(a, b) {
+
+                        return String(
+                            a.name
+                        ).localeCompare(
+                            String(
+                                b.name
+                            ),
+                            undefined,
+                            {
+                                sensitivity:
+                                    "base"
+                            }
+                        );
+
+                    }
+                );
+
+
+        return casePersonOffenses;
+
+    }
+
+
     casePersonOffenses =
-        allOffenses;
+        finalOffenses || [];
 
 
     console.log(
-        "CBRA offenses loaded:",
+        "CBRA synchronized offense list:",
         casePersonOffenses.length
     );
 
 
     return casePersonOffenses;
 }
+
 
 /* =========================================
    LOAD PEOPLE
@@ -300,18 +703,19 @@ async function loadPeopleSelector() {
     const {
         data,
         error
-    } = await peopleSupabase
-        .from("people")
-        .select(`
-            id,
-            display_name
-        `)
-        .order(
-            "display_name",
-            {
-                ascending: true
-            }
-        );
+    } =
+        await peopleSupabase
+            .from("people")
+            .select(`
+                id,
+                display_name
+            `)
+            .order(
+                "display_name",
+                {
+                    ascending: true
+                }
+            );
 
 
     if (error) {
@@ -321,8 +725,10 @@ async function loadPeopleSelector() {
             error
         );
 
+
         selector.innerHTML =
             '<option value="">Unable to load people</option>';
+
 
         return;
     }
@@ -336,17 +742,23 @@ async function loadPeopleSelector() {
         function(person) {
 
             const option =
-                document.createElement("option");
+                document.createElement(
+                    "option"
+                );
+
 
             option.value =
                 person.id;
 
+
             option.textContent =
                 person.display_name;
+
 
             selector.appendChild(
                 option
             );
+
         }
     );
 }
@@ -383,8 +795,10 @@ function createPeopleManagementForm() {
     const card =
         document.createElement("div");
 
+
     card.id =
         "case-person-management-card";
+
 
     card.className =
         "management-card";
@@ -710,6 +1124,7 @@ function createPeopleManagementForm() {
             "submit",
             addExistingPerson
         );
+
     }
 
 
@@ -725,6 +1140,7 @@ function createPeopleManagementForm() {
             "submit",
             createPerson
         );
+
     }
 
 
@@ -763,7 +1179,8 @@ function populateAllPersonOffenseSelectors() {
             }
 
 
-            selector.innerHTML = "";
+            selector.innerHTML =
+                "";
 
 
             if (
@@ -771,16 +1188,23 @@ function populateAllPersonOffenseSelectors() {
             ) {
 
                 const option =
-                    document.createElement("option");
+                    document.createElement(
+                        "option"
+                    );
 
-                option.value = "";
+
+                option.value =
+                    "";
+
 
                 option.textContent =
                     "-- Select Primary Offense --";
 
+
                 selector.appendChild(
                     option
                 );
+
             }
 
 
@@ -792,19 +1216,24 @@ function populateAllPersonOffenseSelectors() {
                             "option"
                         );
 
+
                     option.value =
                         offense.id;
+
 
                     option.textContent =
                         formatOffenseName(
                             offense.name
                         );
 
+
                     selector.appendChild(
                         option
                     );
+
                 }
             );
+
         }
     );
 }
@@ -832,6 +1261,7 @@ function getChargesFromSelectors(
                 primarySelector.value
             )
         );
+
     }
 
 
@@ -843,7 +1273,9 @@ function getChargesFromSelectors(
             function(option) {
 
                 const id =
-                    String(option.value);
+                    String(
+                        option.value
+                    );
 
 
                 if (
@@ -852,9 +1284,12 @@ function getChargesFromSelectors(
                 ) {
 
                     ids.push(id);
+
                 }
+
             }
         );
+
     }
 
 
@@ -937,15 +1372,21 @@ async function addExistingPerson(event) {
     const {
         data,
         error
-    } = await peopleSupabase
-        .from("case_people")
-        .insert({
-            case_id: caseId,
-            person_id: personId,
-            role: role
-        })
-        .select()
-        .single();
+    } =
+        await peopleSupabase
+            .from("case_people")
+            .insert({
+                case_id:
+                    caseId,
+
+                person_id:
+                    personId,
+
+                role:
+                    role
+            })
+            .select()
+            .single();
 
 
     if (error) {
@@ -956,7 +1397,9 @@ async function addExistingPerson(event) {
         );
 
 
-        if (error.code === "23505") {
+        if (
+            error.code === "23505"
+        ) {
 
             showPeopleMessage(
                 "This person is already attached to this case.",
@@ -970,6 +1413,7 @@ async function addExistingPerson(event) {
                 error.message,
                 "error"
             );
+
         }
 
 
@@ -988,28 +1432,38 @@ async function addExistingPerson(event) {
         );
 
 
-    if (offenseIds.length > 0) {
+    if (
+        offenseIds.length > 0
+    ) {
 
         const chargeRows =
             offenseIds.map(
                 function(offenseId) {
 
                     return {
+
                         case_people_id:
                             data.id,
 
                         offense_id:
                             offenseId
+
                     };
+
                 }
             );
 
 
         const {
             error: chargeError
-        } = await peopleSupabase
-            .from("case_person_offenses")
-            .insert(chargeRows);
+        } =
+            await peopleSupabase
+                .from(
+                    "case_person_offenses"
+                )
+                .insert(
+                    chargeRows
+                );
 
 
         if (chargeError) {
@@ -1032,6 +1486,7 @@ async function addExistingPerson(event) {
                 "Person and charges added successfully.",
                 "success"
             );
+
         }
 
     } else {
@@ -1040,6 +1495,7 @@ async function addExistingPerson(event) {
             "Person added successfully.",
             "success"
         );
+
     }
 
 
@@ -1176,23 +1632,24 @@ async function createPerson(event) {
     const {
         data: person,
         error: personError
-    } = await peopleSupabase
-        .from("people")
-        .insert({
-            display_name:
-                displayName,
+    } =
+        await peopleSupabase
+            .from("people")
+            .insert({
+                display_name:
+                    displayName,
 
-            age_at_case:
-                age,
+                age_at_case:
+                    age,
 
-            gender:
-                gender,
+                gender:
+                    gender,
 
-            date_of_birth:
-                dateOfBirth
-        })
-        .select()
-        .single();
+                date_of_birth:
+                    dateOfBirth
+            })
+            .select()
+            .single();
 
 
     if (personError) {
@@ -1234,20 +1691,21 @@ async function createPerson(event) {
     const {
         data: casePerson,
         error: casePersonError
-    } = await peopleSupabase
-        .from("case_people")
-        .insert({
-            case_id:
-                caseId,
+    } =
+        await peopleSupabase
+            .from("case_people")
+            .insert({
+                case_id:
+                    caseId,
 
-            person_id:
-                person.id,
+                person_id:
+                    person.id,
 
-            role:
-                role
-        })
-        .select()
-        .single();
+                role:
+                    role
+            })
+            .select()
+            .single();
 
 
     if (casePersonError) {
@@ -1279,30 +1737,38 @@ async function createPerson(event) {
         );
 
 
-    if (offenseIds.length > 0) {
+    if (
+        offenseIds.length > 0
+    ) {
 
         const chargeRows =
             offenseIds.map(
                 function(offenseId) {
 
                     return {
+
                         case_people_id:
                             casePerson.id,
 
                         offense_id:
                             offenseId
+
                     };
+
                 }
             );
 
 
         const {
             error: chargeError
-        } = await peopleSupabase
-            .from("case_person_offenses")
-            .insert(
-                chargeRows
-            );
+        } =
+            await peopleSupabase
+                .from(
+                    "case_person_offenses"
+                )
+                .insert(
+                    chargeRows
+                );
 
 
         if (chargeError) {
@@ -1325,6 +1791,7 @@ async function createPerson(event) {
                 "Person created, added to the case, and charges saved.",
                 "success"
             );
+
         }
 
     } else {
@@ -1333,6 +1800,7 @@ async function createPerson(event) {
             "Person created and added to the case.",
             "success"
         );
+
     }
 
 
@@ -1369,6 +1837,7 @@ async function loadPeople(caseId) {
 
             casePeopleList.innerHTML =
                 '<p class="empty-message">Select a case to view this information.</p>';
+
         }
 
         return;
@@ -1381,6 +1850,7 @@ async function loadPeople(caseId) {
             document.getElementById(
                 "case-people-list"
             );
+
     }
 
 
@@ -1406,17 +1876,18 @@ async function loadPeople(caseId) {
 
     const {
         data: caseData
-    } = await peopleSupabase
-        .from("cases")
-        .select(`
-            id,
-            offense
-        `)
-        .eq(
-            "id",
-            caseId
-        )
-        .maybeSingle();
+    } =
+        await peopleSupabase
+            .from("cases")
+            .select(`
+                id,
+                offense
+            `)
+            .eq(
+                "id",
+                caseId
+            )
+            .maybeSingle();
 
 
     if (
@@ -1434,6 +1905,7 @@ async function loadPeople(caseId) {
                     String(
                         caseData.offense
                     ).trim().toLowerCase();
+
                 }
             );
 
@@ -1442,7 +1914,9 @@ async function loadPeople(caseId) {
 
             casePrimaryOffenseId =
                 matchingOffense.id;
+
         }
+
     }
 
 
@@ -1453,31 +1927,32 @@ async function loadPeople(caseId) {
     const {
         data,
         error
-    } = await peopleSupabase
-        .from("case_people")
-        .select(`
-            id,
-            case_id,
-            person_id,
-            role,
-            people (
+    } =
+        await peopleSupabase
+            .from("case_people")
+            .select(`
                 id,
-                display_name,
-                age_at_case,
-                date_of_birth,
-                gender
+                case_id,
+                person_id,
+                role,
+                people (
+                    id,
+                    display_name,
+                    age_at_case,
+                    date_of_birth,
+                    gender
+                )
+            `)
+            .eq(
+                "case_id",
+                caseId
             )
-        `)
-        .eq(
-            "case_id",
-            caseId
-        )
-        .order(
-            "id",
-            {
-                ascending: true
-            }
-        );
+            .order(
+                "id",
+                {
+                    ascending: true
+                }
+            );
 
 
     if (error) {
@@ -1499,7 +1974,8 @@ async function loadPeople(caseId) {
        RECREATE MANAGEMENT FORM
        ----------------------------------------- */
 
-    casePeopleList.innerHTML = "";
+    casePeopleList.innerHTML =
+        "";
 
 
     createPeopleManagementForm();
@@ -1511,17 +1987,23 @@ async function loadPeople(caseId) {
     ) {
 
         const emptyMessage =
-            document.createElement("p");
+            document.createElement(
+                "p"
+            );
+
 
         emptyMessage.className =
             "empty-message";
 
+
         emptyMessage.textContent =
             "No people are connected to this case yet.";
+
 
         casePeopleList.appendChild(
             emptyMessage
         );
+
 
         return;
     }
@@ -1532,13 +2014,18 @@ async function loadPeople(caseId) {
        ----------------------------------------- */
 
     const heading =
-        document.createElement("h4");
+        document.createElement(
+            "h4"
+        );
+
 
     heading.textContent =
         "People Attached to Case";
 
+
     heading.style.marginTop =
         "2rem";
+
 
     casePeopleList.appendChild(
         heading
@@ -1557,7 +2044,9 @@ async function loadPeople(caseId) {
             entry,
             casePrimaryOffenseId
         );
+
     }
+
 }
 
 
@@ -1596,17 +2085,20 @@ async function renderCasePerson(
 
     const {
         data: charges
-    } = await peopleSupabase
-        .from("case_person_offenses")
-        .select(`
-            id,
-            case_people_id,
-            offense_id
-        `)
-        .eq(
-            "case_people_id",
-            entry.id
-        );
+    } =
+        await peopleSupabase
+            .from(
+                "case_person_offenses"
+            )
+            .select(`
+                id,
+                case_people_id,
+                offense_id
+            `)
+            .eq(
+                "case_people_id",
+                entry.id
+            );
 
 
     const personCharges =
@@ -1616,9 +2108,11 @@ async function renderCasePerson(
     const chargeIds =
         personCharges.map(
             function(charge) {
+
                 return String(
                     charge.offense_id
                 );
+
             }
         );
 
@@ -1628,14 +2122,20 @@ async function renderCasePerson(
        ----------------------------------------- */
 
     const wrapper =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
+
 
     wrapper.className =
         "case-person-item";
 
 
     const info =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
+
 
     info.className =
         "case-person-info";
@@ -1644,11 +2144,15 @@ async function renderCasePerson(
     /* NAME */
 
     const name =
-        document.createElement("h3");
+        document.createElement(
+            "h3"
+        );
+
 
     name.textContent =
         person.display_name ||
         "Unnamed Person";
+
 
     info.appendChild(
         name
@@ -1658,7 +2162,10 @@ async function renderCasePerson(
     /* ROLE */
 
     const role =
-        document.createElement("p");
+        document.createElement(
+            "p"
+        );
+
 
     role.innerHTML =
         "<strong>Role:</strong> " +
@@ -1666,6 +2173,7 @@ async function renderCasePerson(
             entry.role ||
             "Unknown"
         );
+
 
     info.appendChild(
         role
@@ -1680,7 +2188,10 @@ async function renderCasePerson(
     ) {
 
         const age =
-            document.createElement("p");
+            document.createElement(
+                "p"
+            );
+
 
         age.innerHTML =
             "<strong>Age at Case:</strong> " +
@@ -1688,9 +2199,11 @@ async function renderCasePerson(
                 person.age_at_case
             );
 
+
         info.appendChild(
             age
         );
+
     }
 
 
@@ -1699,7 +2212,10 @@ async function renderCasePerson(
     if (person.date_of_birth) {
 
         const dob =
-            document.createElement("p");
+            document.createElement(
+                "p"
+            );
+
 
         dob.innerHTML =
             "<strong>Date of Birth:</strong> " +
@@ -1709,9 +2225,11 @@ async function renderCasePerson(
                 )
             );
 
+
         info.appendChild(
             dob
         );
+
     }
 
 
@@ -1720,7 +2238,10 @@ async function renderCasePerson(
     if (person.gender) {
 
         const gender =
-            document.createElement("p");
+            document.createElement(
+                "p"
+            );
+
 
         gender.innerHTML =
             "<strong>Gender:</strong> " +
@@ -1728,9 +2249,11 @@ async function renderCasePerson(
                 person.gender
             );
 
+
         info.appendChild(
             gender
         );
+
     }
 
 
@@ -1739,17 +2262,24 @@ async function renderCasePerson(
        ----------------------------------------- */
 
     const chargesContainer =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
+
 
     chargesContainer.className =
         "case-person-charges";
 
 
     const chargesHeading =
-        document.createElement("p");
+        document.createElement(
+            "p"
+        );
+
 
     chargesHeading.innerHTML =
         "<strong>Charges:</strong>";
+
 
     chargesContainer.appendChild(
         chargesHeading
@@ -1761,13 +2291,18 @@ async function renderCasePerson(
     ) {
 
         const none =
-            document.createElement("p");
+            document.createElement(
+                "p"
+            );
+
 
         none.className =
             "empty-message";
 
+
         none.textContent =
             "No charges assigned to this person.";
+
 
         chargesContainer.appendChild(
             none
@@ -1776,7 +2311,10 @@ async function renderCasePerson(
     } else {
 
         const chargeList =
-            document.createElement("ul");
+            document.createElement(
+                "ul"
+            );
+
 
         chargeList.className =
             "case-person-charge-list";
@@ -1786,11 +2324,16 @@ async function renderCasePerson(
             function(charge) {
 
                 const item =
-                    document.createElement("li");
+                    document.createElement(
+                        "li"
+                    );
 
 
                 const chargeName =
-                    document.createElement("span");
+                    document.createElement(
+                        "span"
+                    );
+
 
                 chargeName.textContent =
                     getOffenseName(
@@ -1808,11 +2351,14 @@ async function renderCasePerson(
                         "button"
                     );
 
+
                 removeButton.type =
                     "button";
 
+
                 removeButton.textContent =
                     "Remove";
+
 
                 removeButton.className =
                     "danger";
@@ -1829,6 +2375,7 @@ async function renderCasePerson(
                         removePersonCharge(
                             charge.id
                         );
+
                     }
                 );
 
@@ -1841,6 +2388,7 @@ async function renderCasePerson(
                 chargeList.appendChild(
                     item
                 );
+
             }
         );
 
@@ -1848,6 +2396,7 @@ async function renderCasePerson(
         chargesContainer.appendChild(
             chargeList
         );
+
     }
 
 
@@ -1866,7 +2415,10 @@ async function renderCasePerson(
        ----------------------------------------- */
 
     const buttons =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
+
 
     buttons.className =
         "case-person-buttons";
@@ -1875,10 +2427,14 @@ async function renderCasePerson(
     /* VIEW PERSON */
 
     const viewButton =
-        document.createElement("button");
+        document.createElement(
+            "button"
+        );
+
 
     viewButton.type =
         "button";
+
 
     viewButton.textContent =
         "View Person";
@@ -1891,6 +2447,7 @@ async function renderCasePerson(
             viewPerson(
                 person.id
             );
+
         }
     );
 
@@ -1898,10 +2455,14 @@ async function renderCasePerson(
     /* EDIT CHARGES */
 
     const editButton =
-        document.createElement("button");
+        document.createElement(
+            "button"
+        );
+
 
     editButton.type =
         "button";
+
 
     editButton.textContent =
         "Edit Charges";
@@ -1916,6 +2477,7 @@ async function renderCasePerson(
                 chargeIds,
                 casePrimaryOffenseId
             );
+
         }
     );
 
@@ -1923,13 +2485,18 @@ async function renderCasePerson(
     /* REMOVE PERSON */
 
     const removeButton =
-        document.createElement("button");
+        document.createElement(
+            "button"
+        );
+
 
     removeButton.type =
         "button";
 
+
     removeButton.textContent =
         "Remove From Case";
+
 
     removeButton.className =
         "danger";
@@ -1942,6 +2509,7 @@ async function renderCasePerson(
             removePersonFromCase(
                 entry.id
             );
+
         }
     );
 
@@ -1950,9 +2518,11 @@ async function renderCasePerson(
         viewButton
     );
 
+
     buttons.appendChild(
         editButton
     );
+
 
     buttons.appendChild(
         removeButton
@@ -1967,6 +2537,7 @@ async function renderCasePerson(
     peopleDisplay.appendChild(
         wrapper
     );
+
 }
 
 
@@ -1992,10 +2563,14 @@ async function openPersonChargeEditor(
 
 
     const editor =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
+
 
     editor.id =
         "person-charge-editor";
+
 
     editor.className =
         "management-card";
@@ -2119,6 +2694,14 @@ async function openPersonChargeEditor(
         );
 
 
+    /*
+       Make sure the offense list is current
+       before building the editor.
+    */
+
+    await loadCasePersonOffenses();
+
+
     casePersonOffenses.forEach(
         function(offense) {
 
@@ -2127,13 +2710,16 @@ async function openPersonChargeEditor(
                     "option"
                 );
 
+
             primaryOption.value =
                 offense.id;
+
 
             primaryOption.textContent =
                 formatOffenseName(
                     offense.name
                 );
+
 
             primarySelector.appendChild(
                 primaryOption
@@ -2145,17 +2731,21 @@ async function openPersonChargeEditor(
                     "option"
                 );
 
+
             additionalOption.value =
                 offense.id;
+
 
             additionalOption.textContent =
                 formatOffenseName(
                     offense.name
                 );
 
+
             additionalSelector.appendChild(
                 additionalOption
             );
+
         }
     );
 
@@ -2163,7 +2753,9 @@ async function openPersonChargeEditor(
     const ids =
         existingChargeIds.map(
             function(id) {
+
                 return String(id);
+
             }
         );
 
@@ -2172,26 +2764,36 @@ async function openPersonChargeEditor(
         casePrimaryOffenseId !== null &&
         casePrimaryOffenseId !== undefined &&
         ids.includes(
-            String(casePrimaryOffenseId)
+            String(
+                casePrimaryOffenseId
+            )
         )
     ) {
 
         primarySelector.value =
-            String(casePrimaryOffenseId);
+            String(
+                casePrimaryOffenseId
+            );
+
 
         ids.splice(
             ids.indexOf(
-                String(casePrimaryOffenseId)
+                String(
+                    casePrimaryOffenseId
+                )
             ),
             1
         );
 
-    } else if (ids.length > 0) {
+    } else if (
+        ids.length > 0
+    ) {
 
         primarySelector.value =
             ids[0];
 
         ids.shift();
+
     }
 
 
@@ -2208,13 +2810,18 @@ async function openPersonChargeEditor(
                             item.value
                         ) ===
                         String(id);
+
                     }
                 );
 
 
             if (option) {
-                option.selected = true;
+
+                option.selected =
+                    true;
+
             }
+
         }
     );
 
@@ -2230,6 +2837,7 @@ async function openPersonChargeEditor(
         function() {
 
             editor.remove();
+
         }
     );
 
@@ -2252,8 +2860,10 @@ async function openPersonChargeEditor(
                 primarySelector,
                 additionalSelector
             );
+
         }
     );
+
 }
 
 
@@ -2282,13 +2892,16 @@ async function savePersonCharges(
 
     const {
         error: deleteError
-    } = await peopleSupabase
-        .from("case_person_offenses")
-        .delete()
-        .eq(
-            "case_people_id",
-            casePeopleId
-        );
+    } =
+        await peopleSupabase
+            .from(
+                "case_person_offenses"
+            )
+            .delete()
+            .eq(
+                "case_people_id",
+                casePeopleId
+            );
 
 
     if (deleteError) {
@@ -2305,36 +2918,49 @@ async function savePersonCharges(
                 "Unable to update charges: " +
                 deleteError.message;
 
+
             message.className =
                 "manage-message error";
+
         }
+
 
         return;
     }
 
 
-    if (offenseIds.length > 0) {
+    if (
+        offenseIds.length > 0
+    ) {
 
         const rows =
             offenseIds.map(
                 function(offenseId) {
 
                     return {
+
                         case_people_id:
                             casePeopleId,
 
                         offense_id:
                             offenseId
+
                     };
+
                 }
             );
 
 
         const {
             error: insertError
-        } = await peopleSupabase
-            .from("case_person_offenses")
-            .insert(rows);
+        } =
+            await peopleSupabase
+                .from(
+                    "case_person_offenses"
+                )
+                .insert(
+                    rows
+                );
 
 
         if (insertError) {
@@ -2351,12 +2977,16 @@ async function savePersonCharges(
                     "Unable to save charges: " +
                     insertError.message;
 
+
                 message.className =
                     "manage-message error";
+
             }
+
 
             return;
         }
+
     }
 
 
@@ -2365,8 +2995,10 @@ async function savePersonCharges(
         message.textContent =
             "Charges updated successfully.";
 
+
         message.className =
             "manage-message success";
+
     }
 
 
@@ -2388,6 +3020,7 @@ async function savePersonCharges(
     if (caseId) {
         await loadPeople(caseId);
     }
+
 }
 
 
@@ -2417,13 +3050,16 @@ async function removePersonCharge(
 
     const {
         error
-    } = await peopleSupabase
-        .from("case_person_offenses")
-        .delete()
-        .eq(
-            "id",
-            chargeRecordId
-        );
+    } =
+        await peopleSupabase
+            .from(
+                "case_person_offenses"
+            )
+            .delete()
+            .eq(
+                "id",
+                chargeRecordId
+            );
 
 
     if (error) {
@@ -2439,6 +3075,7 @@ async function removePersonCharge(
             error.message
         );
 
+
         return;
     }
 
@@ -2450,6 +3087,7 @@ async function removePersonCharge(
     if (caseId) {
         await loadPeople(caseId);
     }
+
 }
 
 
@@ -2477,17 +3115,22 @@ async function removePersonFromCase(
     }
 
 
-    /* DELETE CHARGES FIRST */
+    /* -----------------------------------------
+       DELETE CHARGES FIRST
+       ----------------------------------------- */
 
     const {
         error: chargeError
-    } = await peopleSupabase
-        .from("case_person_offenses")
-        .delete()
-        .eq(
-            "case_people_id",
-            casePeopleId
-        );
+    } =
+        await peopleSupabase
+            .from(
+                "case_person_offenses"
+            )
+            .delete()
+            .eq(
+                "case_people_id",
+                casePeopleId
+            );
 
 
     if (chargeError) {
@@ -2503,21 +3146,27 @@ async function removePersonFromCase(
             chargeError.message
         );
 
+
         return;
     }
 
 
-    /* DELETE CASE PERSON */
+    /* -----------------------------------------
+       DELETE CASE PERSON
+       ----------------------------------------- */
 
     const {
         error
-    } = await peopleSupabase
-        .from("case_people")
-        .delete()
-        .eq(
-            "id",
-            casePeopleId
-        );
+    } =
+        await peopleSupabase
+            .from(
+                "case_people"
+            )
+            .delete()
+            .eq(
+                "id",
+                casePeopleId
+            );
 
 
     if (error) {
@@ -2533,6 +3182,7 @@ async function removePersonFromCase(
             error.message
         );
 
+
         return;
     }
 
@@ -2545,8 +3195,12 @@ async function removePersonFromCase(
 
         await loadPeopleSelector();
 
-        await loadPeople(caseId);
+        await loadPeople(
+            caseId
+        );
+
     }
+
 }
 
 
@@ -2566,6 +3220,7 @@ function viewPerson(personId) {
         encodeURIComponent(
             personId
         );
+
 }
 
 
@@ -2578,8 +3233,10 @@ async function refreshPeopleForCase(
 ) {
 
     if (!caseId) {
+
         caseId =
             getCurrentCaseId();
+
     }
 
 
@@ -2592,7 +3249,10 @@ async function refreshPeopleForCase(
 
     await loadPeopleSelector();
 
-    await loadPeople(caseId);
+    await loadPeople(
+        caseId
+    );
+
 }
 
 
@@ -2610,11 +3270,6 @@ async function initializeManagePeople() {
 
     await loadCasePersonOffenses();
 
-
-    /*
-     * The People management form is created
-     * when a case is loaded.
-     */
 }
 
 
