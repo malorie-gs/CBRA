@@ -584,6 +584,55 @@ async function loadCompleteOffenseList() {
 
 
     /* -------------------------------------
+       OFFENSE NAME NORMALIZATION
+       ------------------------------------- */
+
+    function normalizeOffenseName(value) {
+
+        const rawName =
+            String(value || "").trim();
+
+        if (!rawName) {
+            return "";
+        }
+
+
+        /*
+           Merge the old term into the
+           canonical CBRA offense name.
+        */
+
+        if (
+            normalizeValue(rawName) ===
+            "child pornography"
+        ) {
+
+            return "Child Sexual Abuse Material";
+
+        }
+
+
+        /*
+           Make sure the canonical name always
+           has the exact same spelling.
+        */
+
+        if (
+            normalizeValue(rawName) ===
+            "child sexual abuse material"
+        ) {
+
+            return "Child Sexual Abuse Material";
+
+        }
+
+
+        return rawName;
+
+    }
+
+
+    /* -------------------------------------
        OFFENSE LOOKUP TABLE
        ------------------------------------- */
 
@@ -592,9 +641,9 @@ async function loadCompleteOffenseList() {
             offense => {
 
                 const name =
-                    String(
-                        offense.name || ""
-                    ).trim();
+                    normalizeOffenseName(
+                        offense.name
+                    );
 
                 if (!name) {
                     return;
@@ -645,9 +694,9 @@ async function loadCompleteOffenseList() {
                        ------------------------- */
 
                     const primary =
-                        String(
-                            caseItem.offense || ""
-                        ).trim();
+                        normalizeOffenseName(
+                            caseItem.offense
+                        );
 
                     if (primary) {
 
@@ -671,9 +720,20 @@ async function loadCompleteOffenseList() {
                     additional.forEach(
                         offense => {
 
+                            const normalizedOffense =
+                                normalizeOffenseName(
+                                    offense
+                                );
+
+                            if (!normalizedOffense) {
+                                return;
+                            }
+
                             offenseMap.set(
-                                normalizeValue(offense),
-                                offense
+                                normalizeValue(
+                                    normalizedOffense
+                                ),
+                                normalizedOffense
                             );
 
                         }
@@ -710,7 +770,6 @@ async function loadCompleteOffenseList() {
     return caseLookupData.offenses;
 
 }
-
 
 /* -----------------------------------------
    LOGIN
