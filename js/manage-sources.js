@@ -14,19 +14,15 @@ const sourcesSupabase = window.supabaseClient;
    SOURCE TYPES
    KEEP THESE EXACTLY AS THEY ARE
    ----------------------------------------- */
-
+   
 const SOURCE_TYPES = [
-    "News Article",
-    "Court Filing",
-    "Court Record",
-    "Government Record",
-    "Police Record",
-    "Academic Source",
+    "News Report",
+    "Government",
+    "YouTube TCC",
+    "Documentary",
     "Book",
-    "Interview",
     "Other"
 ];
-
 
 /* -----------------------------------------
    CURRENT EDIT STATE
