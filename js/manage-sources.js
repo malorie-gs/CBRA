@@ -12,6 +12,7 @@ const sourcesSupabase = window.supabaseClient;
 
 /* -----------------------------------------
    SOURCE TYPES
+   DO NOT CHANGE THESE
    ----------------------------------------- */
 
 const SOURCE_TYPES = [
@@ -28,68 +29,30 @@ const SOURCE_TYPES = [
 
 
 /* -----------------------------------------
-   CURRENT CASE
+   CURRENT EDIT STATE
    ----------------------------------------- */
 
-function getSourceManagementCaseId() {
-
-    if (
-        typeof window.getCurrentCaseId === "function"
-    ) {
-
-        const id =
-            window.getCurrentCaseId();
-
-        if (id) {
-            return Number(id);
-        }
-    }
-
-
-    const selector =
-        document.getElementById(
-            "case-selector"
-        );
-
-
-    if (
-        selector &&
-        selector.value
-    ) {
-
-        return Number(
-            selector.value
-        );
-    }
-
-
-    return null;
-}
+let editingSourceId = null;
 
 
 /* -----------------------------------------
-   HTML ESCAPE
+   GET CURRENT CASE
    ----------------------------------------- */
 
-function escapeSourceHtml(value) {
+function getSourcesCaseId() {
 
-    return String(value ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+    if (typeof window.getCurrentCaseId === "function") {
+        return window.getCurrentCaseId();
+    }
+
+    const params = new URLSearchParams(window.location.search);
+
+    return params.get("id") || params.get("case_id");
 }
 
 
 /* -----------------------------------------
    NORMALIZE SOURCE TYPE
-   -----------------------------------------
-
-   Keeps source types consistent when
-   displaying existing records.
-
-   The database value itself is NOT changed.
    ----------------------------------------- */
 
 function normalizeSourceType(value) {
@@ -98,592 +61,280 @@ function normalizeSourceType(value) {
         return "";
     }
 
+    const match = SOURCE_TYPES.find(
+        type => type.toLowerCase() === String(value).toLowerCase()
+    );
 
-    const original =
-        String(value).trim();
-
-
-    const exactMatch =
-        SOURCE_TYPES.find(
-            type =>
-                type === original
-        );
-
-
-    if (exactMatch) {
-        return exactMatch;
-    }
-
-
-    const caseInsensitiveMatch =
-        SOURCE_TYPES.find(
-            type =>
-                type.toLowerCase() ===
-                original.toLowerCase()
-        );
-
-
-    if (caseInsensitiveMatch) {
-        return caseInsensitiveMatch;
-    }
-
-
-    return original;
+    return match || value;
 }
 
 
 /* -----------------------------------------
-   GET PERSON DISPLAY NAME
+   INITIALIZE SOURCE FORM
    ----------------------------------------- */
 
-function getPersonDisplayName(person) {
+function initializeSourcesUI() {
 
-    if (!person) {
-        return "Unnamed Person";
+    const form = document.getElementById("source-form");
+    const typeSelect = document.getElementById("source-type");
+
+    if (!form) {
+        console.error("CBRA: #source-form not found.");
+        return;
     }
 
-
-    /* Existing display_name column */
-
-    if (
-        person.display_name &&
-        String(person.display_name).trim()
-    ) {
-
-        return String(
-            person.display_name
-        ).trim();
+    if (!typeSelect) {
+        console.error("CBRA: #source-type not found.");
+        return;
     }
 
+    /*
+       Populate the existing source-type dropdown.
 
-    /* Common first/last name combinations */
+       This intentionally uses the existing HTML form
+       instead of creating a new #sources-management section.
+    */
 
-    const firstName =
-        person.first_name ||
-        person.firstname ||
-        person.firstName ||
-        "";
+    typeSelect.innerHTML = "";
 
+    const placeholder = document.createElement("option");
 
-    const middleName =
-        person.middle_name ||
-        person.middlename ||
-        person.middleName ||
-        "";
+    placeholder.value = "";
+    placeholder.textContent = "-- Select Type --";
 
+    typeSelect.appendChild(placeholder);
 
-    const lastName =
-        person.last_name ||
-        person.lastname ||
-        person.lastName ||
-        "";
+    SOURCE_TYPES.forEach(type => {
 
+        const option = document.createElement("option");
 
-    const fullName =
-        [
-            firstName,
-            middleName,
-            lastName
-        ]
-        .filter(Boolean)
-        .join(" ")
-        .trim();
+        option.value = type;
+        option.textContent = type;
+
+        typeSelect.appendChild(option);
+
+    });
 
 
-    if (fullName) {
-        return fullName;
+    /*
+       Prevent duplicate initialization.
+    */
+
+    if (form.dataset.cbraInitialized === "true") {
+        return;
     }
 
+    form.dataset.cbraInitialized = "true";
 
-    /* Other possible name fields */
 
-    if (
-        person.full_name &&
-        String(person.full_name).trim()
-    ) {
+    form.addEventListener("submit", async function (event) {
 
-        return String(
-            person.full_name
-        ).trim();
+        event.preventDefault();
+
+        await saveSource();
+
+    });
+
+
+    const cancelButton =
+        document.getElementById("cancel-source");
+
+    if (cancelButton) {
+
+        cancelButton.addEventListener("click", function (event) {
+
+            event.preventDefault();
+
+            cancelSourceEdit();
+
+        });
+
     }
 
-
-    if (
-        person.name &&
-        String(person.name).trim()
-    ) {
-
-        return String(
-            person.name
-        ).trim();
-    }
-
-
-    return "Unnamed Person";
 }
 
 
 /* -----------------------------------------
-   BUILD SOURCE MANAGEMENT UI
+   LOAD PEOPLE AVAILABLE FOR SOURCES
    ----------------------------------------- */
 
-function buildSourcesManagementUI() {
+async function loadSourcePeople(caseId) {
 
-    const container =
-        document.getElementById(
-            "sources-management"
-        );
+    const peopleSelect =
+        document.getElementById("source-people");
 
-
-    if (!container) {
-
-        console.error(
-            "CBRA: #sources-management not found."
-        );
-
+    if (!peopleSelect) {
+        console.error("CBRA: #source-people not found.");
         return;
     }
 
+    peopleSelect.innerHTML = "";
 
-    container.innerHTML = `
-
-        <div class="management-section">
-
-            <h2>Sources</h2>
-
-
-            <form id="sources-form">
-
-                <input
-                    type="hidden"
-                    id="source-edit-id"
-                    value=""
-                >
-
-
-                <div class="form-group">
-
-                    <label for="source-title">
-                        Source Title
-                    </label>
-
-                    <input
-                        type="text"
-                        id="source-title"
-                        required
-                    >
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label for="source-type">
-                        Source Type
-                    </label>
-
-                    <select
-                        id="source-type"
-                        required
-                    >
-
-                        <option value="">
-                            Select source type
-                        </option>
-
-                        ${SOURCE_TYPES.map(
-                            type => `
-                                <option
-                                    value="${escapeSourceHtml(type)}"
-                                >
-                                    ${escapeSourceHtml(type)}
-                                </option>
-                            `
-                        ).join("")}
-
-                    </select>
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label for="source-date">
-                        Publication Date
-                    </label>
-
-                    <input
-                        type="date"
-                        id="source-date"
-                    >
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label for="source-url">
-                        URL
-                    </label>
-
-                    <input
-                        type="url"
-                        id="source-url"
-                        required
-                    >
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label for="source-people">
-                        Related People
-                    </label>
-
-                    <select
-                        id="source-people"
-                        multiple
-                    ></select>
-
-                    <small>
-                        Hold Ctrl while clicking
-                        to select multiple people.
-                    </small>
-
-                </div>
-
-
-                <div class="form-actions">
-
-                    <button
-                        type="submit"
-                        id="add-source"
-                    >
-                        Add Source
-                    </button>
-
-
-                    <button
-                        type="button"
-                        id="cancel-source-edit"
-                        style="display:none;"
-                    >
-                        Cancel
-                    </button>
-
-                </div>
-
-
-                <div
-                    id="source-message"
-                    class="management-message"
-                ></div>
-
-            </form>
-
-
-            <div
-                id="source-list"
-                class="management-list"
-            ></div>
-
-        </div>
-    `;
-
-
-    /* Load people for currently selected case */
-
-    loadSourcePeople();
-
-
-    /* Load existing sources */
-
-    const caseId =
-        getSourceManagementCaseId();
-
-
-    if (caseId) {
-
-        loadManageSources(
-            caseId
-        );
-
-    } else {
-
-        loadManageSources();
-
-    }
-}
-
-
-/* -----------------------------------------
-   LOAD PEOPLE FOR CURRENT CASE
-   ----------------------------------------- */
-
-async function loadSourcePeople(
-    caseId = null
-) {
-
-    const select =
-        document.getElementById(
-            "source-people"
-        );
-
-
-    if (!select) {
+    if (!caseId) {
         return;
     }
-
-
-    select.innerHTML = `
-        <option disabled>
-            Loading people...
-        </option>
-    `;
-
-
-    const numericCaseId =
-        caseId
-            ? Number(caseId)
-            : getSourceManagementCaseId();
-
-
-    if (!numericCaseId) {
-
-        select.innerHTML = `
-            <option disabled>
-                Select a case first
-            </option>
-        `;
-
-        return;
-    }
-
 
     try {
 
-        /* ---------------------------------
-           GET PEOPLE LINKED TO CASE
-           --------------------------------- */
+        const numericCaseId = Number(caseId);
+
+        if (!Number.isFinite(numericCaseId)) {
+            console.error(
+                "CBRA: Invalid case ID:",
+                caseId
+            );
+            return;
+        }
+
+
+        /*
+           First get the people connected to this case.
+        */
 
         const {
             data: casePeople,
             error: casePeopleError
         } = await sourcesSupabase
-
             .from("case_people")
-
             .select("person_id")
-
-            .eq(
-                "case_id",
-                numericCaseId
-            );
+            .eq("case_id", numericCaseId);
 
 
         if (casePeopleError) {
-            throw casePeopleError;
+            console.error(
+                "CBRA: Error loading case people:",
+                casePeopleError
+            );
+            return;
         }
 
 
-        if (
-            !casePeople ||
-            casePeople.length === 0
-        ) {
+        if (!casePeople || casePeople.length === 0) {
 
-            select.innerHTML = `
-                <option disabled>
-                    No people linked to this case
-                </option>
-            `;
+            const option = document.createElement("option");
+
+            option.disabled = true;
+            option.textContent = "No people assigned to this case";
+
+            peopleSelect.appendChild(option);
 
             return;
         }
 
 
-        const personIds =
-            casePeople
-                .map(
-                    row =>
-                        row.person_id
-                )
-                .filter(
-                    id =>
-                        id !== null &&
-                        id !== undefined
-                );
+        const personIds = [
+            ...new Set(
+                casePeople
+                    .map(row => row.person_id)
+                    .filter(Boolean)
+            )
+        ];
 
 
-        if (
-            personIds.length === 0
-        ) {
-
-            select.innerHTML = `
-                <option disabled>
-                    No people linked to this case
-                </option>
-            `;
-
+        if (personIds.length === 0) {
             return;
         }
 
 
-        /* ---------------------------------
-           GET PEOPLE
-           --------------------------------- */
+        /*
+           Load the actual people records.
+        */
 
         const {
             data: people,
             error: peopleError
         } = await sourcesSupabase
-
             .from("people")
-
-            .select("*")
-
-            .in(
-                "id",
-                personIds
-            );
+            .select("id, display_name")
+            .in("id", personIds)
+            .order("display_name", {
+                ascending: true
+            });
 
 
         if (peopleError) {
-            throw peopleError;
-        }
-
-
-        if (
-            !people ||
-            people.length === 0
-        ) {
-
-            select.innerHTML = `
-                <option disabled>
-                    No people found
-                </option>
-            `;
-
+            console.error(
+                "CBRA: Error loading people:",
+                peopleError
+            );
             return;
         }
 
 
-        /* ---------------------------------
-           SORT PEOPLE BY DISPLAY NAME
-           --------------------------------- */
+        (people || []).forEach(person => {
 
-        people.sort(
-            (a, b) =>
-                getPersonDisplayName(a)
-                    .localeCompare(
-                        getPersonDisplayName(b)
-                    )
-        );
+            const option = document.createElement("option");
 
+            option.value = person.id;
+            option.textContent =
+                person.display_name || "Unnamed Person";
 
-        /* ---------------------------------
-           BUILD OPTIONS
-           --------------------------------- */
+            peopleSelect.appendChild(option);
 
-        select.innerHTML = "";
-
-
-        people.forEach(
-            person => {
-
-                const option =
-                    document.createElement(
-                        "option"
-                    );
-
-
-                option.value =
-                    String(person.id);
-
-
-                option.textContent =
-                    getPersonDisplayName(
-                        person
-                    );
-
-
-                select.appendChild(
-                    option
-                );
-            }
-        );
-
+        });
 
     } catch (error) {
 
         console.error(
-            "CBRA: Failed to load source people:",
+            "CBRA: Unexpected error loading source people:",
             error
         );
 
-
-        select.innerHTML = `
-            <option disabled>
-                Error loading people
-            </option>
-        `;
     }
+
 }
 
 
 /* -----------------------------------------
-   LOAD SOURCES FOR CURRENT CASE
+   LOAD SOURCES
    ----------------------------------------- */
 
-async function loadManageSources(
-    caseId = null
-) {
+async function loadManageSources(caseId) {
 
     const list =
-        document.getElementById(
-            "source-list"
-        );
-
+        document.getElementById("source-list");
 
     if (!list) {
+        console.error("CBRA: #source-list not found.");
         return;
     }
 
+    list.innerHTML = "";
 
-    const numericCaseId =
-        caseId
-            ? Number(caseId)
-            : getSourceManagementCaseId();
+    if (!caseId) {
 
-
-    if (!numericCaseId) {
-
-        list.innerHTML = `
-            <p>Select a case to view sources.</p>
-        `;
+        list.innerHTML =
+            "<p>No case selected.</p>";
 
         return;
     }
 
 
-    list.innerHTML = `
-        <p>Loading sources...</p>
-    `;
+    const numericCaseId = Number(caseId);
+
+    if (!Number.isFinite(numericCaseId)) {
+
+        list.innerHTML =
+            "<p>Invalid case ID.</p>";
+
+        return;
+    }
+
+
+    /*
+       Make sure the people selector is populated.
+    */
+
+    await loadSourcePeople(numericCaseId);
 
 
     try {
-
-        /* ---------------------------------
-           LOAD SOURCES
-           --------------------------------- */
 
         const {
             data: sources,
             error
         } = await sourcesSupabase
-
             .from("sources")
-
             .select(`
                 id,
                 title,
@@ -692,304 +343,292 @@ async function loadManageSources(
                 publication_date,
                 case_id
             `)
-
-            .eq(
-                "case_id",
-                numericCaseId
-            )
-
-            .order(
-                "publication_date",
-                {
-                    ascending: false,
-                    nullsFirst: false
-                }
-            );
+            .eq("case_id", numericCaseId)
+            .order("publication_date", {
+                ascending: false,
+                nullsFirst: false
+            });
 
 
         if (error) {
-            throw error;
-        }
 
+            console.error(
+                "CBRA: Error loading sources:",
+                error
+            );
 
-        if (
-            !sources ||
-            sources.length === 0
-        ) {
-
-            list.innerHTML = `
-                <p>
-                    No sources have been added
-                    to this case.
-                </p>
-            `;
+            list.innerHTML =
+                "<p>Could not load sources.</p>";
 
             return;
         }
 
 
-        list.innerHTML = "";
+        if (!sources || sources.length === 0) {
 
+            list.innerHTML =
+                "<p>No sources have been added to this case yet.</p>";
 
-        /* ---------------------------------
-           BUILD SOURCE CARDS
-           --------------------------------- */
-
-        for (
-            const source of sources
-        ) {
-
-            let peopleText = "";
-
-
-            /* ---------------------------------
-               LOAD PEOPLE LINKED TO SOURCE
-               --------------------------------- */
-
-            try {
-
-                const {
-                    data: sourcePeople,
-                    error: sourcePeopleError
-                } = await sourcesSupabase
-
-                    .from("source_people")
-
-                    .select("person_id")
-
-                    .eq(
-                        "source_id",
-                        source.id
-                    );
-
-
-                if (
-                    sourcePeopleError
-                ) {
-
-                    throw sourcePeopleError;
-                }
-
-
-                if (
-                    sourcePeople &&
-                    sourcePeople.length
-                ) {
-
-                    const personIds =
-                        sourcePeople
-                            .map(
-                                row =>
-                                    row.person_id
-                            )
-                            .filter(
-                                id =>
-                                    id !== null &&
-                                    id !== undefined
-                            );
-
-
-                    if (
-                        personIds.length
-                    ) {
-
-                        const {
-                            data: people
-                        } = await sourcesSupabase
-
-                            .from("people")
-
-                            .select("*")
-
-                            .in(
-                                "id",
-                                personIds
-                            );
-
-
-                        if (
-                            people &&
-                            people.length
-                        ) {
-
-                            const peopleById =
-                                new Map(
-                                    people.map(
-                                        person => [
-                                            String(
-                                                person.id
-                                            ),
-                                            getPersonDisplayName(
-                                                person
-                                            )
-                                        ]
-                                    )
-                                );
-
-
-                            peopleText =
-                                personIds
-                                    .map(
-                                        id =>
-                                            peopleById.get(
-                                                String(id)
-                                            )
-                                    )
-                                    .filter(Boolean)
-                                    .join(", ");
-                        }
-                    }
-                }
-
-            } catch (peopleError) {
-
-                console.warn(
-                    "CBRA: Could not load source people:",
-                    peopleError
-                );
-            }
-
-
-            /* ---------------------------------
-               CREATE CARD
-               --------------------------------- */
-
-            const card =
-                document.createElement(
-                    "div"
-                );
-
-
-            card.className =
-                "management-card";
-
-
-            const dateText =
-                source.publication_date
-
-                    ? new Date(
-                        source.publication_date +
-                        "T00:00:00"
-                    ).toLocaleDateString()
-
-                    : "No date";
-
-
-            const displayedSourceType =
-                normalizeSourceType(
-                    source.source_type
-                );
-
-
-            card.innerHTML = `
-
-                <div class="management-card-header">
-
-                    <h3>
-                        ${escapeSourceHtml(
-                            source.title
-                        )}
-                    </h3>
-
-                </div>
-
-
-                <div class="management-card-body">
-
-                    <p>
-                        <strong>Type:</strong>
-                        ${escapeSourceHtml(
-                            displayedSourceType ||
-                            "No type"
-                        )}
-                    </p>
-
-
-                    <p>
-                        <strong>Date:</strong>
-                        ${escapeSourceHtml(
-                            dateText
-                        )}
-                    </p>
-
-
-                    ${
-                        peopleText
-                            ? `
-                                <p>
-                                    <strong>
-                                        People:
-                                    </strong>
-
-                                    ${escapeSourceHtml(
-                                        peopleText
-                                    )}
-                                </p>
-                            `
-                            : ""
-                    }
-
-
-                    <p>
-                        <a
-                            href="${escapeSourceHtml(
-                                source.url
-                            )}"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                        >
-                            Open Source
-                        </a>
-                    </p>
-
-                </div>
-
-
-                <div class="management-card-actions">
-
-                    <button
-                        type="button"
-                        onclick="editSource(${source.id})"
-                    >
-                        Edit
-                    </button>
-
-
-                    <button
-                        type="button"
-                        onclick="removeSource(${source.id})"
-                    >
-                        Remove
-                    </button>
-
-                </div>
-
-            `;
-
-
-            list.appendChild(
-                card
-            );
+            return;
         }
 
+
+        for (const source of sources) {
+
+            await renderSourceCard(source, list);
+
+        }
 
     } catch (error) {
 
         console.error(
-            "CBRA: Failed to load sources:",
+            "CBRA: Unexpected error loading sources:",
             error
         );
 
+        list.innerHTML =
+            "<p>Could not load sources.</p>";
 
-        list.innerHTML = `
-            <p class="error">
-                Failed to load sources:
-                ${escapeSourceHtml(
-                    error.message
-                )}
-            </p>
-        `;
     }
+
+}
+
+
+/* -----------------------------------------
+   RENDER SOURCE CARD
+   ----------------------------------------- */
+
+async function renderSourceCard(source, list) {
+
+    const card =
+        document.createElement("div");
+
+    card.className = "source-card";
+
+
+    const title =
+        document.createElement("h3");
+
+    title.textContent =
+        source.title || "Untitled Source";
+
+
+    const type =
+        document.createElement("p");
+
+    type.innerHTML =
+        `<strong>Type:</strong> ${escapeHtml(
+            source.source_type || "Unknown"
+        )}`;
+
+
+    const date =
+        document.createElement("p");
+
+    if (source.publication_date) {
+
+        date.innerHTML =
+            `<strong>Publication Date:</strong> ${escapeHtml(
+                source.publication_date
+            )}`;
+
+    }
+
+
+    const url =
+        document.createElement("p");
+
+    if (source.url) {
+
+        const link =
+            document.createElement("a");
+
+        link.href = source.url;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = source.url;
+
+        url.appendChild(link);
+
+    }
+
+
+    /*
+       Load people connected to this source.
+    */
+
+    const peopleContainer =
+        document.createElement("div");
+
+    peopleContainer.className =
+        "source-people";
+
+
+    const peopleHeading =
+        document.createElement("strong");
+
+    peopleHeading.textContent =
+        "People:";
+
+    peopleContainer.appendChild(
+        peopleHeading
+    );
+
+
+    const peopleList =
+        document.createElement("div");
+
+    peopleList.className =
+        "source-people-list";
+
+
+    try {
+
+        const {
+            data: sourcePeople,
+            error
+        } = await sourcesSupabase
+            .from("source_people")
+            .select("person_id")
+            .eq("source_id", source.id);
+
+
+        if (!error &&
+            sourcePeople &&
+            sourcePeople.length > 0) {
+
+            const personIds = sourcePeople
+                .map(row => row.person_id)
+                .filter(Boolean);
+
+
+            if (personIds.length > 0) {
+
+                const {
+                    data: people,
+                    error: peopleError
+                } = await sourcesSupabase
+                    .from("people")
+                    .select("id, display_name")
+                    .in("id", personIds)
+                    .order("display_name", {
+                        ascending: true
+                    });
+
+
+                if (!peopleError && people) {
+
+                    people.forEach(person => {
+
+                        const personItem =
+                            document.createElement("span");
+
+                        personItem.className =
+                            "source-person";
+
+                        personItem.textContent =
+                            person.display_name ||
+                            "Unnamed Person";
+
+                        peopleList.appendChild(
+                            personItem
+                        );
+
+                    });
+
+                }
+
+            }
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            "CBRA: Error loading source people:",
+            error
+        );
+
+    }
+
+
+    if (!peopleList.children.length) {
+
+        const none =
+            document.createElement("span");
+
+        none.textContent =
+            "No people linked";
+
+        peopleList.appendChild(none);
+
+    }
+
+
+    peopleContainer.appendChild(
+        peopleList
+    );
+
+
+    /*
+       Buttons
+    */
+
+    const actions =
+        document.createElement("div");
+
+    actions.className =
+        "source-actions";
+
+
+    const editButton =
+        document.createElement("button");
+
+    editButton.type = "button";
+    editButton.textContent = "Edit";
+
+    editButton.addEventListener(
+        "click",
+        function () {
+            editSource(source);
+        }
+    );
+
+
+    const deleteButton =
+        document.createElement("button");
+
+    deleteButton.type = "button";
+    deleteButton.textContent = "Delete";
+
+    deleteButton.addEventListener(
+        "click",
+        function () {
+            removeSource(source.id);
+        }
+    );
+
+
+    actions.appendChild(editButton);
+    actions.appendChild(deleteButton);
+
+
+    card.appendChild(title);
+    card.appendChild(type);
+
+    if (source.publication_date) {
+        card.appendChild(date);
+    }
+
+    if (source.url) {
+        card.appendChild(url);
+    }
+
+    card.appendChild(peopleContainer);
+    card.appendChild(actions);
+
+    list.appendChild(card);
+
 }
 
 
@@ -997,142 +636,94 @@ async function loadManageSources(
    SAVE SOURCE
    ----------------------------------------- */
 
-async function saveSource(event) {
+async function saveSource() {
 
-    event.preventDefault();
+    const titleInput =
+        document.getElementById("source-title");
 
+    const typeInput =
+        document.getElementById("source-type");
+
+    const dateInput =
+        document.getElementById("source-date");
+
+    const urlInput =
+        document.getElementById("source-url");
+
+    const peopleInput =
+        document.getElementById("source-people");
 
     const message =
-        document.getElementById(
-            "source-message"
-        );
-
-
-    if (message) {
-
-        message.textContent =
-            "Saving source...";
-
-    }
+        document.getElementById("source-message");
 
 
     const caseId =
-        getSourceManagementCaseId();
+        getSourcesCaseId();
 
 
     if (!caseId) {
 
-        if (message) {
-
-            message.textContent =
-                "Select a case first.";
-
-        }
+        showSourceMessage(
+            "No case selected.",
+            true
+        );
 
         return;
     }
 
 
-    const numericCurrentCaseId =
-        Number(caseId);
-
-
     const title =
-        document.getElementById(
-            "source-title"
-        )?.value.trim();
+        titleInput
+            ? titleInput.value.trim()
+            : "";
 
 
-    const sourceTypeElement =
-        document.getElementById(
-            "source-type"
-        );
+    const source_type =
+        typeInput
+            ? typeInput.value.trim()
+            : "";
 
 
-    const sourceType =
-        sourceTypeElement
-            ?.value.trim();
-
-
-    const publicationDate =
-        document.getElementById(
-            "source-date"
-        )?.value || null;
+    const publication_date =
+        dateInput
+            ? dateInput.value || null
+            : null;
 
 
     const url =
-        document.getElementById(
-            "source-url"
-        )?.value.trim();
-
-
-    const editId =
-        document.getElementById(
-            "source-edit-id"
-        )?.value;
-
-
-    const peopleSelect =
-        document.getElementById(
-            "source-people"
-        );
-
-
-    const selectedPeople =
-        peopleSelect
-
-            ? Array.from(
-                peopleSelect.selectedOptions
-            )
-                .map(
-                    option =>
-                        Number(option.value)
-                )
-                .filter(
-                    id =>
-                        Number.isFinite(id)
-                )
-
-            : [];
+        urlInput
+            ? urlInput.value.trim()
+            : "";
 
 
     if (!title) {
 
-        if (message) {
-
-            message.textContent =
-                "Source title is required.";
-
-        }
+        showSourceMessage(
+            "Please enter a source title.",
+            true
+        );
 
         return;
     }
 
 
-    if (!sourceType) {
+    if (!source_type) {
 
-        if (message) {
-
-            message.textContent =
-                "Select a source type.";
-
-        }
+        showSourceMessage(
+            "Please select a source type.",
+            true
+        );
 
         return;
     }
 
 
-    if (!url) {
-
-        if (message) {
-
-            message.textContent =
-                "Source URL is required.";
-
-        }
-
-        return;
-    }
+    const selectedPeople =
+        peopleInput
+            ? Array.from(
+                peopleInput.selectedOptions
+            ).map(option => option.value)
+            : [];
 
 
     try {
@@ -1140,198 +731,214 @@ async function saveSource(event) {
         let sourceId;
 
 
-        /* ---------------------------------
+        /* -----------------------------------------
            UPDATE EXISTING SOURCE
-           --------------------------------- */
+           ----------------------------------------- */
 
-        if (editId) {
+        if (editingSourceId) {
 
             const {
                 data,
                 error
             } = await sourcesSupabase
-
                 .from("sources")
-
                 .update({
-                    title:
-                        title,
-
-                    source_type:
-                        sourceType,
-
-                    publication_date:
-                        publicationDate,
-
-                    url:
-                        url,
-
-                    case_id:
-                        numericCurrentCaseId
+                    title,
+                    source_type,
+                    publication_date,
+                    url
                 })
-
-                .eq(
-                    "id",
-                    Number(editId)
-                )
-
+                .eq("id", editingSourceId)
                 .select()
-
                 .single();
 
 
             if (error) {
-                throw error;
+
+                console.error(
+                    "CBRA: Error updating source:",
+                    error
+                );
+
+                showSourceMessage(
+                    "Could not update source.",
+                    true
+                );
+
+                return;
             }
 
 
-            sourceId =
-                data.id;
+            sourceId = data.id;
 
-
-        /* ---------------------------------
-           CREATE NEW SOURCE
-           --------------------------------- */
-
-        } else {
-
-            const {
-                data,
-                error
-            } = await sourcesSupabase
-
-                .from("sources")
-
-                .insert({
-                    title:
-                        title,
-
-                    source_type:
-                        sourceType,
-
-                    publication_date:
-                        publicationDate,
-
-                    url:
-                        url,
-
-                    case_id:
-                        numericCurrentCaseId
-                })
-
-                .select()
-
-                .single();
-
-
-            if (error) {
-                throw error;
-            }
-
-
-            sourceId =
-                data.id;
         }
 
 
-        /* ---------------------------------
-           SOURCE PEOPLE
-           --------------------------------- */
+        /* -----------------------------------------
+           CREATE NEW SOURCE
+           ----------------------------------------- */
+
+        else {
+
+            const numericCaseId =
+                Number(caseId);
+
+
+            const {
+                data,
+                error
+            } = await sourcesSupabase
+                .from("sources")
+                .insert({
+                    title,
+                    source_type,
+                    publication_date,
+                    url,
+                    case_id: numericCaseId
+                })
+                .select()
+                .single();
+
+
+            if (error) {
+
+                console.error(
+                    "CBRA: Error creating source:",
+                    error
+                );
+
+                showSourceMessage(
+                    "Could not add source.",
+                    true
+                );
+
+                return;
+            }
+
+
+            sourceId = data.id;
+
+        }
+
+
+        /* -----------------------------------------
+           REMOVE OLD PEOPLE LINKS
+           ----------------------------------------- */
 
         const {
-            error: peopleDeleteError
+            error: deletePeopleError
         } = await sourcesSupabase
-
             .from("source_people")
-
             .delete()
+            .eq("source_id", sourceId);
 
-            .eq(
-                "source_id",
-                sourceId
+
+        if (deletePeopleError) {
+
+            console.error(
+                "CBRA: Error removing old source people:",
+                deletePeopleError
             );
 
+        }
 
-        if (peopleDeleteError) {
-            throw peopleDeleteError;
+
+        /* -----------------------------------------
+           ADD PEOPLE LINKS
+           ----------------------------------------- */
+
+        if (selectedPeople.length > 0) {
+
+            const peopleRows =
+                selectedPeople.map(personId => ({
+                    source_id: sourceId,
+                    person_id: personId
+                }));
+
+
+            const {
+                error: peopleInsertError
+            } = await sourcesSupabase
+                .from("source_people")
+                .insert(peopleRows);
+
+
+            if (peopleInsertError) {
+
+                console.error(
+                    "CBRA: Error linking people to source:",
+                    peopleInsertError
+                );
+
+                showSourceMessage(
+                    "Source saved, but some people could not be linked.",
+                    true
+                );
+
+            }
+
+        }
+
+
+        /* -----------------------------------------
+           FINISH
+           ----------------------------------------- */
+
+        editingSourceId = null;
+
+        resetSourceForm();
+
+        showSourceMessage(
+            "Source saved successfully.",
+            false
+        );
+
+
+        await loadManageSources(caseId);
+
+
+        /*
+           Also refresh the source selectors used
+           by other CBRA management sections.
+        */
+
+        if (
+            typeof window.loadCrimeScenePhotoSources ===
+            "function"
+        ) {
+
+            window.loadCrimeScenePhotoSources(
+                caseId
+            );
+
         }
 
 
         if (
-            selectedPeople.length > 0
+            typeof window.loadGeneralMediaSources ===
+            "function"
         ) {
 
-            const rows =
-                selectedPeople.map(
-                    personId => ({
-                        source_id:
-                            sourceId,
-
-                        person_id:
-                            personId
-                    })
-                );
-
-
-            const {
-                error:
-                    peopleInsertError
-            } = await sourcesSupabase
-
-                .from("source_people")
-
-                .insert(rows);
-
-
-            if (peopleInsertError) {
-                throw peopleInsertError;
-            }
-        }
-
-
-        /* ---------------------------------
-           RESET FORM
-           --------------------------------- */
-
-        resetSourceForm();
-
-
-        if (message) {
-
-            message.textContent =
-                editId
-                    ? "Source updated successfully."
-                    : "Source added successfully.";
+            window.loadGeneralMediaSources(
+                caseId
+            );
 
         }
-
-
-        await loadSourcePeople(
-            numericCurrentCaseId
-        );
-
-
-        await loadManageSources(
-            numericCurrentCaseId
-        );
-
 
     } catch (error) {
 
         console.error(
-            "CBRA: Failed to save source:",
+            "CBRA: Unexpected error saving source:",
             error
         );
 
+        showSourceMessage(
+            "An unexpected error occurred.",
+            true
+        );
 
-        if (message) {
-
-            message.textContent =
-                "Failed to save source: " +
-                error.message;
-
-        }
     }
+
 }
 
 
@@ -1339,430 +946,202 @@ async function saveSource(event) {
    EDIT SOURCE
    ----------------------------------------- */
 
-async function editSource(
-    sourceId
-) {
+async function editSource(source) {
 
-    try {
-
-        /* ---------------------------------
-           LOAD SOURCE
-           --------------------------------- */
-
-        const {
-            data: source,
-            error
-        } = await sourcesSupabase
-
-            .from("sources")
-
-            .select(`
-                id,
-                title,
-                source_type,
-                publication_date,
-                url,
-                case_id
-            `)
-
-            .eq(
-                "id",
-                Number(sourceId)
-            )
-
-            .single();
+    editingSourceId =
+        source.id;
 
 
-        if (error) {
-            throw error;
-        }
+    const titleInput =
+        document.getElementById("source-title");
+
+    const typeInput =
+        document.getElementById("source-type");
+
+    const dateInput =
+        document.getElementById("source-date");
+
+    const urlInput =
+        document.getElementById("source-url");
+
+    const peopleInput =
+        document.getElementById("source-people");
+
+    const submitButton =
+        document.getElementById("add-source");
 
 
-        /* ---------------------------------
-           LOAD PEOPLE FIRST
-           --------------------------------- */
-
-        await loadSourcePeople(
-            source.case_id
-        );
+    if (titleInput) {
+        titleInput.value =
+            source.title || "";
+    }
 
 
-        /* ---------------------------------
-           FILL FORM
-           --------------------------------- */
+    if (typeInput) {
 
-        const editId =
-            document.getElementById(
-                "source-edit-id"
+        /*
+           Preserve old/legacy source types instead
+           of silently changing the database value.
+        */
+
+        const normalized =
+            normalizeSourceType(
+                source.source_type
             );
 
 
-        const title =
-            document.getElementById(
-                "source-title"
-            );
-
-
-        const type =
-            document.getElementById(
-                "source-type"
-            );
-
-
-        const date =
-            document.getElementById(
-                "source-date"
-            );
-
-
-        const url =
-            document.getElementById(
-                "source-url"
-            );
-
-
-        if (editId) {
-
-            editId.value =
-                source.id;
-
-        }
-
-
-        if (title) {
-
-            title.value =
-                source.title || "";
-
-        }
-
-
-        if (type) {
-
-            const storedType =
-                String(
-                    source.source_type || ""
-                ).trim();
-
-
-            const normalizedType =
-                normalizeSourceType(
-                    storedType
-                );
-
-
-            /*
-             * If an old source type exists
-             * that isn't one of the current
-             * choices, temporarily add it
-             * to the dropdown so editing does
-             * not silently replace it.
-             */
-
-            const matchingOption =
-                Array.from(
-                    type.options
-                ).find(
-                    option =>
-                        option.value ===
-                        storedType
-                );
-
-
-            if (
-                storedType &&
-                !matchingOption
-            ) {
-
-                const legacyOption =
-                    document.createElement(
-                        "option"
-                    );
-
-
-                legacyOption.value =
-                    storedType;
-
-
-                legacyOption.textContent =
-                    normalizedType;
-
-
-                type.appendChild(
-                    legacyOption
-                );
-            }
-
-
-            type.value =
-                storedType;
-
-        }
-
-
-        if (date) {
-
-            date.value =
-                source.publication_date || "";
-
-        }
-
-
-        if (url) {
-
-            url.value =
-                source.url || "";
-
-        }
-
-
-        /* ---------------------------------
-           LOAD SOURCE PEOPLE
-           --------------------------------- */
-
-        const {
-            data: sourcePeople,
-            error: sourcePeopleError
-        } = await sourcesSupabase
-
-            .from("source_people")
-
-            .select("person_id")
-
-            .eq(
-                "source_id",
-                source.id
-            );
-
-
-        if (sourcePeopleError) {
-            throw sourcePeopleError;
-        }
-
-
-        const selectedIds =
-            (sourcePeople || [])
-                .map(
-                    row =>
-                        String(
-                            row.person_id
-                        )
-                );
-
-
-        const peopleSelect =
-            document.getElementById(
-                "source-people"
-            );
-
-
-        if (peopleSelect) {
-
+        const existingOption =
             Array.from(
-                peopleSelect.options
-            ).forEach(
-                option => {
-
-                    option.selected =
-                        selectedIds.includes(
-                            String(
-                                option.value
-                            )
-                        );
-                }
-            );
-        }
-
-
-        /* ---------------------------------
-           CHANGE BUTTON
-           --------------------------------- */
-
-        const submitButton =
-            document.getElementById(
-                "add-source"
+                typeInput.options
+            ).find(
+                option =>
+                    option.value ===
+                    normalized
             );
 
 
-        if (submitButton) {
+        if (!existingOption &&
+            source.source_type) {
 
-            submitButton.textContent =
-                "Update Source";
+            const legacyOption =
+                document.createElement("option");
+
+            legacyOption.value =
+                source.source_type;
+
+            legacyOption.textContent =
+                source.source_type;
+
+            typeInput.appendChild(
+                legacyOption
+            );
 
         }
 
 
-        const cancelButton =
-            document.getElementById(
-                "cancel-source-edit"
-            );
+        typeInput.value =
+            normalized;
+
+    }
 
 
-        if (cancelButton) {
+    if (dateInput) {
 
-            cancelButton.style.display =
-                "inline-block";
+        dateInput.value =
+            source.publication_date || "";
 
-        }
+    }
 
 
-        /* ---------------------------------
-           SCROLL TO FORM
-           --------------------------------- */
+    if (urlInput) {
 
-        document.getElementById(
-            "source-title"
-        )?.scrollIntoView({
-            behavior:
-                "smooth",
+        urlInput.value =
+            source.url || "";
 
-            block:
-                "center"
+    }
+
+
+    /*
+       Load currently linked people.
+    */
+
+    if (peopleInput) {
+
+        Array.from(
+            peopleInput.options
+        ).forEach(option => {
+
+            option.selected = false;
+
         });
 
 
-    } catch (error) {
+        try {
 
-        console.error(
-            "CBRA: Failed to edit source:",
-            error
-        );
+            const {
+                data,
+                error
+            } = await sourcesSupabase
+                .from("source_people")
+                .select("person_id")
+                .eq("source_id", source.id);
 
 
-        const message =
-            document.getElementById(
-                "source-message"
+            if (!error && data) {
+
+                const selectedIds =
+                    data.map(
+                        row => String(row.person_id)
+                    );
+
+
+                Array.from(
+                    peopleInput.options
+                ).forEach(option => {
+
+                    option.selected =
+                        selectedIds.includes(
+                            String(option.value)
+                        );
+
+                });
+
+            }
+
+        } catch (error) {
+
+            console.error(
+                "CBRA: Error loading source people for edit:",
+                error
             );
 
-
-        if (message) {
-
-            message.textContent =
-                "Failed to load source: " +
-                error.message;
-
         }
+
     }
+
+
+    if (submitButton) {
+
+        submitButton.textContent =
+            "Update Source";
+
+    }
+
+
+    showSourceMessage(
+        "Editing source...",
+        false
+    );
+
 }
 
 
 /* -----------------------------------------
-   REMOVE SOURCE
+   CANCEL SOURCE EDIT
    ----------------------------------------- */
 
-async function removeSource(
-    sourceId
-) {
+function cancelSourceEdit() {
 
-    const confirmed =
-        confirm(
-            "Are you sure you want to remove this source?"
-        );
+    editingSourceId = null;
 
+    resetSourceForm();
 
-    if (!confirmed) {
-        return;
-    }
+    showSourceMessage(
+        "",
+        false
+    );
 
-
-    try {
-
-        /* ---------------------------------
-           REMOVE SOURCE PEOPLE
-           --------------------------------- */
-
-        const {
-            error: peopleDeleteError
-        } = await sourcesSupabase
-
-            .from("source_people")
-
-            .delete()
-
-            .eq(
-                "source_id",
-                Number(sourceId)
-            );
-
-
-        if (peopleDeleteError) {
-            throw peopleDeleteError;
-        }
-
-
-        /* ---------------------------------
-           REMOVE SOURCE
-           --------------------------------- */
-
-        const {
-            error: sourceDeleteError
-        } = await sourcesSupabase
-
-            .from("sources")
-
-            .delete()
-
-            .eq(
-                "id",
-                Number(sourceId)
-            );
-
-
-        if (sourceDeleteError) {
-            throw sourceDeleteError;
-        }
-
-
-        /* ---------------------------------
-           RESET FORM IF EDITING THIS SOURCE
-           --------------------------------- */
-
-        const editId =
-            document.getElementById(
-                "source-edit-id"
-            );
-
-
-        if (
-            editId &&
-            Number(editId.value) ===
-                Number(sourceId)
-        ) {
-
-            resetSourceForm();
-
-        }
-
-
-        await loadManageSources();
-
-
-    } catch (error) {
-
-        console.error(
-            "CBRA: Failed to remove source:",
-            error
-        );
-
-
-        alert(
-            "Failed to remove source:\n\n" +
-            error.message
-        );
-    }
 }
 
 
 /* -----------------------------------------
-   RESET SOURCE FORM
+   RESET FORM
    ----------------------------------------- */
 
 function resetSourceForm() {
 
     const form =
-        document.getElementById(
-            "sources-form"
-        );
+        document.getElementById("source-form");
 
 
     if (form) {
@@ -1770,24 +1149,25 @@ function resetSourceForm() {
     }
 
 
-    const editId =
-        document.getElementById(
-            "source-edit-id"
-        );
+    const peopleInput =
+        document.getElementById("source-people");
 
 
-    if (editId) {
+    if (peopleInput) {
 
-        editId.value =
-            "";
+        Array.from(
+            peopleInput.options
+        ).forEach(option => {
+
+            option.selected = false;
+
+        });
 
     }
 
 
     const submitButton =
-        document.getElementById(
-            "add-source"
-        );
+        document.getElementById("add-source");
 
 
     if (submitButton) {
@@ -1798,83 +1178,216 @@ function resetSourceForm() {
     }
 
 
-    const cancelButton =
-        document.getElementById(
-            "cancel-source-edit"
-        );
+    editingSourceId = null;
 
-
-    if (cancelButton) {
-
-        cancelButton.style.display =
-            "none";
-
-    }
 }
 
 
 /* -----------------------------------------
-   CANCEL EDIT
+   DELETE SOURCE
    ----------------------------------------- */
 
-function cancelSourceEdit() {
+async function removeSource(sourceId) {
 
-    resetSourceForm();
+    if (!sourceId) {
+        return;
+    }
 
 
-    const message =
-        document.getElementById(
-            "source-message"
+    const confirmed =
+        window.confirm(
+            "Delete this source?"
         );
 
 
-    if (message) {
-
-        message.textContent =
-            "";
-
+    if (!confirmed) {
+        return;
     }
-}
 
 
-/* -----------------------------------------
-   INITIALIZE
-   ----------------------------------------- */
+    try {
 
-document.addEventListener(
-    "DOMContentLoaded",
-    function () {
+        /*
+           Delete people relationships first.
+        */
 
-        buildSourcesManagementUI();
-
-
-        const form =
-            document.getElementById(
-                "sources-form"
-            );
+        const {
+            error: peopleError
+        } = await sourcesSupabase
+            .from("source_people")
+            .delete()
+            .eq("source_id", sourceId);
 
 
-        if (form) {
+        if (peopleError) {
 
-            form.addEventListener(
-                "submit",
-                saveSource
+            console.error(
+                "CBRA: Error deleting source people:",
+                peopleError
             );
 
         }
 
 
-        const cancelButton =
-            document.getElementById(
-                "cancel-source-edit"
+        /*
+           Delete the source itself.
+        */
+
+        const {
+            error
+        } = await sourcesSupabase
+            .from("sources")
+            .delete()
+            .eq("id", sourceId);
+
+
+        if (error) {
+
+            console.error(
+                "CBRA: Error deleting source:",
+                error
             );
 
+            showSourceMessage(
+                "Could not delete source.",
+                true
+            );
 
-        if (cancelButton) {
+            return;
+        }
 
-            cancelButton.addEventListener(
-                "click",
-                cancelSourceEdit
+
+        showSourceMessage(
+            "Source deleted.",
+            false
+        );
+
+
+        const caseId =
+            getSourcesCaseId();
+
+
+        await loadManageSources(
+            caseId
+        );
+
+
+        /*
+           Refresh other source selectors.
+        */
+
+        if (
+            typeof window.loadCrimeScenePhotoSources ===
+            "function"
+        ) {
+
+            window.loadCrimeScenePhotoSources(
+                caseId
+            );
+
+        }
+
+
+        if (
+            typeof window.loadGeneralMediaSources ===
+            "function"
+        ) {
+
+            window.loadGeneralMediaSources(
+                caseId
+            );
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            "CBRA: Unexpected error deleting source:",
+            error
+        );
+
+        showSourceMessage(
+            "An unexpected error occurred.",
+            true
+        );
+
+    }
+
+}
+
+
+/* -----------------------------------------
+   MESSAGE
+   ----------------------------------------- */
+
+function showSourceMessage(
+    text,
+    isError = false
+) {
+
+    const message =
+        document.getElementById("source-message");
+
+
+    if (!message) {
+        return;
+    }
+
+
+    message.textContent =
+        text || "";
+
+
+    message.classList.toggle(
+        "error",
+        isError
+    );
+
+}
+
+
+/* -----------------------------------------
+   HTML ESCAPE
+   ----------------------------------------- */
+
+function escapeHtml(value) {
+
+    if (value === null ||
+        value === undefined) {
+
+        return "";
+
+    }
+
+
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+}
+
+
+/* -----------------------------------------
+   DOM READY
+   ----------------------------------------- */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    async function () {
+
+        initializeSourcesUI();
+
+        const caseId =
+            getSourcesCaseId();
+
+
+        if (caseId) {
+
+            await loadManageSources(
+                caseId
             );
 
         }
@@ -1884,28 +1397,26 @@ document.addEventListener(
 
 
 /* -----------------------------------------
-   GLOBAL EXPORTS
+   EXPORTS
    ----------------------------------------- */
 
 window.loadManageSources =
     loadManageSources;
 
-
 window.loadSourcePeople =
     loadSourcePeople;
-
 
 window.editSource =
     editSource;
 
-
 window.removeSource =
     removeSource;
-
 
 window.saveSource =
     saveSource;
 
-
 window.cancelSourceEdit =
     cancelSourceEdit;
+
+window.resetSourceForm =
+    resetSourceForm;
