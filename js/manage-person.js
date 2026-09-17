@@ -382,10 +382,6 @@ async function loadPeopleSelector(
     );
 
 
-    /* -----------------------------------------
-       SELECT REQUESTED PERSON
-       ----------------------------------------- */
-
     if (selectPersonId !== null) {
 
         const wantedId =
@@ -410,11 +406,6 @@ async function loadPeopleSelector(
                 Number(
                     wantedId
                 );
-
-            console.log(
-                "New person selected:",
-                wantedId
-            );
 
             await loadPerson(
                 currentPersonId
@@ -443,7 +434,7 @@ async function loadPeopleSelector(
         } else {
 
             console.warn(
-                "Person was created but could not be selected in dropdown:",
+                "Person was created but could not be selected:",
                 wantedId
             );
 
@@ -540,10 +531,6 @@ function setupPersonForm() {
     }
 
 
-    /* -----------------------------------------
-       CLEAR BUTTON
-       ----------------------------------------- */
-
     const clearButton =
         document.getElementById(
             "clear-person-button"
@@ -558,10 +545,6 @@ function setupPersonForm() {
 
     }
 
-
-    /* -----------------------------------------
-       NEW PERSON BUTTON
-       ----------------------------------------- */
 
     const newPersonButton =
         document.getElementById(
@@ -699,10 +682,6 @@ async function updatePerson(
 
     event.preventDefault();
 
-    console.log(
-        "updatePerson() fired."
-    );
-
     const name =
         getValue(
             "person-name-input"
@@ -724,10 +703,6 @@ async function updatePerson(
         );
 
 
-    /* -----------------------------------------
-       VALIDATE NAME
-       ----------------------------------------- */
-
     if (!name) {
 
         setMessage(
@@ -739,36 +714,12 @@ async function updatePerson(
     }
 
 
-    /* =========================================
-       CREATE NEW PERSON
-       ========================================= */
-
     if (!currentPersonId) {
 
         setMessage(
             "person-save-message",
             "Creating person..."
         );
-
-        console.log(
-            "Attempting to create person:",
-            {
-                display_name:
-                    name,
-
-                age_at_case:
-                    age
-                        ? Number(age)
-                        : null,
-
-                gender:
-                    gender || null,
-
-                date_of_birth:
-                    dob || null
-            }
-        );
-
 
         const {
             data: newPerson,
@@ -795,24 +746,11 @@ async function updatePerson(
                 .single();
 
 
-        /* -----------------------------------------
-           INSERT FAILED
-           ----------------------------------------- */
-
         if (error) {
 
             console.error(
                 "PERSON INSERT FAILED:",
                 error
-            );
-
-            console.error(
-                "Full Supabase error:",
-                JSON.stringify(
-                    error,
-                    null,
-                    2
-                )
             );
 
             setMessage(
@@ -823,15 +761,6 @@ async function updatePerson(
             return;
         }
 
-
-        /* -----------------------------------------
-           INSERT SUCCEEDED
-           ----------------------------------------- */
-
-        console.log(
-            "PERSON CREATED SUCCESSFULLY:",
-            newPerson
-        );
 
         currentPersonId =
             Number(
@@ -845,18 +774,9 @@ async function updatePerson(
         );
 
 
-        /* -----------------------------------------
-           REFRESH DROPDOWN
-           ----------------------------------------- */
-
         await loadPeopleSelector(
             currentPersonId
         );
-
-
-        /* -----------------------------------------
-           LOAD MANAGEMENT DATA
-           ----------------------------------------- */
 
         await loadPersonCases(
             currentPersonId
@@ -887,10 +807,6 @@ async function updatePerson(
         return;
     }
 
-
-    /* =========================================
-       UPDATE EXISTING PERSON
-       ========================================= */
 
     setMessage(
         "person-save-message",
@@ -1192,6 +1108,28 @@ async function loadPersonCases(
    SOURCES
    ========================================= */
 
+
+/* -----------------------------------------
+   CANONICAL SOURCE TYPES
+   ----------------------------------------- */
+
+const PERSON_SOURCE_TYPES = [
+    "News Article",
+    "Court Filing",
+    "Court Record",
+    "Government Record",
+    "Police Record",
+    "Academic Source",
+    "Book",
+    "Interview",
+    "Other"
+];
+
+
+/* -----------------------------------------
+   CREATE SOURCE MANAGEMENT FORM
+   ----------------------------------------- */
+
 function createSourceManagementForm() {
 
     const container =
@@ -1200,6 +1138,14 @@ function createSourceManagementForm() {
         );
 
     if (!container) return;
+
+
+    const existingForm =
+        document.getElementById(
+            "person-source-form"
+        );
+
+    if (existingForm) return;
 
 
     const form =
@@ -1212,72 +1158,136 @@ function createSourceManagementForm() {
 
 
     form.innerHTML = `
-        <h3>Add Source</h3>
 
-        <input
-            type="text"
-            id="person-source-title"
-            placeholder="Source title"
-            required
-        >
+        <h3>Sources</h3>
 
-        <select id="person-source-type">
+        <div class="person-source-assignment">
 
-            <option value="">
-                Source type
-            </option>
+            <h4>
+                Assign Existing Source
+            </h4>
 
-            <option value="News Article">
-                News Article
-            </option>
+            <select
+                id="person-existing-source"
+            >
 
-            <option value="Court Document">
-                Court Document
-            </option>
+                <option value="">
+                    Select an existing source...
+                </option>
 
-            <option value="Government">
-                Government
-            </option>
+            </select>
 
-            <option value="Academic">
-                Academic
-            </option>
+            <button
+                type="button"
+                id="assign-person-source-button"
+            >
+                Assign Source
+            </button>
 
-            <option value="Book">
-                Book
-            </option>
+        </div>
 
-            <option value="Interview">
-                Interview
-            </option>
 
-            <option value="Video">
-                Video
-            </option>
+        <hr>
 
-            <option value="Other">
-                Other
-            </option>
 
-        </select>
+        <div class="person-source-create">
 
-        <input
-            type="date"
-            id="person-source-date"
-        >
+            <h4>
+                Create New Source
+            </h4>
 
-        <input
-            type="url"
-            id="person-source-url"
-            placeholder="Source URL"
-            required
-        >
+            <label>
+                Case
+            </label>
 
-        <button type="submit">
-            Add Source
-        </button>
+            <select
+                id="person-source-case"
+                required
+            >
 
-        <div id="person-source-message"></div>
+                <option value="">
+                    Select case...
+                </option>
+
+            </select>
+
+
+            <label>
+                Source Title
+            </label>
+
+            <input
+                type="text"
+                id="person-source-title"
+                placeholder="Source title"
+                required
+            >
+
+
+            <label>
+                Source Type
+            </label>
+
+            <select
+                id="person-source-type"
+                required
+            >
+
+                <option value="">
+                    Select source type...
+                </option>
+
+                ${PERSON_SOURCE_TYPES.map(
+                    type =>
+                        `
+                        <option value="${escapeAttribute(
+                            type
+                        )}">
+                            ${escapeHTML(
+                                type
+                            )}
+                        </option>
+                        `
+                ).join("")}
+
+            </select>
+
+
+            <label>
+                Publication Date
+            </label>
+
+            <input
+                type="date"
+                id="person-source-date"
+            >
+
+
+            <label>
+                Source URL
+            </label>
+
+            <input
+                type="url"
+                id="person-source-url"
+                placeholder="https://..."
+                required
+            >
+
+
+            <button
+                type="submit"
+            >
+                Create & Add Source
+            </button>
+
+        </div>
+
+
+        <div
+            id="person-source-message"
+        ></div>
+
     `;
 
 
@@ -1291,8 +1301,475 @@ function createSourceManagementForm() {
         addPersonSource
     );
 
+
+    const assignButton =
+        document.getElementById(
+            "assign-person-source-button"
+        );
+
+
+    if (assignButton) {
+
+        assignButton.addEventListener(
+            "click",
+            assignExistingSourceToPerson
+        );
+
+    }
+
 }
 
+
+/* -----------------------------------------
+   LOAD CASES FOR SOURCE CREATION
+   ----------------------------------------- */
+
+async function loadPersonSourceCases(
+    personId
+) {
+
+    const selector =
+        document.getElementById(
+            "person-source-case"
+        );
+
+    if (!selector) return;
+
+
+    selector.innerHTML =
+        `
+        <option value="">
+            Loading cases...
+        </option>
+        `;
+
+
+    const {
+        data,
+        error
+    } =
+        await supabaseClient
+            .from("case_people")
+            .select(`
+                case_id,
+                role,
+                cases (
+                    id,
+                    name,
+                    case_date,
+                    city,
+                    state
+                )
+            `)
+            .eq(
+                "person_id",
+                personId
+            );
+
+
+    if (error) {
+
+        console.error(
+            "Error loading person source cases:",
+            error
+        );
+
+        selector.innerHTML =
+            `
+            <option value="">
+                Failed to load cases
+            </option>
+            `;
+
+        return;
+    }
+
+
+    selector.innerHTML =
+        `
+        <option value="">
+            Select case...
+        </option>
+        `;
+
+
+    const seen =
+        new Set();
+
+
+    (data || []).forEach(
+        connection => {
+
+            const caseData =
+                connection.cases;
+
+            if (!caseData) return;
+
+
+            const caseId =
+                connection.case_id ||
+                caseData.id;
+
+
+            if (
+                caseId === null ||
+                caseId === undefined
+            ) {
+                return;
+            }
+
+
+            const key =
+                String(
+                    caseId
+                );
+
+
+            if (
+                seen.has(key)
+            ) {
+                return;
+            }
+
+
+            seen.add(key);
+
+
+            const option =
+                document.createElement(
+                    "option"
+                );
+
+            option.value =
+                key;
+
+
+            let label =
+                caseData.name ||
+                `Case ${key}`;
+
+
+            if (caseData.case_date) {
+
+                label +=
+                    ` — ${caseData.case_date}`;
+
+            }
+
+
+            if (caseData.city) {
+
+                label +=
+                    ` — ${caseData.city}`;
+
+            }
+
+
+            option.textContent =
+                label;
+
+
+            selector.appendChild(
+                option
+            );
+
+        }
+    );
+
+
+    if (
+        selector.options.length === 1
+    ) {
+
+        selector.innerHTML =
+            `
+            <option value="">
+                This person is not connected to any cases.
+            </option>
+            `;
+
+    }
+
+}
+
+
+/* -----------------------------------------
+   LOAD EXISTING CASE SOURCES
+   ----------------------------------------- */
+
+async function loadExistingSourcesForPerson(
+    personId
+) {
+
+    const selector =
+        document.getElementById(
+            "person-existing-source"
+        );
+
+    if (!selector) return;
+
+
+    selector.innerHTML =
+        `
+        <option value="">
+            Loading sources...
+        </option>
+        `;
+
+
+    /* -----------------------------------------
+       GET PERSON'S CASES
+       ----------------------------------------- */
+
+    const {
+        data: caseConnections,
+        error: caseError
+    } =
+        await supabaseClient
+            .from("case_people")
+            .select(
+                "case_id"
+            )
+            .eq(
+                "person_id",
+                personId
+            );
+
+
+    if (caseError) {
+
+        console.error(
+            "Error loading person's cases for sources:",
+            caseError
+        );
+
+        selector.innerHTML =
+            `
+            <option value="">
+                Failed to load sources
+            </option>
+            `;
+
+        return;
+    }
+
+
+    const caseIds =
+        (caseConnections || [])
+            .map(
+                row =>
+                    row.case_id
+            )
+            .filter(
+                id =>
+                    id !== null &&
+                    id !== undefined
+            );
+
+
+    if (
+        caseIds.length === 0
+    ) {
+
+        selector.innerHTML =
+            `
+            <option value="">
+                No case sources available
+            </option>
+            `;
+
+        return;
+    }
+
+
+    /* -----------------------------------------
+       GET SOURCES FOR THOSE CASES
+       ----------------------------------------- */
+
+    const {
+        data: sources,
+        error: sourceError
+    } =
+        await supabaseClient
+            .from("sources")
+            .select(`
+                id,
+                title,
+                url,
+                source_type,
+                publication_date,
+                case_id
+            `)
+            .in(
+                "case_id",
+                caseIds
+            )
+            .order(
+                "publication_date",
+                {
+                    ascending: false,
+                    nullsFirst: false
+                }
+            );
+
+
+    if (sourceError) {
+
+        console.error(
+            "Error loading existing sources:",
+            sourceError
+        );
+
+        selector.innerHTML =
+            `
+            <option value="">
+                Failed to load sources
+            </option>
+            `;
+
+        return;
+    }
+
+
+    /* -----------------------------------------
+       GET SOURCES ALREADY LINKED TO PERSON
+       ----------------------------------------- */
+
+    const {
+        data: existingConnections,
+        error: existingError
+    } =
+        await supabaseClient
+            .from("source_people")
+            .select(
+                "source_id"
+            )
+            .eq(
+                "person_id",
+                personId
+            );
+
+
+    if (existingError) {
+
+        console.error(
+            "Error loading existing person source connections:",
+            existingError
+        );
+
+        selector.innerHTML =
+            `
+            <option value="">
+                Failed to load sources
+            </option>
+            `;
+
+        return;
+    }
+
+
+    const alreadyLinked =
+        new Set(
+            (existingConnections || [])
+                .map(
+                    row =>
+                        String(
+                            row.source_id
+                        )
+                )
+        );
+
+
+    selector.innerHTML =
+        `
+        <option value="">
+            Select an existing source...
+        </option>
+        `;
+
+
+    (sources || []).forEach(
+        source => {
+
+            if (
+                alreadyLinked.has(
+                    String(
+                        source.id
+                    )
+                )
+            ) {
+                return;
+            }
+
+
+            const option =
+                document.createElement(
+                    "option"
+                );
+
+
+            option.value =
+                String(
+                    source.id
+                );
+
+
+            let label =
+                source.title ||
+                "Untitled Source";
+
+
+            if (
+                source.source_type
+            ) {
+
+                label +=
+                    ` — ${source.source_type}`;
+
+            }
+
+
+            if (
+                source.publication_date
+            ) {
+
+                label +=
+                    ` — ${source.publication_date}`;
+
+            }
+
+
+            option.textContent =
+                label;
+
+
+            selector.appendChild(
+                option
+            );
+
+        }
+    );
+
+
+    if (
+        selector.options.length === 1
+    ) {
+
+        selector.innerHTML =
+            `
+            <option value="">
+                No unassigned case sources available
+            </option>
+            `;
+
+    }
+
+}
+
+
+/* -----------------------------------------
+   LOAD PERSON SOURCES
+   ----------------------------------------- */
 
 async function loadPersonSources(
     personId
@@ -1304,6 +1781,27 @@ async function loadPersonSources(
         );
 
     if (!container) return;
+
+
+    /*
+       clearPersonManagement() can remove
+       the dynamically-created form.
+
+       Recreate it when necessary.
+    */
+
+    if (
+        !document.getElementById(
+            "person-source-form"
+        )
+    ) {
+
+        container.innerHTML =
+            "";
+
+        createSourceManagementForm();
+
+    }
 
 
     const form =
@@ -1342,6 +1840,15 @@ async function loadPersonSources(
     );
 
 
+    await loadPersonSourceCases(
+        personId
+    );
+
+    await loadExistingSourcesForPerson(
+        personId
+    );
+
+
     const {
         data,
         error
@@ -1356,7 +1863,8 @@ async function loadPersonSources(
                     title,
                     url,
                     source_type,
-                    publication_date
+                    publication_date,
+                    case_id
                 )
             `)
             .eq(
@@ -1379,7 +1887,10 @@ async function loadPersonSources(
     }
 
 
-    if (!data || data.length === 0) {
+    if (
+        !data ||
+        data.length === 0
+    ) {
 
         list.innerHTML =
             "<p>No sources connected to this person.</p>";
@@ -1411,22 +1922,34 @@ async function loadPersonSources(
 
 
             div.innerHTML = `
+
                 <div class="source-title">
-                    ${escapeHTML(
-                        source.title || ""
-                    )}
+
+                    <strong>
+                        ${escapeHTML(
+                            source.title ||
+                            "Untitled Source"
+                        )}
+                    </strong>
+
                 </div>
 
+
                 <div class="source-type">
+
                     ${escapeHTML(
-                        source.source_type || ""
+                        source.source_type ||
+                        "Other"
                     )}
+
                 </div>
+
 
                 ${
                     source.publication_date
                         ? `
                             <div class="source-date">
+                                Published:
                                 ${escapeHTML(
                                     source.publication_date
                                 )}
@@ -1434,6 +1957,22 @@ async function loadPersonSources(
                         `
                         : ""
                 }
+
+
+                ${
+                    source.case_id !== null &&
+                    source.case_id !== undefined
+                        ? `
+                            <div class="source-case">
+                                Case ID:
+                                ${escapeHTML(
+                                    source.case_id
+                                )}
+                            </div>
+                        `
+                        : ""
+                }
+
 
                 ${
                     source.url
@@ -1455,12 +1994,14 @@ async function loadPersonSources(
                         : ""
                 }
 
+
                 <button
                     type="button"
                     class="remove-source-btn"
                 >
                     Remove From Person
                 </button>
+
             `;
 
 
@@ -1470,14 +2011,18 @@ async function loadPersonSources(
                 );
 
 
-            button.addEventListener(
-                "click",
-                () =>
-                    removePersonSourceConnection(
-                        connection.id,
-                        personId
-                    )
-            );
+            if (button) {
+
+                button.addEventListener(
+                    "click",
+                    () =>
+                        removePersonSourceConnection(
+                            connection.id,
+                            personId
+                        )
+                );
+
+            }
 
 
             list.appendChild(
@@ -1489,6 +2034,172 @@ async function loadPersonSources(
 
 }
 
+
+/* -----------------------------------------
+   ASSIGN EXISTING SOURCE
+   ----------------------------------------- */
+
+async function assignExistingSourceToPerson() {
+
+    if (!currentPersonId) {
+
+        alert(
+            "Select a person first."
+        );
+
+        return;
+    }
+
+
+    const selector =
+        document.getElementById(
+            "person-existing-source"
+        );
+
+
+    if (!selector) return;
+
+
+    const sourceId =
+        selector.value;
+
+
+    const message =
+        document.getElementById(
+            "person-source-message"
+        );
+
+
+    if (!sourceId) {
+
+        if (message) {
+
+            message.textContent =
+                "Select a source first.";
+
+        }
+
+        return;
+    }
+
+
+    if (message) {
+
+        message.textContent =
+            "Assigning source...";
+
+    }
+
+
+    /* -----------------------------------------
+       PREVENT DUPLICATES
+       ----------------------------------------- */
+
+    const {
+        data: existing,
+        error: existingError
+    } =
+        await supabaseClient
+            .from("source_people")
+            .select(
+                "id"
+            )
+            .eq(
+                "source_id",
+                Number(sourceId)
+            )
+            .eq(
+                "person_id",
+                currentPersonId
+            )
+            .maybeSingle();
+
+
+    if (existingError) {
+
+        console.error(
+            "Error checking source connection:",
+            existingError
+        );
+
+        if (message) {
+
+            message.textContent =
+                `Failed to check source: ${existingError.message}`;
+
+        }
+
+        return;
+    }
+
+
+    if (existing) {
+
+        if (message) {
+
+            message.textContent =
+                "This source is already assigned to this person.";
+
+        }
+
+        return;
+    }
+
+
+    const {
+        error
+    } =
+        await supabaseClient
+            .from("source_people")
+            .insert({
+                source_id:
+                    Number(sourceId),
+
+                person_id:
+                    currentPersonId
+            });
+
+
+    if (error) {
+
+        console.error(
+            "Error assigning existing source:",
+            error
+        );
+
+        if (message) {
+
+            message.textContent =
+                `Failed to assign source: ${error.message}`;
+
+        }
+
+        return;
+    }
+
+
+    if (message) {
+
+        message.textContent =
+            "Source assigned successfully.";
+
+    }
+
+
+    selector.value =
+        "";
+
+
+    await loadPersonSources(
+        currentPersonId
+    );
+
+}
+
+
+/* -----------------------------------------
+   CREATE NEW PERSON SOURCE
+   ----------------------------------------- */
 
 async function addPersonSource(
     event
@@ -1507,20 +2218,29 @@ async function addPersonSource(
     }
 
 
+    const caseId =
+        getValue(
+            "person-source-case"
+        );
+
+
     const title =
         getValue(
             "person-source-title"
         );
+
 
     const type =
         getValue(
             "person-source-type"
         );
 
+
     const date =
         getValue(
             "person-source-date"
         );
+
 
     const url =
         getValue(
@@ -1532,6 +2252,19 @@ async function addPersonSource(
         document.getElementById(
             "person-source-message"
         );
+
+
+    if (!caseId) {
+
+        if (message) {
+
+            message.textContent =
+                "Select a case for this source.";
+
+        }
+
+        return;
+    }
 
 
     if (!title || !url) {
@@ -1547,13 +2280,30 @@ async function addPersonSource(
     }
 
 
+    if (!type) {
+
+        if (message) {
+
+            message.textContent =
+                "Select a source type.";
+
+        }
+
+        return;
+    }
+
+
     if (message) {
 
         message.textContent =
-            "Adding source...";
+            "Creating source...";
 
     }
 
+
+    /* -----------------------------------------
+       CREATE SOURCE
+       ----------------------------------------- */
 
     const {
         data: source,
@@ -1563,13 +2313,19 @@ async function addPersonSource(
             .from("sources")
             .insert({
                 title,
+
                 url,
+
                 source_type:
-                    type || null,
+                    type,
+
                 publication_date:
                     date || null,
+
                 case_id:
-                    null
+                    Number(
+                        caseId
+                    )
             })
             .select()
             .single();
@@ -1585,13 +2341,17 @@ async function addPersonSource(
         if (message) {
 
             message.textContent =
-                "Failed to create source.";
+                `Failed to create source: ${sourceError.message}`;
 
         }
 
         return;
     }
 
+
+    /* -----------------------------------------
+       CONNECT SOURCE TO PERSON
+       ----------------------------------------- */
 
     const {
         error: connectionError
@@ -1610,10 +2370,15 @@ async function addPersonSource(
     if (connectionError) {
 
         console.error(
-            "Error connecting source:",
+            "Error connecting source to person:",
             connectionError
         );
 
+
+        /*
+           Roll back the source so we don't
+           leave an orphaned source.
+        */
 
         await supabaseClient
             .from("sources")
@@ -1627,7 +2392,7 @@ async function addPersonSource(
         if (message) {
 
             message.textContent =
-                "Source was created but could not be connected.";
+                `Source was created but could not be connected: ${connectionError.message}`;
 
         }
 
@@ -1638,7 +2403,7 @@ async function addPersonSource(
     if (message) {
 
         message.textContent =
-            "Source added.";
+            "Source created and added successfully.";
 
     }
 
@@ -1650,7 +2415,48 @@ async function addPersonSource(
 
 
     if (form) {
-        form.reset();
+
+        /*
+           Reset only the new-source fields.
+           The dynamic selectors remain available.
+        */
+
+        const titleInput =
+            document.getElementById(
+                "person-source-title"
+            );
+
+        const typeInput =
+            document.getElementById(
+                "person-source-type"
+            );
+
+        const dateInput =
+            document.getElementById(
+                "person-source-date"
+            );
+
+        const urlInput =
+            document.getElementById(
+                "person-source-url"
+            );
+
+        if (titleInput) {
+            titleInput.value = "";
+        }
+
+        if (typeInput) {
+            typeInput.value = "";
+        }
+
+        if (dateInput) {
+            dateInput.value = "";
+        }
+
+        if (urlInput) {
+            urlInput.value = "";
+        }
+
     }
 
 
@@ -1658,8 +2464,59 @@ async function addPersonSource(
         currentPersonId
     );
 
+
+    /*
+       If Manage Cases is currently using
+       this same case, refresh its source list.
+    */
+
+    if (
+        typeof window.loadManageSources ===
+        "function"
+    ) {
+
+        await window.loadManageSources(
+            Number(
+                caseId
+            )
+        );
+
+    }
+
+
+    if (
+        typeof window.loadCrimeScenePhotoSources ===
+        "function"
+    ) {
+
+        await window.loadCrimeScenePhotoSources(
+            Number(
+                caseId
+            )
+        );
+
+    }
+
+
+    if (
+        typeof window.loadGeneralMediaSources ===
+        "function"
+    ) {
+
+        await window.loadGeneralMediaSources(
+            Number(
+                caseId
+            )
+        );
+
+    }
+
 }
 
+
+/* -----------------------------------------
+   REMOVE SOURCE FROM PERSON
+   ----------------------------------------- */
 
 async function removePersonSourceConnection(
     connectionId,
@@ -1695,7 +2552,7 @@ async function removePersonSourceConnection(
         );
 
         alert(
-            "Failed to remove source."
+            `Failed to remove source: ${error.message}`
         );
 
         return;
@@ -2202,10 +3059,6 @@ async function editPersonMugshot(
             null;
 
 
-        /* -----------------------------------------
-           UPLOAD REPLACEMENT IMAGE
-           ----------------------------------------- */
-
         if (newFile) {
 
             const safeFileName =
@@ -2258,10 +3111,6 @@ async function editPersonMugshot(
         }
 
 
-        /* -----------------------------------------
-           UPDATE DATABASE
-           ----------------------------------------- */
-
         const {
             error: updateError
         } =
@@ -2311,10 +3160,6 @@ async function editPersonMugshot(
             throw updateError;
         }
 
-
-        /* -----------------------------------------
-           REMOVE OLD STORAGE IMAGE
-           ----------------------------------------- */
 
         if (
             newFile &&
@@ -2431,10 +3276,6 @@ async function deletePersonMugshot(
             throw error;
         }
 
-
-        /* -----------------------------------------
-           REMOVE STORAGE IMAGE
-           ----------------------------------------- */
 
         if (imageUrl) {
 
@@ -2884,6 +3725,10 @@ function createDocumentManagementForm() {
 }
 
 
+/* =========================================
+   LOAD PERSON DOCUMENTS
+   ========================================= */
+
 async function loadPersonDocuments(
     personId
 ) {
@@ -3213,6 +4058,10 @@ function showPersonDocumentEditForm(
 
 }
 
+
+/* =========================================
+   EDIT PERSON DOCUMENT
+   ========================================= */
 
 async function editPersonDocument(
     documentId,
