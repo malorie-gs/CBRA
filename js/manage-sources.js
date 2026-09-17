@@ -12,7 +12,7 @@ const sourcesSupabase = window.supabaseClient;
 
 /* -----------------------------------------
    SOURCE TYPES
-   DO NOT CHANGE THESE
+   KEEP THESE EXACTLY AS THEY ARE
    ----------------------------------------- */
 
 const SOURCE_TYPES = [
@@ -36,7 +36,7 @@ let editingSourceId = null;
 
 
 /* -----------------------------------------
-   GET CURRENT CASE
+   GET CURRENT CASE ID
    ----------------------------------------- */
 
 function getSourcesCaseId() {
@@ -45,9 +45,14 @@ function getSourcesCaseId() {
         return window.getCurrentCaseId();
     }
 
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(
+        window.location.search
+    );
 
-    return params.get("id") || params.get("case_id");
+    return (
+        params.get("id") ||
+        params.get("case_id")
+    );
 }
 
 
@@ -62,7 +67,9 @@ function normalizeSourceType(value) {
     }
 
     const match = SOURCE_TYPES.find(
-        type => type.toLowerCase() === String(value).toLowerCase()
+        type =>
+            type.toLowerCase() ===
+            String(value).toLowerCase()
     );
 
     return match || value;
@@ -70,84 +77,277 @@ function normalizeSourceType(value) {
 
 
 /* -----------------------------------------
-   INITIALIZE SOURCE FORM
+   BUILD SOURCES UI
    ----------------------------------------- */
 
-function initializeSourcesUI() {
+function buildSourcesManagementUI() {
 
-    const form = document.getElementById("source-form");
-    const typeSelect = document.getElementById("source-type");
+    const container =
+        document.getElementById(
+            "sources-management"
+        );
 
-    if (!form) {
-        console.error("CBRA: #source-form not found.");
+    if (!container) {
+
+        console.error(
+            "CBRA: #sources-management not found."
+        );
+
         return;
     }
 
-    if (!typeSelect) {
-        console.error("CBRA: #source-type not found.");
-        return;
-    }
+
+    container.innerHTML = `
+        <div class="management-card">
+
+            <div class="management-card-header">
+
+                <h4>
+                    Add Source / Reference
+                </h4>
+
+                <p>
+                    Add a source used to document this case.
+                </p>
+
+            </div>
+
+
+            <form id="source-form">
+
+                <div class="form-grid">
+
+
+                    <!-- SOURCE TITLE -->
+
+                    <div class="form-group">
+
+                        <label for="source-title">
+                            Source Title
+                        </label>
+
+                        <input
+                            type="text"
+                            id="source-title"
+                            placeholder="Source title"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- SOURCE TYPE -->
+
+                    <div class="form-group">
+
+                        <label for="source-type">
+                            Source Type
+                        </label>
+
+                        <select
+                            id="source-type"
+                            required
+                        >
+
+                            <option value="">
+                                -- Select Type --
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- PUBLICATION DATE -->
+
+                    <div class="form-group">
+
+                        <label for="source-date">
+                            Publication Date
+                        </label>
+
+                        <input
+                            type="date"
+                            id="source-date"
+                        >
+
+                    </div>
+
+
+                    <!-- URL -->
+
+                    <div class="form-group">
+
+                        <label for="source-url">
+                            URL
+                        </label>
+
+                        <input
+                            type="url"
+                            id="source-url"
+                            placeholder="https://..."
+                        >
+
+                    </div>
+
+
+                    <!-- PEOPLE -->
+
+                    <div class="form-group form-group-full">
+
+                        <label for="source-people">
+                            People Associated With Source
+                        </label>
+
+                        <select
+                            id="source-people"
+                            multiple
+                        ></select>
+
+                        <small>
+                            Hold Ctrl while clicking to select
+                            multiple people.
+                        </small>
+
+                    </div>
+
+
+                </div>
+
+
+                <div class="form-actions">
+
+                    <button
+                        type="submit"
+                        id="add-source"
+                        class="primary-button"
+                    >
+                        Add Source
+                    </button>
+
+                    <button
+                        type="button"
+                        id="cancel-source"
+                        class="secondary-button"
+                    >
+                        Cancel
+                    </button>
+
+                </div>
+
+
+                <div
+                    id="source-message"
+                    class="manage-message"
+                ></div>
+
+            </form>
+
+        </div>
+
+
+        <div class="management-card">
+
+            <div class="management-card-header">
+
+                <h4>
+                    Sources & References
+                </h4>
+
+                <p>
+                    Sources currently associated with this case.
+                </p>
+
+            </div>
+
+
+            <div id="source-list">
+
+                <p class="empty-message">
+                    Select a case to view sources.
+                </p>
+
+            </div>
+
+        </div>
+    `;
+
 
     /*
-       Populate the existing source-type dropdown.
-
-       This intentionally uses the existing HTML form
-       instead of creating a new #sources-management section.
+       Populate source types.
     */
 
-    typeSelect.innerHTML = "";
+    const typeSelect =
+        document.getElementById(
+            "source-type"
+        );
 
-    const placeholder = document.createElement("option");
 
-    placeholder.value = "";
-    placeholder.textContent = "-- Select Type --";
+    if (typeSelect) {
 
-    typeSelect.appendChild(placeholder);
+        SOURCE_TYPES.forEach(type => {
 
-    SOURCE_TYPES.forEach(type => {
+            const option =
+                document.createElement("option");
 
-        const option = document.createElement("option");
+            option.value = type;
+            option.textContent = type;
 
-        option.value = type;
-        option.textContent = type;
+            typeSelect.appendChild(
+                option
+            );
 
-        typeSelect.appendChild(option);
+        });
 
-    });
+    }
 
 
     /*
-       Prevent duplicate initialization.
+       Submit handler.
     */
 
-    if (form.dataset.cbraInitialized === "true") {
-        return;
+    const form =
+        document.getElementById(
+            "source-form"
+        );
+
+
+    if (form) {
+
+        form.addEventListener(
+            "submit",
+            async function (event) {
+
+                event.preventDefault();
+
+                await saveSource();
+
+            }
+        );
+
     }
 
-    form.dataset.cbraInitialized = "true";
 
-
-    form.addEventListener("submit", async function (event) {
-
-        event.preventDefault();
-
-        await saveSource();
-
-    });
-
+    /*
+       Cancel handler.
+    */
 
     const cancelButton =
-        document.getElementById("cancel-source");
+        document.getElementById(
+            "cancel-source"
+        );
+
 
     if (cancelButton) {
 
-        cancelButton.addEventListener("click", function (event) {
+        cancelButton.addEventListener(
+            "click",
+            function () {
 
-            event.preventDefault();
+                cancelSourceEdit();
 
-            cancelSourceEdit();
-
-        });
+            }
+        );
 
     }
 
@@ -155,40 +355,43 @@ function initializeSourcesUI() {
 
 
 /* -----------------------------------------
-   LOAD PEOPLE AVAILABLE FOR SOURCES
+   LOAD PEOPLE SELECTOR
    ----------------------------------------- */
 
 async function loadSourcePeople(caseId) {
 
     const peopleSelect =
-        document.getElementById("source-people");
+        document.getElementById(
+            "source-people"
+        );
+
 
     if (!peopleSelect) {
-        console.error("CBRA: #source-people not found.");
         return;
     }
 
+
     peopleSelect.innerHTML = "";
+
 
     if (!caseId) {
         return;
     }
 
+
+    const numericCaseId =
+        Number(caseId);
+
+
+    if (!Number.isFinite(numericCaseId)) {
+        return;
+    }
+
+
     try {
 
-        const numericCaseId = Number(caseId);
-
-        if (!Number.isFinite(numericCaseId)) {
-            console.error(
-                "CBRA: Invalid case ID:",
-                caseId
-            );
-            return;
-        }
-
-
         /*
-           First get the people connected to this case.
+           Find people assigned to this case.
         */
 
         const {
@@ -197,26 +400,38 @@ async function loadSourcePeople(caseId) {
         } = await sourcesSupabase
             .from("case_people")
             .select("person_id")
-            .eq("case_id", numericCaseId);
+            .eq(
+                "case_id",
+                numericCaseId
+            );
 
 
         if (casePeopleError) {
+
             console.error(
                 "CBRA: Error loading case people:",
                 casePeopleError
             );
+
             return;
         }
 
 
-        if (!casePeople || casePeople.length === 0) {
+        if (
+            !casePeople ||
+            casePeople.length === 0
+        ) {
 
-            const option = document.createElement("option");
+            const option =
+                document.createElement("option");
 
             option.disabled = true;
-            option.textContent = "No people assigned to this case";
+            option.textContent =
+                "No people assigned to this case";
 
-            peopleSelect.appendChild(option);
+            peopleSelect.appendChild(
+                option
+            );
 
             return;
         }
@@ -237,7 +452,7 @@ async function loadSourcePeople(caseId) {
 
 
         /*
-           Load the actual people records.
+           Get the actual people.
         */
 
         const {
@@ -245,33 +460,54 @@ async function loadSourcePeople(caseId) {
             error: peopleError
         } = await sourcesSupabase
             .from("people")
-            .select("id, display_name")
-            .in("id", personIds)
-            .order("display_name", {
-                ascending: true
-            });
+            .select(
+                "id, display_name"
+            )
+            .in(
+                "id",
+                personIds
+            )
+            .order(
+                "display_name",
+                {
+                    ascending: true
+                }
+            );
 
 
         if (peopleError) {
+
             console.error(
                 "CBRA: Error loading people:",
                 peopleError
             );
+
             return;
         }
 
 
-        (people || []).forEach(person => {
+        (people || []).forEach(
+            person => {
 
-            const option = document.createElement("option");
+                const option =
+                    document.createElement(
+                        "option"
+                    );
 
-            option.value = person.id;
-            option.textContent =
-                person.display_name || "Unnamed Person";
+                option.value =
+                    person.id;
 
-            peopleSelect.appendChild(option);
+                option.textContent =
+                    person.display_name ||
+                    "Unnamed Person";
 
-        });
+                peopleSelect.appendChild(
+                    option
+                );
+
+            }
+        );
+
 
     } catch (error) {
 
@@ -291,41 +527,87 @@ async function loadSourcePeople(caseId) {
 
 async function loadManageSources(caseId) {
 
-    const list =
-        document.getElementById("source-list");
-
-    if (!list) {
-        console.error("CBRA: #source-list not found.");
-        return;
-    }
-
-    list.innerHTML = "";
-
-    if (!caseId) {
-
-        list.innerHTML =
-            "<p>No case selected.</p>";
-
-        return;
-    }
+    const container =
+        document.getElementById(
+            "sources-management"
+        );
 
 
-    const numericCaseId = Number(caseId);
+    if (!container) {
 
-    if (!Number.isFinite(numericCaseId)) {
-
-        list.innerHTML =
-            "<p>Invalid case ID.</p>";
+        console.error(
+            "CBRA: #sources-management not found."
+        );
 
         return;
     }
 
 
     /*
-       Make sure the people selector is populated.
+       Build the interface if it hasn't
+       been created yet.
     */
 
-    await loadSourcePeople(numericCaseId);
+    if (
+        !document.getElementById(
+            "source-form"
+        )
+    ) {
+
+        buildSourcesManagementUI();
+
+    }
+
+
+    const sourceList =
+        document.getElementById(
+            "source-list"
+        );
+
+
+    if (!sourceList) {
+        return;
+    }
+
+
+    sourceList.innerHTML = "";
+
+
+    if (!caseId) {
+
+        sourceList.innerHTML = `
+            <p class="empty-message">
+                Select a case to view sources.
+            </p>
+        `;
+
+        return;
+    }
+
+
+    const numericCaseId =
+        Number(caseId);
+
+
+    if (!Number.isFinite(numericCaseId)) {
+
+        sourceList.innerHTML = `
+            <p class="empty-message">
+                Invalid case selected.
+            </p>
+        `;
+
+        return;
+    }
+
+
+    /*
+       Load people for the selector.
+    */
+
+    await loadSourcePeople(
+        numericCaseId
+    );
 
 
     try {
@@ -343,11 +625,17 @@ async function loadManageSources(caseId) {
                 publication_date,
                 case_id
             `)
-            .eq("case_id", numericCaseId)
-            .order("publication_date", {
-                ascending: false,
-                nullsFirst: false
-            });
+            .eq(
+                "case_id",
+                numericCaseId
+            )
+            .order(
+                "publication_date",
+                {
+                    ascending: false,
+                    nullsFirst: false
+                }
+            );
 
 
         if (error) {
@@ -357,17 +645,26 @@ async function loadManageSources(caseId) {
                 error
             );
 
-            list.innerHTML =
-                "<p>Could not load sources.</p>";
+            sourceList.innerHTML = `
+                <p class="empty-message">
+                    Could not load sources.
+                </p>
+            `;
 
             return;
         }
 
 
-        if (!sources || sources.length === 0) {
+        if (
+            !sources ||
+            sources.length === 0
+        ) {
 
-            list.innerHTML =
-                "<p>No sources have been added to this case yet.</p>";
+            sourceList.innerHTML = `
+                <p class="empty-message">
+                    No sources have been added to this case yet.
+                </p>
+            `;
 
             return;
         }
@@ -375,9 +672,13 @@ async function loadManageSources(caseId) {
 
         for (const source of sources) {
 
-            await renderSourceCard(source, list);
+            await renderSourceCard(
+                source,
+                sourceList
+            );
 
         }
+
 
     } catch (error) {
 
@@ -386,8 +687,11 @@ async function loadManageSources(caseId) {
             error
         );
 
-        list.innerHTML =
-            "<p>Could not load sources.</p>";
+        sourceList.innerHTML = `
+            <p class="empty-message">
+                Could not load sources.
+            </p>
+        `;
 
     }
 
@@ -398,32 +702,51 @@ async function loadManageSources(caseId) {
    RENDER SOURCE CARD
    ----------------------------------------- */
 
-async function renderSourceCard(source, list) {
+async function renderSourceCard(
+    source,
+    sourceList
+) {
 
     const card =
         document.createElement("div");
 
-    card.className = "source-card";
+    card.className =
+        "management-card";
 
+
+    /*
+       Title
+    */
 
     const title =
-        document.createElement("h3");
+        document.createElement("h4");
 
     title.textContent =
-        source.title || "Untitled Source";
+        source.title ||
+        "Untitled Source";
 
+
+    /*
+       Source type
+    */
 
     const type =
         document.createElement("p");
 
     type.innerHTML =
         `<strong>Type:</strong> ${escapeHtml(
-            source.source_type || "Unknown"
+            source.source_type ||
+            "Unknown"
         )}`;
 
 
+    /*
+       Publication date
+    */
+
     const date =
         document.createElement("p");
+
 
     if (source.publication_date) {
 
@@ -435,44 +758,54 @@ async function renderSourceCard(source, list) {
     }
 
 
+    /*
+       URL
+    */
+
     const url =
         document.createElement("p");
+
 
     if (source.url) {
 
         const link =
             document.createElement("a");
 
-        link.href = source.url;
-        link.target = "_blank";
-        link.rel = "noopener noreferrer";
-        link.textContent = source.url;
+        link.href =
+            source.url;
 
-        url.appendChild(link);
+        link.target =
+            "_blank";
+
+        link.rel =
+            "noopener noreferrer";
+
+        link.textContent =
+            source.url;
+
+        url.appendChild(
+            link
+        );
 
     }
 
 
     /*
-       Load people connected to this source.
+       People
     */
 
-    const peopleContainer =
+    const peopleSection =
         document.createElement("div");
 
-    peopleContainer.className =
-        "source-people";
+    peopleSection.className =
+        "source-people-section";
 
 
     const peopleHeading =
-        document.createElement("strong");
+        document.createElement("p");
 
-    peopleHeading.textContent =
-        "People:";
-
-    peopleContainer.appendChild(
-        peopleHeading
-    );
+    peopleHeading.innerHTML =
+        "<strong>People:</strong>";
 
 
     const peopleList =
@@ -486,20 +819,26 @@ async function renderSourceCard(source, list) {
 
         const {
             data: sourcePeople,
-            error
+            error: sourcePeopleError
         } = await sourcesSupabase
             .from("source_people")
             .select("person_id")
-            .eq("source_id", source.id);
+            .eq(
+                "source_id",
+                source.id
+            );
 
 
-        if (!error &&
+        if (
+            !sourcePeopleError &&
             sourcePeople &&
-            sourcePeople.length > 0) {
+            sourcePeople.length > 0
+        ) {
 
-            const personIds = sourcePeople
-                .map(row => row.person_id)
-                .filter(Boolean);
+            const personIds =
+                sourcePeople
+                    .map(row => row.person_id)
+                    .filter(Boolean);
 
 
             if (personIds.length > 0) {
@@ -509,38 +848,51 @@ async function renderSourceCard(source, list) {
                     error: peopleError
                 } = await sourcesSupabase
                     .from("people")
-                    .select("id, display_name")
-                    .in("id", personIds)
-                    .order("display_name", {
-                        ascending: true
-                    });
+                    .select(
+                        "id, display_name"
+                    )
+                    .in(
+                        "id",
+                        personIds
+                    )
+                    .order(
+                        "display_name",
+                        {
+                            ascending: true
+                        }
+                    );
 
 
-                if (!peopleError && people) {
+                if (
+                    !peopleError &&
+                    people
+                ) {
 
-                    people.forEach(person => {
+                    people.forEach(
+                        person => {
 
-                        const personItem =
-                            document.createElement("span");
+                            const personItem =
+                                document.createElement(
+                                    "span"
+                                );
 
-                        personItem.className =
-                            "source-person";
+                            personItem.textContent =
+                                person.display_name ||
+                                "Unnamed Person";
 
-                        personItem.textContent =
-                            person.display_name ||
-                            "Unnamed Person";
+                            peopleList.appendChild(
+                                personItem
+                            );
 
-                        peopleList.appendChild(
-                            personItem
-                        );
-
-                    });
+                        }
+                    );
 
                 }
 
             }
 
         }
+
 
     } catch (error) {
 
@@ -552,20 +904,30 @@ async function renderSourceCard(source, list) {
     }
 
 
-    if (!peopleList.children.length) {
+    if (
+        peopleList.children.length === 0
+    ) {
 
         const none =
-            document.createElement("span");
+            document.createElement(
+                "span"
+            );
 
         none.textContent =
             "No people linked";
 
-        peopleList.appendChild(none);
+        peopleList.appendChild(
+            none
+        );
 
     }
 
 
-    peopleContainer.appendChild(
+    peopleSection.appendChild(
+        peopleHeading
+    );
+
+    peopleSection.appendChild(
         peopleList
     );
 
@@ -578,19 +940,30 @@ async function renderSourceCard(source, list) {
         document.createElement("div");
 
     actions.className =
-        "source-actions";
+        "form-actions";
 
 
     const editButton =
         document.createElement("button");
 
-    editButton.type = "button";
-    editButton.textContent = "Edit";
+    editButton.type =
+        "button";
+
+    editButton.className =
+        "secondary-button";
+
+    editButton.textContent =
+        "Edit";
+
 
     editButton.addEventListener(
         "click",
         function () {
-            editSource(source);
+
+            editSource(
+                source
+            );
+
         }
     );
 
@@ -598,36 +971,80 @@ async function renderSourceCard(source, list) {
     const deleteButton =
         document.createElement("button");
 
-    deleteButton.type = "button";
-    deleteButton.textContent = "Delete";
+    deleteButton.type =
+        "button";
+
+    deleteButton.className =
+        "secondary-button";
+
+    deleteButton.textContent =
+        "Delete";
+
 
     deleteButton.addEventListener(
         "click",
         function () {
-            removeSource(source.id);
+
+            removeSource(
+                source.id
+            );
+
         }
     );
 
 
-    actions.appendChild(editButton);
-    actions.appendChild(deleteButton);
+    actions.appendChild(
+        editButton
+    );
+
+    actions.appendChild(
+        deleteButton
+    );
 
 
-    card.appendChild(title);
-    card.appendChild(type);
+    /*
+       Build card.
+    */
+
+    card.appendChild(
+        title
+    );
+
+    card.appendChild(
+        type
+    );
+
 
     if (source.publication_date) {
-        card.appendChild(date);
+
+        card.appendChild(
+            date
+        );
+
     }
+
 
     if (source.url) {
-        card.appendChild(url);
+
+        card.appendChild(
+            url
+        );
+
     }
 
-    card.appendChild(peopleContainer);
-    card.appendChild(actions);
 
-    list.appendChild(card);
+    card.appendChild(
+        peopleSection
+    );
+
+    card.appendChild(
+        actions
+    );
+
+
+    sourceList.appendChild(
+        card
+    );
 
 }
 
@@ -639,22 +1056,29 @@ async function renderSourceCard(source, list) {
 async function saveSource() {
 
     const titleInput =
-        document.getElementById("source-title");
+        document.getElementById(
+            "source-title"
+        );
 
     const typeInput =
-        document.getElementById("source-type");
+        document.getElementById(
+            "source-type"
+        );
 
     const dateInput =
-        document.getElementById("source-date");
+        document.getElementById(
+            "source-date"
+        );
 
     const urlInput =
-        document.getElementById("source-url");
+        document.getElementById(
+            "source-url"
+        );
 
     const peopleInput =
-        document.getElementById("source-people");
-
-    const message =
-        document.getElementById("source-message");
+        document.getElementById(
+            "source-people"
+        );
 
 
     const caseId =
@@ -685,8 +1109,9 @@ async function saveSource() {
 
 
     const publication_date =
-        dateInput
-            ? dateInput.value || null
+        dateInput &&
+        dateInput.value
+            ? dateInput.value
             : null;
 
 
@@ -722,7 +1147,9 @@ async function saveSource() {
         peopleInput
             ? Array.from(
                 peopleInput.selectedOptions
-            ).map(option => option.value)
+            ).map(
+                option => option.value
+            )
             : [];
 
 
@@ -732,7 +1159,7 @@ async function saveSource() {
 
 
         /* -----------------------------------------
-           UPDATE EXISTING SOURCE
+           UPDATE
            ----------------------------------------- */
 
         if (editingSourceId) {
@@ -748,7 +1175,10 @@ async function saveSource() {
                     publication_date,
                     url
                 })
-                .eq("id", editingSourceId)
+                .eq(
+                    "id",
+                    editingSourceId
+                )
                 .select()
                 .single();
 
@@ -769,13 +1199,14 @@ async function saveSource() {
             }
 
 
-            sourceId = data.id;
+            sourceId =
+                data.id;
 
         }
 
 
         /* -----------------------------------------
-           CREATE NEW SOURCE
+           INSERT
            ----------------------------------------- */
 
         else {
@@ -816,7 +1247,8 @@ async function saveSource() {
             }
 
 
-            sourceId = data.id;
+            sourceId =
+                data.id;
 
         }
 
@@ -826,52 +1258,64 @@ async function saveSource() {
            ----------------------------------------- */
 
         const {
-            error: deletePeopleError
+            error: deleteError
         } = await sourcesSupabase
             .from("source_people")
             .delete()
-            .eq("source_id", sourceId);
+            .eq(
+                "source_id",
+                sourceId
+            );
 
 
-        if (deletePeopleError) {
+        if (deleteError) {
 
             console.error(
                 "CBRA: Error removing old source people:",
-                deletePeopleError
+                deleteError
             );
 
         }
 
 
         /* -----------------------------------------
-           ADD PEOPLE LINKS
+           INSERT PEOPLE LINKS
            ----------------------------------------- */
 
-        if (selectedPeople.length > 0) {
+        if (
+            selectedPeople.length > 0
+        ) {
 
             const peopleRows =
-                selectedPeople.map(personId => ({
-                    source_id: sourceId,
-                    person_id: personId
-                }));
+                selectedPeople.map(
+                    personId => ({
+                        source_id:
+                            sourceId,
+
+                        person_id:
+                            personId
+                    })
+                );
 
 
             const {
-                error: peopleInsertError
+                error: peopleError
             } = await sourcesSupabase
                 .from("source_people")
-                .insert(peopleRows);
+                .insert(
+                    peopleRows
+                );
 
 
-            if (peopleInsertError) {
+            if (peopleError) {
 
                 console.error(
-                    "CBRA: Error linking people to source:",
-                    peopleInsertError
+                    "CBRA: Error linking people:",
+                    peopleError
                 );
 
                 showSourceMessage(
-                    "Source saved, but some people could not be linked.",
+                    "Source saved, but people could not be linked.",
                     true
                 );
 
@@ -880,13 +1324,16 @@ async function saveSource() {
         }
 
 
-        /* -----------------------------------------
-           FINISH
-           ----------------------------------------- */
+        /*
+           Reset.
+        */
 
-        editingSourceId = null;
+        editingSourceId =
+            null;
+
 
         resetSourceForm();
+
 
         showSourceMessage(
             "Source saved successfully.",
@@ -894,12 +1341,14 @@ async function saveSource() {
         );
 
 
-        await loadManageSources(caseId);
+        await loadManageSources(
+            caseId
+        );
 
 
         /*
-           Also refresh the source selectors used
-           by other CBRA management sections.
+           Refresh source selectors
+           elsewhere on Manage.
         */
 
         if (
@@ -925,6 +1374,7 @@ async function saveSource() {
 
         }
 
+
     } catch (error) {
 
         console.error(
@@ -946,49 +1396,66 @@ async function saveSource() {
    EDIT SOURCE
    ----------------------------------------- */
 
-async function editSource(source) {
+async function editSource(
+    source
+) {
 
     editingSourceId =
         source.id;
 
 
     const titleInput =
-        document.getElementById("source-title");
+        document.getElementById(
+            "source-title"
+        );
 
     const typeInput =
-        document.getElementById("source-type");
+        document.getElementById(
+            "source-type"
+        );
 
     const dateInput =
-        document.getElementById("source-date");
+        document.getElementById(
+            "source-date"
+        );
 
     const urlInput =
-        document.getElementById("source-url");
+        document.getElementById(
+            "source-url"
+        );
 
     const peopleInput =
-        document.getElementById("source-people");
+        document.getElementById(
+            "source-people"
+        );
 
     const submitButton =
-        document.getElementById("add-source");
+        document.getElementById(
+            "add-source"
+        );
 
 
     if (titleInput) {
+
         titleInput.value =
             source.title || "";
+
     }
 
 
     if (typeInput) {
-
-        /*
-           Preserve old/legacy source types instead
-           of silently changing the database value.
-        */
 
         const normalized =
             normalizeSourceType(
                 source.source_type
             );
 
+
+        /*
+           If the database contains an older
+           source type, preserve it rather than
+           changing the stored value.
+        */
 
         const existingOption =
             Array.from(
@@ -1000,11 +1467,15 @@ async function editSource(source) {
             );
 
 
-        if (!existingOption &&
-            source.source_type) {
+        if (
+            !existingOption &&
+            source.source_type
+        ) {
 
             const legacyOption =
-                document.createElement("option");
+                document.createElement(
+                    "option"
+                );
 
             legacyOption.value =
                 source.source_type;
@@ -1028,7 +1499,8 @@ async function editSource(source) {
     if (dateInput) {
 
         dateInput.value =
-            source.publication_date || "";
+            source.publication_date ||
+            "";
 
     }
 
@@ -1036,24 +1508,26 @@ async function editSource(source) {
     if (urlInput) {
 
         urlInput.value =
-            source.url || "";
+            source.url ||
+            "";
 
     }
 
 
     /*
-       Load currently linked people.
+       Clear people first.
     */
 
     if (peopleInput) {
 
         Array.from(
             peopleInput.options
-        ).forEach(option => {
-
-            option.selected = false;
-
-        });
+        ).forEach(
+            option => {
+                option.selected =
+                    false;
+            }
+        );
 
 
         try {
@@ -1063,28 +1537,43 @@ async function editSource(source) {
                 error
             } = await sourcesSupabase
                 .from("source_people")
-                .select("person_id")
-                .eq("source_id", source.id);
+                .select(
+                    "person_id"
+                )
+                .eq(
+                    "source_id",
+                    source.id
+                );
 
 
-            if (!error && data) {
+            if (
+                !error &&
+                data
+            ) {
 
                 const selectedIds =
                     data.map(
-                        row => String(row.person_id)
+                        row =>
+                            String(
+                                row.person_id
+                            )
                     );
 
 
                 Array.from(
                     peopleInput.options
-                ).forEach(option => {
+                ).forEach(
+                    option => {
 
-                    option.selected =
-                        selectedIds.includes(
-                            String(option.value)
-                        );
+                        option.selected =
+                            selectedIds.includes(
+                                String(
+                                    option.value
+                                )
+                            );
 
-                });
+                    }
+                );
 
             }
 
@@ -1117,14 +1606,17 @@ async function editSource(source) {
 
 
 /* -----------------------------------------
-   CANCEL SOURCE EDIT
+   CANCEL EDIT
    ----------------------------------------- */
 
 function cancelSourceEdit() {
 
-    editingSourceId = null;
+    editingSourceId =
+        null;
+
 
     resetSourceForm();
+
 
     showSourceMessage(
         "",
@@ -1141,33 +1633,44 @@ function cancelSourceEdit() {
 function resetSourceForm() {
 
     const form =
-        document.getElementById("source-form");
+        document.getElementById(
+            "source-form"
+        );
 
 
     if (form) {
+
         form.reset();
+
     }
 
 
     const peopleInput =
-        document.getElementById("source-people");
+        document.getElementById(
+            "source-people"
+        );
 
 
     if (peopleInput) {
 
         Array.from(
             peopleInput.options
-        ).forEach(option => {
+        ).forEach(
+            option => {
 
-            option.selected = false;
+                option.selected =
+                    false;
 
-        });
+            }
+        );
 
     }
 
 
     const submitButton =
-        document.getElementById("add-source");
+        document.getElementById(
+            "add-source"
+        );
 
 
     if (submitButton) {
@@ -1178,7 +1681,8 @@ function resetSourceForm() {
     }
 
 
-    editingSourceId = null;
+    editingSourceId =
+        null;
 
 }
 
@@ -1187,7 +1691,9 @@ function resetSourceForm() {
    DELETE SOURCE
    ----------------------------------------- */
 
-async function removeSource(sourceId) {
+async function removeSource(
+    sourceId
+) {
 
     if (!sourceId) {
         return;
@@ -1208,7 +1714,7 @@ async function removeSource(sourceId) {
     try {
 
         /*
-           Delete people relationships first.
+           Remove people relationships first.
         */
 
         const {
@@ -1216,7 +1722,10 @@ async function removeSource(sourceId) {
         } = await sourcesSupabase
             .from("source_people")
             .delete()
-            .eq("source_id", sourceId);
+            .eq(
+                "source_id",
+                sourceId
+            );
 
 
         if (peopleError) {
@@ -1230,7 +1739,7 @@ async function removeSource(sourceId) {
 
 
         /*
-           Delete the source itself.
+           Delete source.
         */
 
         const {
@@ -1238,7 +1747,10 @@ async function removeSource(sourceId) {
         } = await sourcesSupabase
             .from("sources")
             .delete()
-            .eq("id", sourceId);
+            .eq(
+                "id",
+                sourceId
+            );
 
 
         if (error) {
@@ -1273,7 +1785,7 @@ async function removeSource(sourceId) {
 
 
         /*
-           Refresh other source selectors.
+           Refresh source selectors elsewhere.
         */
 
         if (
@@ -1298,6 +1810,7 @@ async function removeSource(sourceId) {
             );
 
         }
+
 
     } catch (error) {
 
@@ -1326,7 +1839,9 @@ function showSourceMessage(
 ) {
 
     const message =
-        document.getElementById("source-message");
+        document.getElementById(
+            "source-message"
+        );
 
 
     if (!message) {
@@ -1350,10 +1865,14 @@ function showSourceMessage(
    HTML ESCAPE
    ----------------------------------------- */
 
-function escapeHtml(value) {
+function escapeHtml(
+    value
+) {
 
-    if (value === null ||
-        value === undefined) {
+    if (
+        value === null ||
+        value === undefined
+    ) {
 
         return "";
 
@@ -1361,36 +1880,45 @@ function escapeHtml(value) {
 
 
     return String(value)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /'/g,
+            "&#039;"
+        );
 
 }
 
 
 /* -----------------------------------------
-   DOM READY
+   INITIALIZE
    ----------------------------------------- */
 
 document.addEventListener(
     "DOMContentLoaded",
-    async function () {
+    function () {
 
-        initializeSourcesUI();
+        /*
+           The Sources section exists in
+           Manage.html, but its actual controls
+           are generated here.
+        */
 
-        const caseId =
-            getSourcesCaseId();
-
-
-        if (caseId) {
-
-            await loadManageSources(
-                caseId
-            );
-
-        }
+        buildSourcesManagementUI();
 
     }
 );
@@ -1399,6 +1927,9 @@ document.addEventListener(
 /* -----------------------------------------
    EXPORTS
    ----------------------------------------- */
+
+window.buildSourcesManagementUI =
+    buildSourcesManagementUI;
 
 window.loadManageSources =
     loadManageSources;
