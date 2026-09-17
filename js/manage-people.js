@@ -189,43 +189,92 @@ function showPeopleMessage(
 
 async function loadCasePersonOffenses() {
 
-    const {
-        data,
-        error
-    } = await peopleSupabase
-        .from("case_offenses")
-        .select(`
-            id,
-            name
-        `)
-        .order(
-            "name",
-            {
-                ascending: true
-            }
-        );
+    const allOffenses = [];
+
+    const pageSize = 1000;
+
+    let from = 0;
+
+    let hasMore = true;
 
 
-    if (error) {
+    while (hasMore) {
 
-        console.error(
-            "Error loading case offenses:",
+        const {
+            data,
             error
+        } = await peopleSupabase
+            .from("case_offenses")
+            .select(`
+                id,
+                name
+            `)
+            .order(
+                "name",
+                {
+                    ascending: true
+                }
+            )
+            .range(
+                from,
+                from + pageSize - 1
+            );
+
+
+        if (error) {
+
+            console.error(
+                "Error loading case offenses:",
+                error
+            );
+
+            casePersonOffenses = [];
+
+            return [];
+        }
+
+
+        const page =
+            data || [];
+
+
+        allOffenses.push(
+            ...page
         );
 
-        casePersonOffenses = [];
 
-        return [];
+        /*
+         * If fewer than 1,000 were returned,
+         * we have reached the end.
+         */
+
+        if (
+            page.length < pageSize
+        ) {
+
+            hasMore = false;
+
+        } else {
+
+            from += pageSize;
+
+        }
+
     }
 
 
     casePersonOffenses =
-        data || [];
+        allOffenses;
+
+
+    console.log(
+        "CBRA offenses loaded:",
+        casePersonOffenses.length
+    );
 
 
     return casePersonOffenses;
 }
-
 
 /* =========================================
    LOAD PEOPLE
