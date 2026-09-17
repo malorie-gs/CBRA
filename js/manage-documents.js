@@ -1390,8 +1390,6 @@ async function cancelDocumentEdit(
     }
 
 }
-
-
 /* =========================================
    LOAD DOCUMENT SOURCES
    ========================================= */
@@ -1405,9 +1403,7 @@ async function loadDocumentSources(
             "document-source"
         );
 
-
     if (!sourceSelect) return;
-
 
     sourceSelect.innerHTML = `
         <option value="">
@@ -1415,28 +1411,28 @@ async function loadDocumentSources(
         </option>
     `;
 
-
     if (!caseId) return;
-
 
     const {
         data,
         error
     } =
         await documentsSupabase
-            .from("source_cases")
+            .from("sources")
             .select(`
-                source_id,
-                source:sources (
-                    id,
-                    title
-                )
+                id,
+                title
             `)
             .eq(
                 "case_id",
                 Number(caseId)
+            )
+            .order(
+                "title",
+                {
+                    ascending: true
+                }
             );
-
 
     if (error) {
 
@@ -1448,44 +1444,9 @@ async function loadDocumentSources(
         return;
     }
 
-
     if (!data) return;
 
-
-    const sources =
-        data
-            .map(
-                function(connection) {
-
-                    return connection.source;
-
-                }
-            )
-            .filter(
-                function(source) {
-
-                    return Boolean(
-                        source
-                    );
-
-                }
-            )
-            .sort(
-                function(a, b) {
-
-                    return String(
-                        a.title || ""
-                    ).localeCompare(
-                        String(
-                            b.title || ""
-                        )
-                    );
-
-                }
-            );
-
-
-    sources.forEach(
+    data.forEach(
         function(source) {
 
             const option =
@@ -1493,17 +1454,14 @@ async function loadDocumentSources(
                     "option"
                 );
 
-
             option.value =
                 String(
                     source.id
                 );
 
-
             option.textContent =
                 source.title ||
                 "Untitled Source";
-
 
             sourceSelect.appendChild(
                 option

@@ -425,7 +425,6 @@ function resetGeneralMediaForm() {
 
 }
 
-
 /* -----------------------------------------
    LOAD SOURCES
    ----------------------------------------- */
@@ -440,20 +439,16 @@ async function loadGeneralMediaSources(
             "media-source"
         );
 
-
     if (!selector) {
         return;
     }
 
-
     selector.innerHTML =
         '<option value="">-- No Source --</option>';
-
 
     if (!caseId) {
         return;
     }
-
 
     try {
 
@@ -462,90 +457,27 @@ async function loadGeneralMediaSources(
             error
         } =
             await generalMediaSupabase
-                .from(
-                    "source_cases"
-                )
+                .from("sources")
                 .select(`
-                    source_id,
-                    source:sources (
-                        id,
-                        title
-                    )
+                    id,
+                    title
                 `)
                 .eq(
                     "case_id",
                     Number(caseId)
+                )
+                .order(
+                    "title",
+                    {
+                        ascending: true
+                    }
                 );
-
 
         if (error) {
             throw error;
         }
 
-
-        const sources =
-            (data || [])
-                .map(
-                    function(connection) {
-
-                        return connection.source;
-
-                    }
-                )
-                .filter(
-                    function(source) {
-
-                        return Boolean(
-                            source
-                        );
-
-                    }
-                );
-
-
-        /*
-           Remove duplicate sources.
-        */
-
-        const uniqueSources =
-            Array.from(
-                new Map(
-                    sources.map(
-                        function(source) {
-
-                            return [
-                                String(
-                                    source.id
-                                ),
-                                source
-                            ];
-
-                        }
-                    )
-                ).values()
-            );
-
-
-        /*
-           Alphabetical order.
-        */
-
-        uniqueSources.sort(
-            function(a, b) {
-
-                return String(
-                    a.title || ""
-                ).localeCompare(
-                    String(
-                        b.title || ""
-                    )
-                );
-
-            }
-        );
-
-
-        uniqueSources.forEach(
+        (data || []).forEach(
             function(source) {
 
                 const option =
@@ -553,17 +485,14 @@ async function loadGeneralMediaSources(
                         "option"
                     );
 
-
                 option.value =
                     String(
                         source.id
                     );
 
-
                 option.textContent =
                     source.title ||
                     "Untitled Source";
-
 
                 selector.appendChild(
                     option
@@ -573,9 +502,9 @@ async function loadGeneralMediaSources(
         );
 
 
-        /*
-           Restore selected source when editing.
-        */
+        /* -----------------------------------------
+           RESTORE SELECTED SOURCE WHEN EDITING
+           ----------------------------------------- */
 
         if (
             selectedSourceId !== null &&
@@ -587,7 +516,6 @@ async function loadGeneralMediaSources(
                 String(
                     selectedSourceId
                 );
-
 
             const matchingOption =
                 Array.from(
@@ -604,7 +532,6 @@ async function loadGeneralMediaSources(
                     }
                 );
 
-
             if (matchingOption) {
 
                 selector.value =
@@ -614,7 +541,6 @@ async function loadGeneralMediaSources(
 
         }
 
-
     } catch (error) {
 
         console.error(
@@ -622,14 +548,12 @@ async function loadGeneralMediaSources(
             error
         );
 
-
         selector.innerHTML =
             '<option value="">-- Unable to load sources --</option>';
 
     }
 
 }
-
 
 /* -----------------------------------------
    LOAD GENERAL MEDIA

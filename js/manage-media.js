@@ -869,7 +869,6 @@ async function removeCrimeScenePhoto(id) {
 
 }
 
-
 /* -----------------------------------------
    LOAD SOURCES
    ----------------------------------------- */
@@ -881,98 +880,49 @@ async function loadCrimeScenePhotoSources(caseId) {
             "crime-scene-photo-source"
         );
 
-
     if (!selector) {
         return;
     }
 
-
     selector.innerHTML =
         '<option value="">-- Select Source --</option>';
-
 
     if (!caseId) {
         return;
     }
 
-
     try {
-
-        /*
-           Sources are now connected to cases
-           through source_cases.
-
-           This allows the same source to be
-           reused across multiple cases.
-        */
 
         const {
             data,
             error
         } =
             await supabaseClient
-                .from(
-                    "source_cases"
-                )
+                .from("sources")
                 .select(`
-                    source_id,
-                    source:sources (
-                        id,
-                        title
-                    )
+                    id,
+                    title
                 `)
                 .eq(
                     "case_id",
                     Number(caseId)
+                )
+                .order(
+                    "title",
+                    {
+                        ascending: true
+                    }
                 );
 
-
         if (error) {
-
             throw error;
-
         }
-
 
         if (!data) {
             return;
         }
 
-
-        const sources =
-            data
-                .map(
-                    function(connection) {
-
-                        return connection.source;
-
-                    }
-                )
-                .filter(
-                    function(source) {
-
-                        return Boolean(
-                            source
-                        );
-
-                    }
-                )
-                .sort(
-                    function(a, b) {
-
-                        return String(
-                            a.title || ""
-                        ).localeCompare(
-                            String(
-                                b.title || ""
-                            )
-                        );
-
-                    }
-                );
-
-
-        sources.forEach(
+        data.forEach(
             function(source) {
 
                 const option =
@@ -1006,7 +956,6 @@ async function loadCrimeScenePhotoSources(caseId) {
     }
 
 }
-
 
 /* -----------------------------------------
    FORM SUBMISSION
