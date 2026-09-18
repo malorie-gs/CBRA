@@ -405,7 +405,6 @@ async function loadCase() {
 
 }
 
-
 /* -----------------------------------------
    LOAD PEOPLE
    ----------------------------------------- */
@@ -427,11 +426,11 @@ async function loadPeople() {
             .from("case_people")
             .select(`
                 role,
-                people (
+                person:people (
                     id,
-                    name,
+                    display_name,
                     date_of_birth,
-                    age,
+                    age_at_case,
                     gender
                 )
             `)
@@ -472,7 +471,7 @@ async function loadPeople() {
             .map(item => {
 
                 const person =
-                    item.people;
+                    item.person;
 
                 if (!person) {
 
@@ -487,32 +486,46 @@ async function loadPeople() {
                             <a
                                 href="person.html?id=${encodeURIComponent(person.id)}"
                             >
-                                ${escapeHTML(person.name)}
+                                ${escapeHTML(
+                                    person.display_name ||
+                                    "Unnamed Person"
+                                )}
                             </a>
                         </h3>
 
                         <p>
                             <strong>Role:</strong>
-                            ${escapeHTML(item.role || "—")}
+                            ${escapeHTML(
+                                item.role ||
+                                "—"
+                            )}
                         </p>
 
                         <p>
                             <strong>Age:</strong>
-                            ${escapeHTML(person.age ?? "—")}
+                            ${escapeHTML(
+                                person.age_at_case ??
+                                "—"
+                            )}
                         </p>
 
                         <p>
                             <strong>Date of Birth:</strong>
                             ${escapeHTML(
                                 person.date_of_birth
-                                    ? formatDate(person.date_of_birth)
+                                    ? formatDate(
+                                        person.date_of_birth
+                                    )
                                     : "—"
                             )}
                         </p>
 
                         <p>
                             <strong>Gender:</strong>
-                            ${escapeHTML(person.gender || "—")}
+                            ${escapeHTML(
+                                person.gender ||
+                                "—"
+                            )}
                         </p>
 
                     </div>
@@ -522,7 +535,6 @@ async function loadPeople() {
             .join("");
 
 }
-
 
 /* -----------------------------------------
    LOAD TAGS
@@ -781,7 +793,6 @@ async function loadCrimeScenePhotos() {
 
 }
 
-
 /* -----------------------------------------
    LOAD MEDIA
    ----------------------------------------- */
@@ -807,11 +818,7 @@ async function loadMedia() {
                 media_type,
                 description,
                 url,
-                sources (
-                    id,
-                    title,
-                    url
-                )
+                source_id
             `)
             .eq(
                 "case_id",
@@ -845,9 +852,69 @@ async function loadMedia() {
 
     }
 
+    const sourceIds =
+        data
+            .map(
+                media => media.source_id
+            )
+            .filter(Boolean);
+
+    let sources = [];
+
+    if (sourceIds.length > 0) {
+
+        const {
+            data: sourceData,
+            error: sourceError
+        } =
+            await supabaseClient
+                .from("sources")
+                .select(`
+                    id,
+                    title,
+                    url
+                `)
+                .in(
+                    "id",
+                    sourceIds
+                );
+
+        if (sourceError) {
+
+            console.warn(
+                "CBRA: Could not load media sources:",
+                sourceError
+            );
+
+        } else {
+
+            sources =
+                sourceData || [];
+
+        }
+
+    }
+
+    const sourceMap =
+        new Map(
+            sources.map(
+                source => [
+                    source.id,
+                    source
+                ]
+            )
+        );
+
     container.innerHTML =
         data
             .map(media => {
+
+                const source =
+                    media.source_id
+                        ? sourceMap.get(
+                            media.source_id
+                        )
+                        : null;
 
                 return `
                     <div class="media-card">
@@ -867,12 +934,17 @@ async function loadMedia() {
                             )}
                         </p>
 
-                        <p>
-                            ${escapeHTML(
-                                media.description ||
-                                ""
-                            )}
-                        </p>
+                        ${
+                            media.description
+                                ? `
+                                    <p>
+                                        ${escapeHTML(
+                                            media.description
+                                        )}
+                                    </p>
+                                `
+                                : ""
+                        }
 
                         ${
                             media.url
@@ -883,6 +955,29 @@ async function loadMedia() {
                                 : ""
                         }
 
+                        ${
+                            source
+                                ? `
+                                    <p>
+                                        <strong>Source:</strong>
+                                        ${escapeHTML(
+                                            source.title ||
+                                            "Untitled Source"
+                                        )}
+                                    </p>
+
+                                    ${
+                                        source.url
+                                            ? createExternalLink(
+                                                source.url,
+                                                "View Source"
+                                            )
+                                            : ""
+                                    }
+                                `
+                                : ""
+                        }
+
                     </div>
                 `;
 
@@ -890,8 +985,6 @@ async function loadMedia() {
             .join("");
 
 }
-
-
 /* -----------------------------------------
    LOAD DOCUMENTS
    ----------------------------------------- */
@@ -950,9 +1043,23 @@ async function loadDocuments() {
     }
 
     const documentIds =
-        documentCases.map(
-            item => item.document_id
+        documentCases
+            .map(
+                item =>
+                    item.document_id
+            )
+            .filter(Boolean);
+
+    if (documentIds.length === 0) {
+
+        showEmpty(
+            "case-documents",
+            "No documents are linked to this case."
         );
+
+        return;
+
+    }
 
     const {
         data: documents,
@@ -966,13 +1073,8 @@ async function loadDocuments() {
                 document_type,
                 publication_date,
                 description,
-                url,
-                source_id,
-                sources (
-                    id,
-                    title,
-                    url
-                )
+                document_url,
+                source_id
             `)
             .in(
                 "id",
@@ -1006,6 +1108,60 @@ async function loadDocuments() {
 
     }
 
+    const sourceIds =
+        documents
+            .map(
+                document =>
+                    document.source_id
+            )
+            .filter(Boolean);
+
+    let sources = [];
+
+    if (sourceIds.length > 0) {
+
+        const {
+            data: sourceData,
+            error: sourceError
+        } =
+            await supabaseClient
+                .from("sources")
+                .select(`
+                    id,
+                    title,
+                    url
+                `)
+                .in(
+                    "id",
+                    sourceIds
+                );
+
+        if (sourceError) {
+
+            console.warn(
+                "CBRA: Could not load document sources:",
+                sourceError
+            );
+
+        } else {
+
+            sources =
+                sourceData || [];
+
+        }
+
+    }
+
+    const sourceMap =
+        new Map(
+            sources.map(
+                source => [
+                    source.id,
+                    source
+                ]
+            )
+        );
+
     documents.sort(
         (a, b) => {
 
@@ -1014,8 +1170,12 @@ async function loadDocuments() {
             if (!b.publication_date) return -1;
 
             return (
-                new Date(b.publication_date) -
-                new Date(a.publication_date)
+                new Date(
+                    b.publication_date
+                ) -
+                new Date(
+                    a.publication_date
+                )
             );
 
         }
@@ -1024,6 +1184,13 @@ async function loadDocuments() {
     container.innerHTML =
         documents
             .map(document => {
+
+                const source =
+                    document.source_id
+                        ? sourceMap.get(
+                            document.source_id
+                        )
+                        : null;
 
                 return `
                     <div class="document-card">
@@ -1045,29 +1212,58 @@ async function loadDocuments() {
 
                         <p>
                             <strong>Publication Date:</strong>
-                            ${document.publication_date
-                                ? escapeHTML(
-                                    formatDate(
-                                        document.publication_date
+                            ${
+                                document.publication_date
+                                    ? escapeHTML(
+                                        formatDate(
+                                            document.publication_date
+                                        )
                                     )
-                                )
-                                : "—"
+                                    : "—"
                             }
                         </p>
 
-                        <p>
-                            ${escapeHTML(
-                                document.description ||
-                                ""
-                            )}
-                        </p>
+                        ${
+                            document.description
+                                ? `
+                                    <p>
+                                        ${escapeHTML(
+                                            document.description
+                                        )}
+                                    </p>
+                                `
+                                : ""
+                        }
 
                         ${
-                            document.url
+                            document.document_url
                                 ? createExternalLink(
-                                    document.url,
+                                    document.document_url,
                                     "View Document"
                                 )
+                                : ""
+                        }
+
+                        ${
+                            source
+                                ? `
+                                    <p>
+                                        <strong>Source:</strong>
+                                        ${escapeHTML(
+                                            source.title ||
+                                            "Untitled Source"
+                                        )}
+                                    </p>
+
+                                    ${
+                                        source.url
+                                            ? createExternalLink(
+                                                source.url,
+                                                "View Source"
+                                            )
+                                            : ""
+                                    }
+                                `
                                 : ""
                         }
 
@@ -1078,7 +1274,6 @@ async function loadDocuments() {
             .join("");
 
 }
-
 
 /* -----------------------------------------
    LOAD CASE SOURCES
