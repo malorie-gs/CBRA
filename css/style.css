@@ -633,6 +633,84 @@ main > p {
     line-height: 1.75;
 }
 
+/* =========================================================
+   13. COPYRIGHT & USAGE
+   ========================================================= */
+
+.copyright-section {
+    min-width: 0;
+
+    padding: 25px;
+
+    margin-top: 18px;
+
+    background: var(--paper);
+
+    border: 1px solid var(--border-light);
+
+    color: var(--ink);
+
+    box-shadow: var(--shadow-small);
+}
+
+.copyright-section h2 {
+    margin-bottom: 10px;
+
+    color: var(--ink);
+
+    font-size: 22px;
+}
+
+.copyright-section h2::after {
+    content: "";
+
+    display: block;
+
+    width: 32px;
+
+    height: 2px;
+
+    margin-top: 8px;
+
+    background: var(--accent);
+}
+
+.copyright-section h3 {
+    margin-top: 28px;
+
+    margin-bottom: 9px;
+
+    color: var(--ink);
+
+    font-size: 17px;
+}
+
+.copyright-section p,
+.copyright-section li {
+    color: var(--ink-soft);
+
+    font-size: 13px;
+
+    line-height: 1.75;
+}
+
+.copyright-section p {
+    max-width: 820px;
+
+    margin-bottom: 14px;
+}
+
+.copyright-section ul {
+    max-width: 820px;
+
+    margin: 8px 0 18px 20px;
+
+    padding: 0;
+}
+
+.copyright-section li {
+    margin-bottom: 6px;
+}
 
 /* =========================================================
    13. ARCHIVE SEARCH
