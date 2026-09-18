@@ -4350,3 +4350,17 @@ textarea:focus-visible {
 .last-updated {
     margin-bottom: 8px !important;
 }
+
+.resource-type {
+    margin-bottom: 10px !important;
+
+    color: var(--accent) !important;
+
+    font-family: var(--mono);
+
+    font-size: 9px !important;
+
+    letter-spacing: 1.4px;
+
+    line-height: 1.4 !important;
+}
