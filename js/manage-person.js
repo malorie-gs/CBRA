@@ -2911,6 +2911,12 @@ function setupLoginForm() {
 /* =========================================
    LOGOUT
    ========================================= */
+<button
+    type="button"
+    id="logout-button"
+>
+    Log Out
+</button>
 
 function setupLogoutButton() {
 
