@@ -1322,7 +1322,6 @@ async function loadDocuments() {
 
 }
 
-
 /* -----------------------------------------
    LOAD CASE SOURCES
    ----------------------------------------- */
@@ -1335,6 +1334,11 @@ async function loadCaseSources() {
         );
 
     if (!container) return;
+
+
+    /* -----------------------------------------
+       LOAD SOURCE/CASE RELATIONSHIPS
+       ----------------------------------------- */
 
     const {
         data: sourceCases,
@@ -1350,10 +1354,11 @@ async function loadCaseSources() {
                 caseId
             );
 
+
     if (sourceCaseError) {
 
         console.error(
-            "CBRA: Error loading case sources:",
+            "CBRA: Error loading source_cases:",
             sourceCaseError
         );
 
@@ -1366,7 +1371,20 @@ async function loadCaseSources() {
 
     }
 
-    if (!sourceCases || sourceCases.length === 0) {
+
+    /* -----------------------------------------
+       NO RELATIONSHIPS
+       ----------------------------------------- */
+
+    if (
+        !sourceCases ||
+        sourceCases.length === 0
+    ) {
+
+        console.warn(
+            "CBRA: No source_cases rows found for case:",
+            caseId
+        );
 
         showEmpty(
             "case-sources",
@@ -1377,17 +1395,55 @@ async function loadCaseSources() {
 
     }
 
+
+    /* -----------------------------------------
+       GET SOURCE IDS
+       ----------------------------------------- */
+
     const sourceIds =
         sourceCases
             .map(
-                item =>
-                    item.source_id
+                relationship =>
+                    relationship.source_id
             )
-            .filter(Boolean);
+            .filter(
+                sourceId =>
+                    sourceId !== null &&
+                    sourceId !== undefined
+            );
+
+
+    if (sourceIds.length === 0) {
+
+        console.warn(
+            "CBRA: source_cases rows exist, but no source IDs were found for case:",
+            caseId
+        );
+
+        showEmpty(
+            "case-sources",
+            "No sources are linked to this case."
+        );
+
+        return;
+
+    }
+
+
+    console.log(
+        "CBRA: Source IDs for case",
+        caseId,
+        sourceIds
+    );
+
+
+    /* -----------------------------------------
+       LOAD SOURCES
+       ----------------------------------------- */
 
     const {
         data: sources,
-        error
+        error: sourceError
     } =
         await supabaseClient
             .from("sources")
@@ -1403,11 +1459,12 @@ async function loadCaseSources() {
                 sourceIds
             );
 
-    if (error) {
+
+    if (sourceError) {
 
         console.error(
-            "CBRA: Error loading sources:",
-            error
+            "CBRA: Error loading source records:",
+            sourceError
         );
 
         showEmpty(
@@ -1419,16 +1476,37 @@ async function loadCaseSources() {
 
     }
 
-    if (!sources || sources.length === 0) {
+
+    /* -----------------------------------------
+       SOURCE RECORDS NOT FOUND
+       ----------------------------------------- */
+
+    if (
+        !sources ||
+        sources.length === 0
+    ) {
+
+        console.warn(
+            "CBRA: source_cases found source IDs, but no matching sources were returned.",
+            {
+                caseId: caseId,
+                sourceIds: sourceIds
+            }
+        );
 
         showEmpty(
             "case-sources",
-            "No sources are available."
+            "The linked source records could not be found."
         );
 
         return;
 
     }
+
+
+    /* -----------------------------------------
+       SORT SOURCES
+       ----------------------------------------- */
 
     sources.sort(
         (a, b) => {
@@ -1438,12 +1516,21 @@ async function loadCaseSources() {
             if (!b.publication_date) return -1;
 
             return (
-                new Date(b.publication_date) -
-                new Date(a.publication_date)
+                new Date(
+                    b.publication_date
+                ) -
+                new Date(
+                    a.publication_date
+                )
             );
 
         }
     );
+
+
+    /* -----------------------------------------
+       DISPLAY SOURCES
+       ----------------------------------------- */
 
     container.innerHTML =
         sources
@@ -1496,7 +1583,6 @@ async function loadCaseSources() {
             .join("");
 
 }
-
 
 /* -----------------------------------------
    LOAD LINKS
