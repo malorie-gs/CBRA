@@ -58,33 +58,33 @@ const PERSON_SOURCE_TYPES = [
    DOM READY
    ========================================= */
 
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener(
+    "DOMContentLoaded",
+    async () => {
 
-    await checkAdmin();
+        await checkAdmin();
 
-    await loadPeopleSelector();
+        await loadPeopleSelector();
 
-    /*
-       Management forms are ONLY created
-       for the admin.
-    */
+        setupPersonSelector();
+        setupPersonForm();
+        setupLoginForm();
+        setupLogoutButton();
+        setupMugshotForm();
 
-    if (CBRA_IS_ADMIN) {
+        updateAdminInterface();
 
-        createSourceManagementForm();
-        createDocumentManagementForm();
+        if (CBRA_IS_ADMIN) {
+
+            createSourceManagementForm();
+            createDocumentManagementForm();
+
+        }
+
+        updateAuthInterface();
 
     }
-
-    setupPersonSelector();
-    setupPersonForm();
-    setupLoginForm();
-    setupLogoutButton();
-    setupMugshotForm();
-
-    updateAdminInterface();
-
-});
+);
 
 
 /* =========================================
@@ -131,6 +131,46 @@ async function checkAdmin() {
 
 
 /* =========================================
+   AUTH INTERFACE
+   ========================================= */
+
+function updateAuthInterface() {
+
+    const loginForm =
+        document.getElementById(
+            "login-form"
+        );
+
+
+    const logoutButton =
+        document.getElementById(
+            "logout-button"
+        );
+
+
+    if (loginForm) {
+
+        loginForm.style.display =
+            CBRA_IS_ADMIN
+                ? "none"
+                : "";
+
+    }
+
+
+    if (logoutButton) {
+
+        logoutButton.style.display =
+            CBRA_IS_ADMIN
+                ? ""
+                : "none";
+
+    }
+
+}
+
+
+/* =========================================
    ADMIN INTERFACE
    ========================================= */
 
@@ -145,6 +185,7 @@ function updateAdminInterface() {
             "person-form"
         );
 
+
     if (personForm) {
 
         personForm.style.display =
@@ -156,8 +197,7 @@ function updateAdminInterface() {
 
 
     /*
-       Static management containers that
-       may exist in Manage Person HTML.
+       Static management containers
     */
 
     const adminContainers = [
@@ -186,8 +226,7 @@ function updateAdminInterface() {
 
 
     /*
-       Admin-only buttons already present
-       in HTML.
+       Admin-only buttons
     */
 
     const adminButtons = [
@@ -216,6 +255,9 @@ function updateAdminInterface() {
 
     });
 
+
+    updateAuthInterface();
+
 }
 
 
@@ -230,6 +272,7 @@ async function loadPeopleSelector() {
             "person-selector"
         );
 
+
     if (!selector) return;
 
 
@@ -242,7 +285,9 @@ async function loadPeopleSelector() {
         error
     } = await supabaseClient
         .from("people")
-        .select("id, display_name")
+        .select(
+            "id, display_name"
+        )
         .order(
             "display_name",
             {
@@ -266,7 +311,9 @@ async function loadPeopleSelector() {
     (data || []).forEach(person => {
 
         const option =
-            document.createElement("option");
+            document.createElement(
+                "option"
+            );
 
 
         option.value =
@@ -297,6 +344,7 @@ function setupPersonSelector() {
         document.getElementById(
             "person-selector"
         );
+
 
     if (!selector) return;
 
@@ -346,10 +394,6 @@ function setupPersonSelector() {
 
 function updateCurrentPersonId() {
 
-    /*
-       Keep global reference synchronized.
-    */
-
     window.currentPersonId =
         currentPersonId;
 
@@ -360,7 +404,9 @@ function updateCurrentPersonId() {
    LOAD PERSON
    ========================================= */
 
-async function loadPerson(personId) {
+async function loadPerson(
+    personId
+) {
 
     const {
         data,
@@ -429,16 +475,9 @@ async function loadPerson(personId) {
     );
 
 
-    if (
-        typeof loadPersonDocuments ===
-        "function"
-    ) {
-
-        await loadPersonDocuments(
-            personId
-        );
-
-    }
+    await loadPersonDocuments(
+        personId
+    );
 
 }
 
@@ -497,16 +536,12 @@ function clearPersonManagement() {
 
     if (sources) {
 
+        sources.innerHTML =
+            "<p>Select a person to view their sources.</p>";
+
         if (CBRA_IS_ADMIN) {
 
-            sources.innerHTML = "";
-
             createSourceManagementForm();
-
-        } else {
-
-            sources.innerHTML =
-                "<p>Select a person to view their sources.</p>";
 
         }
 
@@ -535,16 +570,12 @@ function clearPersonManagement() {
 
     if (documents) {
 
+        documents.innerHTML =
+            "<p>Select a person to view their documents.</p>";
+
         if (CBRA_IS_ADMIN) {
 
-            documents.innerHTML = "";
-
             createDocumentManagementForm();
-
-        } else {
-
-            documents.innerHTML =
-                "<p>Select a person to view their documents.</p>";
 
         }
 
@@ -574,11 +605,6 @@ function setupPersonForm() {
 
             event.preventDefault();
 
-
-            /*
-               Frontend protection.
-               RLS remains the actual security.
-            */
 
             if (!CBRA_IS_ADMIN) {
 
@@ -706,7 +732,9 @@ function setupPersonForm() {
    CASES
    ========================================= */
 
-async function loadPersonCases(personId) {
+async function loadPersonCases(
+    personId
+) {
 
     const container =
         document.getElementById(
@@ -947,14 +975,7 @@ async function loadPersonCases(personId) {
 
 function createSourceManagementForm() {
 
-    /*
-       NEVER create this interface for
-       non-admin users.
-    */
-
-    if (!CBRA_IS_ADMIN) {
-        return;
-    }
+    if (!CBRA_IS_ADMIN) return;
 
 
     const container =
@@ -965,10 +986,6 @@ function createSourceManagementForm() {
 
     if (!container) return;
 
-
-    /*
-       Prevent duplicate forms.
-    */
 
     if (
         document.getElementById(
@@ -1341,14 +1358,6 @@ async function loadExistingSourcesForPerson(
     }
 
 
-    /*
-       Existing source architecture still uses
-       sources.case_id here.
-
-       This is intentional for compatibility
-       with your current source system.
-    */
-
     const {
         data: sources,
         error: sourceError
@@ -1484,11 +1493,6 @@ async function loadPersonSources(
     personId
 ) {
 
-    /*
-       Only create the management interface
-       for the admin.
-    */
-
     if (CBRA_IS_ADMIN) {
 
         let form =
@@ -1516,11 +1520,6 @@ async function loadPersonSources(
     }
 
 
-    /*
-       The linked source list itself is
-       available to the admin management page.
-    */
-
     const list =
         document.getElementById(
             "person-sources-list"
@@ -1528,8 +1527,6 @@ async function loadPersonSources(
 
 
     if (!list) {
-
-        if (!CBRA_IS_ADMIN) return;
 
         return;
 
@@ -1713,11 +1710,7 @@ async function loadPersonSources(
 
 async function assignExistingSourceToPerson() {
 
-    if (!CBRA_IS_ADMIN) {
-
-        return;
-
-    }
+    if (!CBRA_IS_ADMIN) return;
 
 
     if (!currentPersonId) {
@@ -1854,11 +1847,7 @@ async function assignExistingSourceToPerson() {
 
 async function addPersonSource() {
 
-    if (!CBRA_IS_ADMIN) {
-
-        return;
-
-    }
+    if (!CBRA_IS_ADMIN) return;
 
 
     if (!currentPersonId) {
@@ -1949,11 +1938,6 @@ async function addPersonSource() {
         Number(caseId);
 
 
-    /*
-       Create source with case_id for
-       compatibility with Manage Cases.
-    */
-
     const {
         data: source,
         error: sourceError
@@ -2000,10 +1984,6 @@ async function addPersonSource() {
     }
 
 
-    /*
-       Connect source to person.
-    */
-
     const {
         error: relationshipError
     } = await supabaseClient
@@ -2027,10 +2007,6 @@ async function addPersonSource() {
         );
 
 
-        /*
-           Clean up orphan source.
-        */
-
         await supabaseClient
             .from("sources")
             .delete()
@@ -2052,8 +2028,7 @@ async function addPersonSource() {
 
 
     /*
-       Also connect the source through the
-       central source_cases system.
+       Central source_cases relationship.
     */
 
     const {
@@ -2070,12 +2045,6 @@ async function addPersonSource() {
 
         });
 
-
-    /*
-       If it already exists, PostgreSQL may
-       reject the duplicate. The source itself
-       is still valid, so don't delete it.
-    */
 
     if (caseRelationshipError) {
 
@@ -2122,11 +2091,6 @@ async function addPersonSource() {
     );
 
 
-    /*
-       Refresh Manage Cases source list
-       if available.
-    */
-
     if (
         typeof window.loadManageSources ===
         "function"
@@ -2149,18 +2113,10 @@ async function removePersonSourceConnection(
     sourceId
 ) {
 
-    if (!CBRA_IS_ADMIN) {
-
-        return;
-
-    }
+    if (!CBRA_IS_ADMIN) return;
 
 
-    if (!currentPersonId) {
-
-        return;
-
-    }
+    if (!currentPersonId) return;
 
 
     const {
@@ -2283,7 +2239,7 @@ async function loadPersonMugshots(
             "management-card";
 
 
-        let imageUrl =
+        const imageUrl =
             mugshot.image_url ||
             mugshot.file_url ||
             "";
@@ -2332,12 +2288,11 @@ async function loadPersonMugshots(
 function setupMugshotForm() {
 
     /*
-       Existing mugshot form logic is
-       preserved if the HTML provides
-       its own controls.
+       Mugshot upload logic can be added here
+       when the upload controls are present.
 
-       Any actual write operation should
-       still check CBRA_IS_ADMIN.
+       Any write operation MUST verify
+       CBRA_IS_ADMIN before touching Supabase.
     */
 
 }
@@ -2349,11 +2304,7 @@ function setupMugshotForm() {
 
 function createDocumentManagementForm() {
 
-    if (!CBRA_IS_ADMIN) {
-
-        return;
-
-    }
+    if (!CBRA_IS_ADMIN) return;
 
 
     const container =
@@ -2364,10 +2315,6 @@ function createDocumentManagementForm() {
 
     if (!container) return;
 
-
-    /*
-       Don't overwrite an existing form.
-    */
 
     if (
         document.getElementById(
@@ -2503,10 +2450,30 @@ async function loadPersonDocuments(
     personId
 ) {
 
-    const list =
+    let list =
         document.getElementById(
             "person-documents-list"
         );
+
+
+    /*
+       If admin and the management form has
+       not been created yet, create it.
+    */
+
+    if (
+        !list &&
+        CBRA_IS_ADMIN
+    ) {
+
+        createDocumentManagementForm();
+
+        list =
+            document.getElementById(
+                "person-documents-list"
+            );
+
+    }
 
 
     if (!list) return;
@@ -2653,11 +2620,7 @@ async function loadPersonDocuments(
 
 async function addPersonDocument() {
 
-    if (!CBRA_IS_ADMIN) {
-
-        return;
-
-    }
+    if (!CBRA_IS_ADMIN) return;
 
 
     if (!currentPersonId) {
@@ -2837,6 +2800,18 @@ function setupLoginForm() {
                 );
 
 
+            if (!email || !password) {
+
+                setMessage(
+                    "login-message",
+                    "Enter your email and password."
+                );
+
+                return;
+
+            }
+
+
             const {
                 error
             } =
@@ -2868,31 +2843,31 @@ function setupLoginForm() {
             updateAdminInterface();
 
 
-            /*
-               Create admin-only forms after
-               successful admin login.
-            */
+            updateAuthInterface();
 
-            if (CBRA_IS_ADMIN) {
 
-                createSourceManagementForm();
-                createDocumentManagementForm();
+            if (!CBRA_IS_ADMIN) {
+
+                setMessage(
+                    "login-message",
+                    "This account does not have admin access."
+                );
+
+                return;
 
             }
 
 
+            createSourceManagementForm();
+
+            createDocumentManagementForm();
+
+
             setMessage(
                 "login-message",
-                CBRA_IS_ADMIN
-                    ? "Logged in."
-                    : "Logged in."
+                "Logged in."
             );
 
-
-            /*
-               If a person was already selected,
-               refresh the management interface.
-            */
 
             if (currentPersonId) {
 
@@ -2911,12 +2886,6 @@ function setupLoginForm() {
 /* =========================================
    LOGOUT
    ========================================= */
-<button
-    type="button"
-    id="logout-button"
->
-    Log Out
-</button>
 
 function setupLogoutButton() {
 
@@ -2933,7 +2902,30 @@ function setupLogoutButton() {
         "click",
         async () => {
 
-            await supabaseClient.auth.signOut();
+            button.disabled =
+                true;
+
+
+            const {
+                error
+            } = await supabaseClient.auth.signOut();
+
+
+            if (error) {
+
+                console.error(
+                    "Logout failed:",
+                    error
+                );
+
+
+                button.disabled =
+                    false;
+
+
+                return;
+
+            }
 
 
             CBRA_IS_ADMIN =
@@ -2947,7 +2939,27 @@ function setupLogoutButton() {
             updateCurrentPersonId();
 
 
-            window.location.reload();
+            updateAdminInterface();
+
+
+            updateAuthInterface();
+
+
+            clearPersonManagement();
+
+
+            const loginMessage =
+                document.getElementById(
+                    "login-message"
+                );
+
+
+            if (loginMessage) {
+
+                loginMessage.textContent =
+                    "Logged out.";
+
+            }
 
         }
     );
@@ -3114,8 +3126,7 @@ window.getPersonPublicUrl =
 
 
 /*
-   Use a getter so window.currentPersonId
-   always reflects the actual current ID.
+   Keep window.currentPersonId synchronized.
 */
 
 Object.defineProperty(
