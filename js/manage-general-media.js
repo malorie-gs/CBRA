@@ -202,6 +202,11 @@ function buildGeneralMediaForm() {
                                 Other
                             </option>
 
+                           <option value="Court Footage">
+                                Court Footage
+                            </option>
+
+
                         </select>
 
                     </div>
