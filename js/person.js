@@ -3464,7 +3464,6 @@ async function deletePersonDocument(
 
 }
 
-
 // ============================================================
 // Load Person Sources
 // ============================================================
@@ -3486,29 +3485,35 @@ async function loadPersonSources(
     }
 
 
+    // --------------------------------------------------------
+    // IMPORTANT:
+    // Sources connected to people are stored in
+    // source_people.
+    //
+    // Do NOT use person_sources here.
+    // --------------------------------------------------------
+
     const {
         data,
         error
     } =
         await supabaseClient
-            .from("person_sources")
+            .from("source_people")
             .select(`
                 id,
-                title,
-                url,
-                source_type,
-                publication_date
+                source_id,
+                person_id,
+                source:sources (
+                    id,
+                    title,
+                    url,
+                    source_type,
+                    publication_date
+                )
             `)
             .eq(
                 "person_id",
                 personId
-            )
-            .order(
-                "publication_date",
-                {
-                    ascending: false,
-                    nullsFirst: false
-                }
             );
 
 
@@ -3527,9 +3532,71 @@ async function loadPersonSources(
     }
 
 
+    // --------------------------------------------------------
+    // Convert source_people rows into source records
+    // --------------------------------------------------------
+
+    const sources =
+        (data || [])
+            .map(
+                connection =>
+                    connection.source
+            )
+            .filter(Boolean);
+
+
+    // --------------------------------------------------------
+    // Remove duplicate sources just in case
+    // --------------------------------------------------------
+
+    const uniqueSources =
+        Array.from(
+            new Map(
+                sources.map(
+                    source => [
+                        String(source.id),
+                        source
+                    ]
+                )
+            ).values()
+        );
+
+
+    // --------------------------------------------------------
+    // Sort newest publication date first
+    // --------------------------------------------------------
+
+    uniqueSources.sort(
+        function(a, b) {
+
+            const dateA =
+                a.publication_date
+                    ? new Date(
+                        a.publication_date
+                    ).getTime()
+                    : 0;
+
+
+            const dateB =
+                b.publication_date
+                    ? new Date(
+                        b.publication_date
+                    ).getTime()
+                    : 0;
+
+
+            return dateB - dateA;
+
+        }
+    );
+
+
+    // --------------------------------------------------------
+    // Nothing found
+    // --------------------------------------------------------
+
     if (
-        !data ||
-        data.length === 0
+        uniqueSources.length === 0
     ) {
 
         container.innerHTML =
@@ -3540,12 +3607,16 @@ async function loadPersonSources(
     }
 
 
+    // --------------------------------------------------------
+    // Display sources
+    // --------------------------------------------------------
+
     container.innerHTML =
         "";
 
 
-    data.forEach(
-        source => {
+    uniqueSources.forEach(
+        function(source) {
 
             const article =
                 document.createElement(
@@ -3563,7 +3634,7 @@ async function loadPersonSources(
 
                     <a
                         href="${escapeHtml(
-                            source.url
+                            source.url || "#"
                         )}"
                         target="_blank"
                         rel="noopener noreferrer"
@@ -3614,13 +3685,6 @@ async function loadPersonSources(
                                     Edit
                                 </button>
 
-                                <button
-                                    type="button"
-                                    onclick="deletePersonSource('${source.id}')"
-                                >
-                                    Delete
-                                </button>
-
                             </div>
                         `
                         : ""
@@ -3637,7 +3701,6 @@ async function loadPersonSources(
     );
 
 }
-
 
 // ============================================================
 // Source Form
