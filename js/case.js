@@ -193,7 +193,6 @@ async function loadCase() {
                 classification,
                 offense,
                 additional_offenses,
-                case_status,
                 outcome,
                 victim_count,
                 fatality_count,
@@ -289,11 +288,6 @@ async function loadCase() {
     setText(
         "case-offense",
         caseData.offense
-    );
-
-    setText(
-        "case-status",
-        caseData.case_status
     );
 
     setText(
