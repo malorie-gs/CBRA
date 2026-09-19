@@ -817,7 +817,7 @@ async function loadMedia() {
                 title,
                 media_type,
                 description,
-                url,
+                media_url,
                 source_id
             `)
             .eq(
@@ -947,9 +947,9 @@ async function loadMedia() {
                         }
 
                         ${
-                            media.url
+                            media.media_url
                                 ? createExternalLink(
-                                    media.url,
+                                    media.media_url,
                                     "Open Media"
                                 )
                                 : ""
@@ -983,8 +983,8 @@ async function loadMedia() {
 
             })
             .join("");
-
 }
+
 /* -----------------------------------------
    LOAD DOCUMENTS
    ----------------------------------------- */
