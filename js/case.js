@@ -36,11 +36,8 @@ function setText(id, value) {
         value === undefined ||
         String(value).trim() === ""
     ) {
-
         element.textContent = "—";
-
         return;
-
     }
 
     element.textContent = value;
@@ -58,9 +55,7 @@ function escapeHTML(value) {
         value === null ||
         value === undefined
     ) {
-
         return "";
-
     }
 
     return String(value)
@@ -80,18 +75,14 @@ function escapeHTML(value) {
 function formatDate(dateValue) {
 
     if (!dateValue) {
-
         return "—";
-
     }
 
     const date =
         new Date(dateValue);
 
     if (Number.isNaN(date.getTime())) {
-
         return dateValue;
-
     }
 
     return date.toLocaleDateString(
@@ -116,9 +107,7 @@ function createExternalLink(
 ) {
 
     if (!url) {
-
         return "—";
-
     }
 
     return `
@@ -154,65 +143,6 @@ function showEmpty(
         <div class="empty-state">
             ${escapeHTML(message)}
         </div>
-    `;
-
-}
-
-
-/* -----------------------------------------
-   ADDITIONAL OFFENSES
-   ----------------------------------------- */
-
-function renderAdditionalOffenses(value) {
-
-    const container =
-        document.getElementById(
-            "case-additional-offenses"
-        );
-
-    if (!container) return;
-
-    if (
-        value === null ||
-        value === undefined ||
-        String(value).trim() === ""
-    ) {
-
-        container.textContent = "—";
-
-        return;
-
-    }
-
-    const offenses =
-        String(value)
-            .split(/\s*(?:,|;|\n)\s*/)
-            .map(offense => offense.trim())
-            .filter(Boolean);
-
-    if (offenses.length === 0) {
-
-        container.textContent = "—";
-
-        return;
-
-    }
-
-    container.innerHTML = `
-        <ul class="additional-offenses-list">
-
-            ${offenses
-                .map(
-                    offense => `
-                        <li>
-                            ${escapeHTML(offense)}
-                        </li>
-                    `
-                )
-                .join("")
-            }
-
-        </ul>
     `;
 
 }
@@ -260,21 +190,20 @@ async function loadCase() {
                 country,
                 state_province,
                 city,
-                description,
+                classification,
                 offense,
                 additional_offenses,
-                classification,
+                case_status,
                 outcome,
                 victim_count,
-                fatality_count
+                fatality_count,
+                description
             `)
-            .eq("id", caseId)
+            .eq(
+                "id",
+                caseId
+            )
             .single();
-
-
-    /* -----------------------------------------
-       ERROR
-       ----------------------------------------- */
 
     if (error) {
 
@@ -299,7 +228,7 @@ async function loadCase() {
 
 
     /* -----------------------------------------
-       CASE HEADER
+       HEADER
        ----------------------------------------- */
 
     setText(
@@ -308,7 +237,18 @@ async function loadCase() {
     );
 
     setText(
-        "case-date",
+        "case-location",
+        [
+            caseData.city,
+            caseData.state_province,
+            caseData.country
+        ]
+            .filter(Boolean)
+            .join(", ")
+    );
+
+    setText(
+        "case-date-header",
         formatDate(
             caseData.case_date
         )
@@ -316,8 +256,15 @@ async function loadCase() {
 
 
     /* -----------------------------------------
-       CASE LOCATION
+       CASE INFORMATION
        ----------------------------------------- */
+
+    setText(
+        "case-date",
+        formatDate(
+            caseData.case_date
+        )
+    );
 
     setText(
         "case-country",
@@ -325,7 +272,7 @@ async function loadCase() {
     );
 
     setText(
-        "case-state-province",
+        "case-state",
         caseData.state_province
     );
 
@@ -334,10 +281,35 @@ async function loadCase() {
         caseData.city
     );
 
+    setText(
+        "case-classification",
+        caseData.classification
+    );
 
-    /* -----------------------------------------
-       CASE DESCRIPTION
-       ----------------------------------------- */
+    setText(
+        "case-offense",
+        caseData.offense
+    );
+
+    setText(
+        "case-status",
+        caseData.case_status
+    );
+
+    setText(
+        "case-outcome",
+        caseData.outcome
+    );
+
+    setText(
+        "case-victims",
+        caseData.victim_count
+    );
+
+    setText(
+        "case-fatalities",
+        caseData.fatality_count
+    );
 
     setText(
         "case-description",
@@ -346,64 +318,62 @@ async function loadCase() {
 
 
     /* -----------------------------------------
-       CLASSIFICATION
-       ----------------------------------------- */
-
-    setText(
-        "case-classification",
-        caseData.classification
-    );
-
-
-    /* -----------------------------------------
-       PRIMARY OFFENSE
-       ----------------------------------------- */
-
-    setText(
-        "case-offense",
-        caseData.offense
-    );
-
-
-    /* -----------------------------------------
        ADDITIONAL OFFENSES
        ----------------------------------------- */
 
-    renderAdditionalOffenses(
-        caseData.additional_offenses
-    );
+    const additionalContainer =
+        document.getElementById(
+            "case-additional-offenses"
+        );
 
+    if (additionalContainer) {
 
-    /* -----------------------------------------
-       OUTCOME
-       ----------------------------------------- */
+        if (
+            !caseData.additional_offenses ||
+            String(
+                caseData.additional_offenses
+            ).trim() === ""
+        ) {
 
-    setText(
-        "case-outcome",
-        caseData.outcome
-    );
+            additionalContainer.textContent = "—";
 
+        } else {
 
-    /* -----------------------------------------
-       VICTIM COUNT
-       ----------------------------------------- */
+            const offenses =
+                String(
+                    caseData.additional_offenses
+                )
+                    .split(/\s*(?:,|;|\n)\s*/)
+                    .map(
+                        offense =>
+                            offense.trim()
+                    )
+                    .filter(Boolean);
 
-    setText(
-        "case-victim-count",
-        caseData.victim_count
-    );
+            additionalContainer.innerHTML = `
+                <ul class="additional-offenses-list">
+                    ${
+                        offenses
+                            .map(
+                                offense => `
+                                    <li>
+                                        ${escapeHTML(
+                                            offense
+                                        )}
+                                    </li>
+                                `
+                            )
+                            .join("")
+                    }
+                </ul>
+            `;
 
+        }
 
-    /* -----------------------------------------
-       FATALITY COUNT
-       ----------------------------------------- */
-
-    setText(
-        "case-fatality-count",
-        caseData.fatality_count
-    );
+    }
 
 }
+
 
 /* -----------------------------------------
    LOAD PEOPLE
@@ -466,7 +436,7 @@ async function loadPeople() {
 
     }
 
-    container.innerHTML =
+    const html =
         data
             .map(item => {
 
@@ -474,9 +444,7 @@ async function loadPeople() {
                     item.person;
 
                 if (!person) {
-
                     return "";
-
                 }
 
                 return `
@@ -484,7 +452,9 @@ async function loadPeople() {
 
                         <h3>
                             <a
-                                href="person.html?id=${encodeURIComponent(person.id)}"
+                                href="person.html?id=${encodeURIComponent(
+                                    person.id
+                                )}"
                             >
                                 ${escapeHTML(
                                     person.display_name ||
@@ -511,13 +481,15 @@ async function loadPeople() {
 
                         <p>
                             <strong>Date of Birth:</strong>
-                            ${escapeHTML(
+                            ${
                                 person.date_of_birth
-                                    ? formatDate(
-                                        person.date_of_birth
+                                    ? escapeHTML(
+                                        formatDate(
+                                            person.date_of_birth
+                                        )
                                     )
                                     : "—"
-                            )}
+                            }
                         </p>
 
                         <p>
@@ -534,7 +506,12 @@ async function loadPeople() {
             })
             .join("");
 
+    container.innerHTML =
+        html ||
+        `<div class="empty-state">No people are linked to this case.</div>`;
+
 }
+
 
 /* -----------------------------------------
    LOAD TAGS
@@ -542,41 +519,39 @@ async function loadPeople() {
 
 async function loadTags() {
 
-    const container =
-        document.getElementById(
-            "case-tags"
-        );
-
-    if (!container) return;
-
     const {
-        data,
-        error
+        data: caseTags,
+        error: caseTagError
     } =
         await supabaseClient
             .from("case_tags")
             .select(`
-                tag_id,
-                tags (
-                    id,
-                    name,
-                    category
-                )
+                tag_id
             `)
             .eq(
                 "case_id",
                 caseId
             );
 
-    if (error) {
+    if (caseTagError) {
 
         console.error(
-            "CBRA: Error loading tags:",
-            error
+            "CBRA: Error loading case tags:",
+            caseTagError
         );
 
         showEmpty(
-            "case-tags",
+            "case-crime-tags",
+            "Unable to load tags."
+        );
+
+        showEmpty(
+            "case-influence-tags",
+            "Unable to load tags."
+        );
+
+        showEmpty(
+            "case-mental-health-tags",
             "Unable to load tags."
         );
 
@@ -584,80 +559,167 @@ async function loadTags() {
 
     }
 
-    if (!data || data.length === 0) {
+    if (!caseTags || caseTags.length === 0) {
 
         showEmpty(
-            "case-tags",
-            "No tags are linked to this case."
+            "case-crime-tags",
+            "No crime tags are linked to this case."
+        );
+
+        showEmpty(
+            "case-influence-tags",
+            "No influence tags are linked to this case."
+        );
+
+        showEmpty(
+            "case-mental-health-tags",
+            "No mental-health tags are linked to this case."
         );
 
         return;
 
     }
 
-    const categoryOrder = {
+    const tagIds =
+        caseTags
+            .map(
+                item => item.tag_id
+            )
+            .filter(Boolean);
 
-        crime: 1,
-        influence: 2,
-        mental_health: 3,
-        demographic: 4
+    if (tagIds.length === 0) {
+        return;
+    }
 
-    };
-
-    data.sort(
-        (a, b) => {
-
-            const aCategory =
-                a.tags?.category || "";
-
-            const bCategory =
-                b.tags?.category || "";
-
-            const aOrder =
-                categoryOrder[aCategory] || 99;
-
-            const bOrder =
-                categoryOrder[bCategory] || 99;
-
-            if (aOrder !== bOrder) {
-
-                return aOrder - bOrder;
-
-            }
-
-            return (
-                a.tags?.name || ""
-            ).localeCompare(
-                b.tags?.name || ""
+    const {
+        data: tags,
+        error: tagError
+    } =
+        await supabaseClient
+            .from("tags")
+            .select(`
+                id,
+                name,
+                category
+            `)
+            .in(
+                "id",
+                tagIds
             );
 
-        }
-    );
+    if (tagError) {
 
-    container.innerHTML =
-        data
-            .map(item => {
+        console.error(
+            "CBRA: Error loading tag details:",
+            tagError
+        );
 
-                const tag =
-                    item.tags;
+        return;
 
-                if (!tag) {
+    }
 
-                    return "";
+    if (!tags || tags.length === 0) {
+        return;
+    }
+
+    const containers = {
+        crime:
+            document.getElementById(
+                "case-crime-tags"
+            ),
+
+        influence:
+            document.getElementById(
+                "case-influence-tags"
+            ),
+
+        mental_health:
+            document.getElementById(
+                "case-mental-health-tags"
+            )
+    };
+
+    Object.values(containers)
+        .forEach(container => {
+
+            if (container) {
+                container.innerHTML = "";
+            }
+
+        });
+
+    tags
+        .sort(
+            (a, b) =>
+                (a.name || "")
+                    .localeCompare(
+                        b.name || ""
+                    )
+        )
+        .forEach(tag => {
+
+            const container =
+                containers[
+                    tag.category
+                ];
+
+            if (!container) {
+                return;
+            }
+
+            const link =
+                document.createElement("a");
+
+            link.className =
+                "case-tag";
+
+            link.href =
+                "archive.html?tag=" +
+                encodeURIComponent(
+                    tag.name
+                );
+
+            link.textContent =
+                tag.name;
+
+            container.appendChild(
+                link
+            );
+
+        });
+
+    Object.entries(containers)
+        .forEach(
+            ([category, container]) => {
+
+                if (
+                    container &&
+                    container.children.length === 0
+                ) {
+
+                    const labels = {
+                        crime:
+                            "No crime tags are linked to this case.",
+
+                        influence:
+                            "No influence tags are linked to this case.",
+
+                        mental_health:
+                            "No mental-health tags are linked to this case."
+                    };
+
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            ${escapeHTML(
+                                labels[category]
+                            )}
+                        </div>
+                    `;
 
                 }
 
-                return `
-                    <a
-                        class="case-tag"
-                        href="archive.html?tag=${encodeURIComponent(tag.name)}"
-                    >
-                        ${escapeHTML(tag.name)}
-                    </a>
-                `;
-
-            })
-            .join("");
+            }
+        );
 
 }
 
@@ -670,7 +732,7 @@ async function loadCrimeScenePhotos() {
 
     const container =
         document.getElementById(
-            "crime-scene-photos"
+            "case-crime-scene-photos"
         );
 
     if (!container) return;
@@ -704,7 +766,7 @@ async function loadCrimeScenePhotos() {
         );
 
         showEmpty(
-            "crime-scene-photos",
+            "case-crime-scene-photos",
             "Unable to load crime scene photos."
         );
 
@@ -715,7 +777,7 @@ async function loadCrimeScenePhotos() {
     if (!data || data.length === 0) {
 
         showEmpty(
-            "crime-scene-photos",
+            "case-crime-scene-photos",
             "No crime scene photos are available."
         );
 
@@ -748,8 +810,13 @@ async function loadCrimeScenePhotos() {
                         <div class="crime-scene-photo-image">
 
                             <img
-                                src="${escapeHTML(photo.image_url)}"
-                                alt="${escapeHTML(photo.title || "Crime scene photo")}"
+                                src="${escapeHTML(
+                                    photo.image_url
+                                )}"
+                                alt="${escapeHTML(
+                                    photo.title ||
+                                    "Crime scene photo"
+                                )}"
                                 loading="lazy"
                             >
 
@@ -766,22 +833,28 @@ async function loadCrimeScenePhotos() {
 
                             <p>
                                 <strong>Date Taken:</strong>
-                                ${photo.date_taken
-                                    ? escapeHTML(
-                                        formatDate(
-                                            photo.date_taken
+                                ${
+                                    photo.date_taken
+                                        ? escapeHTML(
+                                            formatDate(
+                                                photo.date_taken
+                                            )
                                         )
-                                    )
-                                    : "—"
+                                        : "—"
                                 }
                             </p>
 
-                            <p>
-                                ${escapeHTML(
-                                    photo.description ||
-                                    ""
-                                )}
-                            </p>
+                            ${
+                                photo.description
+                                    ? `
+                                        <p>
+                                            ${escapeHTML(
+                                                photo.description
+                                            )}
+                                        </p>
+                                    `
+                                    : ""
+                            }
 
                         </div>
 
@@ -792,6 +865,7 @@ async function loadCrimeScenePhotos() {
             .join("");
 
 }
+
 
 /* -----------------------------------------
    LOAD MEDIA
@@ -983,7 +1057,9 @@ async function loadMedia() {
 
             })
             .join("");
+
 }
+
 
 /* -----------------------------------------
    LOAD DOCUMENTS
@@ -1050,17 +1126,6 @@ async function loadDocuments() {
             )
             .filter(Boolean);
 
-    if (documentIds.length === 0) {
-
-        showEmpty(
-            "case-documents",
-            "No documents are linked to this case."
-        );
-
-        return;
-
-    }
-
     const {
         data: documents,
         error
@@ -1121,8 +1186,7 @@ async function loadDocuments() {
     if (sourceIds.length > 0) {
 
         const {
-            data: sourceData,
-            error: sourceError
+            data: sourceData
         } =
             await supabaseClient
                 .from("sources")
@@ -1136,19 +1200,8 @@ async function loadDocuments() {
                     sourceIds
                 );
 
-        if (sourceError) {
-
-            console.warn(
-                "CBRA: Could not load document sources:",
-                sourceError
-            );
-
-        } else {
-
-            sources =
-                sourceData || [];
-
-        }
+        sources =
+            sourceData || [];
 
     }
 
@@ -1275,15 +1328,9 @@ async function loadDocuments() {
 
 }
 
+
 /* -----------------------------------------
    LOAD CASE SOURCES
-   -----------------------------------------
-   
-   IMPORTANT:
-   This is intentionally named
-   loadCaseSources() instead of loadSources()
-   so it cannot conflict with the
-   Manage Sources system.
    ----------------------------------------- */
 
 async function loadCaseSources() {
@@ -1325,10 +1372,7 @@ async function loadCaseSources() {
 
     }
 
-    if (
-        !sourceCases ||
-        sourceCases.length === 0
-    ) {
+    if (!sourceCases || sourceCases.length === 0) {
 
         showEmpty(
             "case-sources",
@@ -1340,9 +1384,12 @@ async function loadCaseSources() {
     }
 
     const sourceIds =
-        sourceCases.map(
-            item => item.source_id
-        );
+        sourceCases
+            .map(
+                item =>
+                    item.source_id
+            )
+            .filter(Boolean);
 
     const {
         data: sources,
@@ -1353,9 +1400,9 @@ async function loadCaseSources() {
             .select(`
                 id,
                 title,
-                publisher,
-                publication_date,
-                url
+                url,
+                source_type,
+                publication_date
             `)
             .in(
                 "id",
@@ -1419,22 +1466,23 @@ async function loadCaseSources() {
                         </h3>
 
                         <p>
-                            <strong>Publisher:</strong>
+                            <strong>Type:</strong>
                             ${escapeHTML(
-                                source.publisher ||
+                                source.source_type ||
                                 "—"
                             )}
                         </p>
 
                         <p>
                             <strong>Publication Date:</strong>
-                            ${source.publication_date
-                                ? escapeHTML(
-                                    formatDate(
-                                        source.publication_date
+                            ${
+                                source.publication_date
+                                    ? escapeHTML(
+                                        formatDate(
+                                            source.publication_date
+                                        )
                                     )
-                                )
-                                : "—"
+                                    : "—"
                             }
                         </p>
 
@@ -1527,12 +1575,17 @@ async function loadLinks() {
                             )}
                         </h3>
 
-                        <p>
-                            ${escapeHTML(
-                                link.description ||
-                                ""
-                            )}
-                        </p>
+                        ${
+                            link.description
+                                ? `
+                                    <p>
+                                        ${escapeHTML(
+                                            link.description
+                                        )}
+                                    </p>
+                                `
+                                : ""
+                        }
 
                         ${
                             link.url
@@ -1560,7 +1613,7 @@ async function loadRelatedCases() {
 
     const container =
         document.getElementById(
-            "related-cases"
+            "case-related"
         );
 
     if (!container) return;
@@ -1588,7 +1641,7 @@ async function loadRelatedCases() {
         );
 
         showEmpty(
-            "related-cases",
+            "case-related",
             "Unable to load related cases."
         );
 
@@ -1602,7 +1655,7 @@ async function loadRelatedCases() {
     ) {
 
         showEmpty(
-            "related-cases",
+            "case-related",
             "No related cases are linked."
         );
 
@@ -1611,10 +1664,12 @@ async function loadRelatedCases() {
     }
 
     const relatedCaseIds =
-        relationships.map(
-            relationship =>
-                relationship.related_case_id
-        );
+        relationships
+            .map(
+                relationship =>
+                    relationship.related_case_id
+            )
+            .filter(Boolean);
 
     const {
         data: cases,
@@ -1642,7 +1697,7 @@ async function loadRelatedCases() {
         );
 
         showEmpty(
-            "related-cases",
+            "case-related",
             "Unable to load related cases."
         );
 
@@ -1653,7 +1708,7 @@ async function loadRelatedCases() {
     if (!cases || cases.length === 0) {
 
         showEmpty(
-            "related-cases",
+            "case-related",
             "No related cases were found."
         );
 
@@ -1681,9 +1736,7 @@ async function loadRelatedCases() {
                     );
 
                 if (!relatedCase) {
-
                     return "";
-
                 }
 
                 return `
@@ -1697,7 +1750,8 @@ async function loadRelatedCases() {
                                 )}"
                             >
                                 ${escapeHTML(
-                                    relatedCase.case_name
+                                    relatedCase.case_name ||
+                                    "Unnamed Case"
                                 )}
                             </a>
 
@@ -1713,13 +1767,14 @@ async function loadRelatedCases() {
 
                         <p>
                             <strong>Date:</strong>
-                            ${relatedCase.case_date
-                                ? escapeHTML(
-                                    formatDate(
-                                        relatedCase.case_date
+                            ${
+                                relatedCase.case_date
+                                    ? escapeHTML(
+                                        formatDate(
+                                            relatedCase.case_date
+                                        )
                                     )
-                                )
-                                : "—"
+                                    : "—"
                             }
                         </p>
 
