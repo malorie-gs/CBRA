@@ -19,6 +19,8 @@ const supabaseClient =
         SUPABASE_KEY
     );
 
+window.supabaseClient = supabaseClient;
+
 
 // ============================================================
 // CBRA Admin
@@ -29,6 +31,10 @@ const CBRA_ADMIN_USER_ID =
 
 let CBRA_IS_ADMIN = false;
 
+
+// ============================================================
+// Authentication
+// ============================================================
 
 async function checkAdminStatus() {
 
@@ -50,6 +56,10 @@ async function checkAdminStatus() {
 
             CBRA_IS_ADMIN = false;
 
+            updateAuthInterface();
+
+            removeAdminInterface();
+
             return false;
 
         }
@@ -64,6 +74,16 @@ async function checkAdminStatus() {
             user.id === CBRA_ADMIN_USER_ID;
 
 
+        updateAuthInterface();
+
+
+        if (!CBRA_IS_ADMIN) {
+
+            removeAdminInterface();
+
+        }
+
+
         return CBRA_IS_ADMIN;
 
     } catch (error) {
@@ -75,11 +95,227 @@ async function checkAdminStatus() {
 
         CBRA_IS_ADMIN = false;
 
+        updateAuthInterface();
+
+        removeAdminInterface();
+
         return false;
 
     }
 
 }
+
+
+// ============================================================
+// Authentication Interface
+// ============================================================
+
+function updateAuthInterface() {
+
+    let authContainer =
+        document.getElementById(
+            "cbra-person-auth-controls"
+        );
+
+
+    if (!authContainer) {
+
+        const header =
+            document.querySelector(
+                "header"
+            );
+
+
+        if (!header) {
+
+            return;
+
+        }
+
+
+        authContainer =
+            document.createElement(
+                "div"
+            );
+
+
+        authContainer.id =
+            "cbra-person-auth-controls";
+
+
+        authContainer.style.marginTop =
+            "15px";
+
+
+        authContainer.style.textAlign =
+            "center";
+
+
+        header.appendChild(
+            authContainer
+        );
+
+    }
+
+
+    authContainer.innerHTML =
+        "";
+
+
+    if (!CBRA_IS_ADMIN) {
+
+        return;
+
+    }
+
+
+    const logoutButton =
+        document.createElement(
+            "button"
+        );
+
+
+    logoutButton.type =
+        "button";
+
+
+    logoutButton.id =
+        "person-logout-button";
+
+
+    logoutButton.textContent =
+        "Log Out";
+
+
+    logoutButton.addEventListener(
+        "click",
+        logoutAdmin
+    );
+
+
+    authContainer.appendChild(
+        logoutButton
+    );
+
+}
+
+
+// ============================================================
+// Logout
+// ============================================================
+
+async function logoutAdmin() {
+
+    const {
+        error
+    } =
+        await supabaseClient.auth.signOut();
+
+
+    if (error) {
+
+        console.error(
+            "Error logging out:",
+            error
+        );
+
+        alert(
+            "Could not log out: " +
+            error.message
+        );
+
+        return;
+
+    }
+
+
+    CBRA_IS_ADMIN =
+        false;
+
+
+    removeAdminInterface();
+
+    updateAuthInterface();
+
+}
+
+
+// ============================================================
+// Remove Admin Interface
+// ============================================================
+
+function removeAdminInterface() {
+
+    const controls =
+        document.getElementById(
+            "person-management-controls"
+        );
+
+
+    if (controls) {
+
+        controls.remove();
+
+    }
+
+
+    const adminForms = [
+
+        "edit-person-form",
+
+        "person-mugshot-form",
+
+        "person-document-form",
+
+        "person-source-form",
+
+        "mental-health-document-form"
+
+    ];
+
+
+    adminForms.forEach(
+        function(id) {
+
+            const element =
+                document.getElementById(id);
+
+
+            if (element) {
+
+                element.remove();
+
+            }
+
+        }
+    );
+
+
+    // Remove any dynamically-created admin buttons
+    // that may already exist in content.
+
+    document
+        .querySelectorAll(
+            ".cbra-admin-only"
+        )
+        .forEach(
+            element => element.remove()
+        );
+
+}
+
+
+// ============================================================
+// Listen For Authentication Changes
+// ============================================================
+
+supabaseClient.auth.onAuthStateChange(
+    async function() {
+
+        await checkAdminStatus();
+
+    }
+);
 
 
 // ============================================================
@@ -92,6 +328,7 @@ function getPersonId() {
         new URLSearchParams(
             window.location.search
         );
+
 
     return params.get("id");
 
@@ -112,6 +349,7 @@ function escapeHtml(value) {
         return "";
 
     }
+
 
     return String(value)
         .replace(/&/g, "&amp;")
@@ -135,6 +373,7 @@ function displayValue(value) {
 
     }
 
+
     return escapeHtml(value);
 
 }
@@ -147,15 +386,18 @@ function showError(message) {
             "person-loading"
         );
 
+
     const profile =
         document.getElementById(
             "person-profile"
         );
 
+
     const error =
         document.getElementById(
             "person-error"
         );
+
 
     const errorMessage =
         document.getElementById(
@@ -206,13 +448,6 @@ function formatDate(date) {
     }
 
 
-    /*
-     * Date-only database values such as
-     * YYYY-MM-DD must NOT be passed through
-     * new Date(), because timezone conversion
-     * can shift the displayed day.
-     */
-
     const dateString =
         String(date).substring(0, 10);
 
@@ -231,8 +466,10 @@ function formatDate(date) {
     const year =
         Number(parts[0]);
 
+
     const month =
         Number(parts[1]);
+
 
     const day =
         Number(parts[2]);
@@ -250,6 +487,7 @@ function formatDate(date) {
 
 
     const months = [
+
         "January",
         "February",
         "March",
@@ -262,6 +500,7 @@ function formatDate(date) {
         "October",
         "November",
         "December"
+
     ];
 
 
@@ -344,10 +583,6 @@ async function loadPerson() {
             `${person.display_name} | CBRA`;
 
 
-        // ====================================================
-        // Person Name
-        // ====================================================
-
         const nameElement =
             document.getElementById(
                 "person-name"
@@ -362,10 +597,6 @@ async function loadPerson() {
 
         }
 
-
-        // ====================================================
-        // Basic Info
-        // ====================================================
 
         const basicInfo = [];
 
@@ -453,9 +684,8 @@ async function loadPerson() {
         }
 
 
-        // ====================================================
-        // Check Admin
-        // ====================================================
+        // Check authentication BEFORE
+        // creating any management controls.
 
         const isAdmin =
             await checkAdminStatus();
@@ -467,17 +697,18 @@ async function loadPerson() {
                 person
             );
 
+        } else {
+
+            removeAdminInterface();
+
         }
 
-
-        // ====================================================
-        // Show Profile
-        // ====================================================
 
         const loading =
             document.getElementById(
                 "person-loading"
             );
+
 
         const profile =
             document.getElementById(
@@ -500,10 +731,6 @@ async function loadPerson() {
 
         }
 
-
-        // ====================================================
-        // Load All Person Information
-        // ====================================================
 
         await Promise.all([
 
@@ -548,6 +775,9 @@ function createPersonManagementControls(person) {
     }
 
 
+    removeAdminInterface();
+
+
     const profile =
         document.getElementById(
             "person-profile"
@@ -555,17 +785,6 @@ function createPersonManagementControls(person) {
 
 
     if (!profile) {
-
-        return;
-
-    }
-
-
-    if (
-        document.getElementById(
-            "person-management-controls"
-        )
-    ) {
 
         return;
 
@@ -580,6 +799,11 @@ function createPersonManagementControls(person) {
 
     controls.id =
         "person-management-controls";
+
+
+    controls.className =
+        "cbra-admin-only";
+
 
     controls.style.marginBottom =
         "25px";
@@ -598,13 +822,21 @@ function createPersonManagementControls(person) {
     editPersonButton.type =
         "button";
 
+
     editPersonButton.textContent =
         "Edit Person";
 
 
     editPersonButton.addEventListener(
         "click",
-        function () {
+        function() {
+
+            if (!CBRA_IS_ADMIN) {
+
+                return;
+
+            }
+
 
             showEditPersonForm(
                 person
@@ -632,8 +864,10 @@ function createPersonManagementControls(person) {
     mugshotButton.type =
         "button";
 
+
     mugshotButton.textContent =
         "Add Mugshot";
+
 
     mugshotButton.style.marginLeft =
         "8px";
@@ -641,7 +875,14 @@ function createPersonManagementControls(person) {
 
     mugshotButton.addEventListener(
         "click",
-        function () {
+        function() {
+
+            if (!CBRA_IS_ADMIN) {
+
+                return;
+
+            }
+
 
             showMugshotForm();
 
@@ -667,8 +908,10 @@ function createPersonManagementControls(person) {
     mentalButton.type =
         "button";
 
+
     mentalButton.textContent =
         "Add Behavioral / Mental Health Document";
+
 
     mentalButton.style.marginLeft =
         "8px";
@@ -676,7 +919,14 @@ function createPersonManagementControls(person) {
 
     mentalButton.addEventListener(
         "click",
-        function () {
+        function() {
+
+            if (!CBRA_IS_ADMIN) {
+
+                return;
+
+            }
+
 
             showMentalHealthDocumentForm();
 
@@ -702,8 +952,10 @@ function createPersonManagementControls(person) {
     sourceButton.type =
         "button";
 
+
     sourceButton.textContent =
         "Add Source";
+
 
     sourceButton.style.marginLeft =
         "8px";
@@ -711,7 +963,14 @@ function createPersonManagementControls(person) {
 
     sourceButton.addEventListener(
         "click",
-        function () {
+        function() {
+
+            if (!CBRA_IS_ADMIN) {
+
+                return;
+
+            }
+
 
             showSourceForm();
 
@@ -768,6 +1027,7 @@ function showEditPersonForm(person) {
 
     form.id =
         "edit-person-form";
+
 
     form.style.marginBottom =
         "30px";
@@ -880,7 +1140,11 @@ function showEditPersonForm(person) {
         );
 
 
-    if (!profile || !controls) {
+    if (
+        !profile ||
+        !controls ||
+        !CBRA_IS_ADMIN
+    ) {
 
         return;
 
@@ -895,7 +1159,7 @@ function showEditPersonForm(person) {
 
     form.addEventListener(
         "submit",
-        function (event) {
+        function(event) {
 
             savePersonChanges(
                 event,
@@ -912,7 +1176,7 @@ function showEditPersonForm(person) {
         )
         .addEventListener(
             "click",
-            function () {
+            function() {
 
                 form.remove();
 
@@ -946,20 +1210,24 @@ async function savePersonChanges(
             "edit-person-name"
         );
 
+
     const ageElement =
         document.getElementById(
             "edit-person-age"
         );
+
 
     const dobElement =
         document.getElementById(
             "edit-person-dob"
         );
 
+
     const genderElement =
         document.getElementById(
             "edit-person-gender"
         );
+
 
     const message =
         document.getElementById(
@@ -983,11 +1251,14 @@ async function savePersonChanges(
     const name =
         nameElement.value.trim();
 
+
     const ageValue =
         ageElement.value.trim();
 
+
     const dobValue =
         dobElement.value;
+
 
     const genderValue =
         genderElement.value.trim();
@@ -1070,7 +1341,7 @@ async function savePersonChanges(
 
 
     setTimeout(
-        function () {
+        function() {
 
             loadPerson();
 
@@ -1204,12 +1475,10 @@ async function loadPersonCases(personId) {
                             caseData.id
                         )}"
                     >
-
                         ${escapeHtml(
                             caseData.case_name ||
                             "Unnamed Case"
                         )}
-
                     </a>
 
                 </h3>
@@ -1306,7 +1575,7 @@ async function loadPersonCases(personId) {
 
 
 // ============================================================
-// Load Sources For Dropdowns
+// Load Person Source Options
 // ============================================================
 
 async function loadPersonSourceOptions(
@@ -1355,12 +1624,10 @@ async function loadPersonSourceOptions(
 // ============================================================
 // Load Mugshot Source Options
 // ============================================================
-// IMPORTANT:
-// person_mugshots.source_id references sources.id.
-// Therefore mugshots must use IDs from the sources table,
-// NOT IDs from person_sources.
 
-async function loadMugshotSourceOptions(personId) {
+async function loadMugshotSourceOptions(
+    personId
+) {
 
     const {
         data,
@@ -1380,6 +1647,7 @@ async function loadMugshotSourceOptions(personId) {
                 personId
             );
 
+
     if (error) {
 
         console.error(
@@ -1391,13 +1659,18 @@ async function loadMugshotSourceOptions(personId) {
 
     }
 
+
     return (data || [])
-        .map(row => row.source)
+        .map(
+            row => row.source
+        )
         .filter(Boolean)
-        .sort((a, b) =>
-            (a.title || "").localeCompare(
-                b.title || ""
-            )
+        .sort(
+            (a, b) =>
+                (a.title || "")
+                    .localeCompare(
+                        b.title || ""
+                    )
         );
 
 }
@@ -1407,7 +1680,9 @@ async function loadMugshotSourceOptions(personId) {
 // Load Person Mugshots
 // ============================================================
 
-async function loadPersonMugshots(personId) {
+async function loadPersonMugshots(
+    personId
+) {
 
     const container =
         document.getElementById(
@@ -1567,7 +1842,7 @@ async function loadPersonMugshots(personId) {
                 ${
                     CBRA_IS_ADMIN
                         ? `
-                            <div>
+                            <div class="cbra-admin-only">
 
                                 <button
                                     type="button"
@@ -1639,9 +1914,9 @@ async function showMugshotForm(
 
 
     const sources =
-    await loadMugshotSourceOptions(
-        personId
-    );
+        await loadMugshotSourceOptions(
+            personId
+        );
 
 
     const form =
@@ -1652,6 +1927,11 @@ async function showMugshotForm(
 
     form.id =
         "person-mugshot-form";
+
+
+    form.className =
+        "cbra-admin-only";
+
 
     form.style.marginBottom =
         "30px";
@@ -1894,25 +2174,30 @@ async function saveMugshot(
             "mugshot-title"
         );
 
+
     const imageElement =
         document.getElementById(
             "mugshot-image"
         );
+
 
     const dateElement =
         document.getElementById(
             "mugshot-date"
         );
 
+
     const descriptionElement =
         document.getElementById(
             "mugshot-description"
         );
 
+
     const sourceElement =
         document.getElementById(
             "mugshot-source"
         );
+
 
     const message =
         document.getElementById(
@@ -1937,14 +2222,18 @@ async function saveMugshot(
     const title =
         titleElement.value.trim();
 
+
     const file =
         imageElement.files?.[0] || null;
+
 
     const dateTaken =
         dateElement.value;
 
+
     const description =
         descriptionElement.value.trim();
+
 
     const sourceId =
         sourceElement.value;
@@ -2003,9 +2292,6 @@ async function saveMugshot(
             ? "Uploading image..."
             : "Saving mugshot...";
 
-    message.style.color =
-        "";
-
 
     let existingImageUrl =
         null;
@@ -2019,9 +2305,7 @@ async function saveMugshot(
         } =
             await supabaseClient
                 .from("person_mugshots")
-                .select(`
-                    image_url
-                `)
+                .select("image_url")
                 .eq(
                     "id",
                     mugshotId
@@ -2049,7 +2333,8 @@ async function saveMugshot(
 
 
         existingImageUrl =
-            existingMugshot?.image_url || null;
+            existingMugshot?.image_url ||
+            null;
 
     }
 
@@ -2057,10 +2342,6 @@ async function saveMugshot(
     let imageUrl =
         existingImageUrl;
 
-
-    // ========================================================
-    // Upload New Image
-    // ========================================================
 
     if (file) {
 
@@ -2129,7 +2410,8 @@ async function saveMugshot(
 
 
         imageUrl =
-            publicUrlData?.publicUrl || null;
+            publicUrlData?.publicUrl ||
+            null;
 
 
         if (!imageUrl) {
@@ -2186,10 +2468,6 @@ async function saveMugshot(
     let error;
 
 
-    // ========================================================
-    // Update Existing Mugshot
-    // ========================================================
-
     if (mugshotId) {
 
         ({
@@ -2205,14 +2483,7 @@ async function saveMugshot(
                     mugshotId
                 ));
 
-    }
-
-
-    // ========================================================
-    // Insert New Mugshot
-    // ========================================================
-
-    else {
+    } else {
 
         ({
             error
@@ -2499,16 +2770,13 @@ async function loadPersonDocuments(
                         target="_blank"
                         rel="noopener noreferrer"
                     >
-
                         ${escapeHtml(
                             documentData.title ||
                             "Document"
                         )}
-
                     </a>
 
                 </h3>
-
 
                 ${
                     documentData.document_type
@@ -2523,7 +2791,6 @@ async function loadPersonDocuments(
                         : ""
                 }
 
-
                 ${
                     documentData.publication_date
                         ? `
@@ -2537,7 +2804,6 @@ async function loadPersonDocuments(
                         : ""
                 }
 
-
                 ${
                     documentData.description
                         ? `
@@ -2550,7 +2816,6 @@ async function loadPersonDocuments(
                         : ""
                 }
 
-
                 ${
                     documentData.source
                         ? `
@@ -2560,6 +2825,30 @@ async function loadPersonDocuments(
                                     documentData.source.title
                                 )}
                             </p>
+                        `
+                        : ""
+                }
+
+                ${
+                    CBRA_IS_ADMIN
+                        ? `
+                            <div class="cbra-admin-only">
+
+                                <button
+                                    type="button"
+                                    onclick="editPersonDocument('${documentData.id}')"
+                                >
+                                    Edit
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onclick="deletePersonDocument('${documentData.id}')"
+                                >
+                                    Delete
+                                </button>
+
+                            </div>
                         `
                         : ""
                 }
@@ -2623,6 +2912,11 @@ async function showDocumentForm(
 
     form.id =
         "person-document-form";
+
+
+    form.className =
+        "cbra-admin-only";
+
 
     form.style.marginBottom =
         "30px";
@@ -2848,30 +3142,36 @@ async function savePersonDocument(
             "person-document-title"
         );
 
+
     const urlElement =
         document.getElementById(
             "person-document-url"
         );
+
 
     const typeElement =
         document.getElementById(
             "person-document-type"
         );
 
+
     const dateElement =
         document.getElementById(
             "person-document-date"
         );
+
 
     const descriptionElement =
         document.getElementById(
             "person-document-description"
         );
 
+
     const sourceElement =
         document.getElementById(
             "person-document-source"
         );
+
 
     const message =
         document.getElementById(
@@ -2897,17 +3197,22 @@ async function savePersonDocument(
     const title =
         titleElement.value.trim();
 
+
     const documentUrl =
         urlElement.value.trim();
+
 
     const documentType =
         typeElement.value.trim();
 
+
     const publicationDate =
         dateElement.value;
 
+
     const description =
         descriptionElement.value.trim();
+
 
     const sourceId =
         sourceElement.value;
@@ -3263,12 +3568,10 @@ async function loadPersonSources(
                         target="_blank"
                         rel="noopener noreferrer"
                     >
-
                         ${escapeHtml(
                             source.title ||
                             "Source"
                         )}
-
                     </a>
 
                 </h3>
@@ -3302,19 +3605,23 @@ async function loadPersonSources(
                 ${
                     CBRA_IS_ADMIN
                         ? `
-                            <button
-                                type="button"
-                                onclick="editPersonSource('${source.id}')"
-                            >
-                                Edit
-                            </button>
+                            <div class="cbra-admin-only">
 
-                            <button
-                                type="button"
-                                onclick="deletePersonSource('${source.id}')"
-                            >
-                                Delete
-                            </button>
+                                <button
+                                    type="button"
+                                    onclick="editPersonSource('${source.id}')"
+                                >
+                                    Edit
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onclick="deletePersonSource('${source.id}')"
+                                >
+                                    Delete
+                                </button>
+
+                            </div>
                         `
                         : ""
                 }
@@ -3368,6 +3675,11 @@ async function showSourceForm(
 
     form.id =
         "person-source-form";
+
+
+    form.className =
+        "cbra-admin-only";
+
 
     form.style.marginBottom =
         "30px";
@@ -3542,20 +3854,24 @@ async function savePersonSource(
             "person-source-title"
         );
 
+
     const urlElement =
         document.getElementById(
             "person-source-url"
         );
+
 
     const typeElement =
         document.getElementById(
             "person-source-type"
         );
 
+
     const dateElement =
         document.getElementById(
             "person-source-date"
         );
+
 
     const message =
         document.getElementById(
@@ -3579,11 +3895,14 @@ async function savePersonSource(
     const title =
         titleElement.value.trim();
 
+
     const url =
         urlElement.value.trim();
 
+
     const sourceType =
         typeElement.value.trim();
+
 
     const publicationDate =
         dateElement.value;
@@ -3935,12 +4254,10 @@ async function loadPersonMentalHealth(
                         target="_blank"
                         rel="noopener noreferrer"
                     >
-
                         ${escapeHtml(
                             documentData.title ||
                             "Behavioral / Mental Health Document"
                         )}
-
                     </a>
 
                 </h3>
@@ -3986,19 +4303,23 @@ async function loadPersonMentalHealth(
                 ${
                     CBRA_IS_ADMIN
                         ? `
-                            <button
-                                type="button"
-                                onclick="editMentalHealthDocument('${documentData.id}')"
-                            >
-                                Edit
-                            </button>
+                            <div class="cbra-admin-only">
 
-                            <button
-                                type="button"
-                                onclick="deleteMentalHealthDocument('${documentData.id}')"
-                            >
-                                Delete
-                            </button>
+                                <button
+                                    type="button"
+                                    onclick="editMentalHealthDocument('${documentData.id}')"
+                                >
+                                    Edit
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onclick="deleteMentalHealthDocument('${documentData.id}')"
+                                >
+                                    Delete
+                                </button>
+
+                            </div>
                         `
                         : ""
                 }
@@ -4112,6 +4433,11 @@ async function showMentalHealthDocumentForm(
 
     form.id =
         "mental-health-document-form";
+
+
+    form.className =
+        "cbra-admin-only";
+
 
     form.style.marginBottom =
         "30px";
@@ -4388,35 +4714,42 @@ async function saveMentalHealthDocument(
             "mental-health-case"
         );
 
+
     const titleElement =
         document.getElementById(
             "mental-health-title"
         );
+
 
     const urlElement =
         document.getElementById(
             "mental-health-url"
         );
 
+
     const typeElement =
         document.getElementById(
             "mental-health-type"
         );
+
 
     const dateElement =
         document.getElementById(
             "mental-health-date"
         );
 
+
     const descriptionElement =
         document.getElementById(
             "mental-health-description"
         );
 
+
     const sourceElement =
         document.getElementById(
             "mental-health-source"
         );
+
 
     const message =
         document.getElementById(
@@ -4443,20 +4776,26 @@ async function saveMentalHealthDocument(
     const caseId =
         caseElement.value;
 
+
     const title =
         titleElement.value.trim();
+
 
     const documentUrl =
         urlElement.value.trim();
 
+
     const documentType =
         typeElement.value.trim();
+
 
     const publicationDate =
         dateElement.value;
 
+
     const description =
         descriptionElement.value.trim();
+
 
     const sourceId =
         sourceElement.value;
@@ -4749,6 +5088,9 @@ window.editMentalHealthDocument =
 window.deleteMentalHealthDocument =
     deleteMentalHealthDocument;
 
+window.logoutAdmin =
+    logoutAdmin;
+
 
 // ============================================================
 // Start Page
@@ -4756,9 +5098,11 @@ window.deleteMentalHealthDocument =
 
 document.addEventListener(
     "DOMContentLoaded",
-    function() {
+    async function() {
 
-        loadPerson();
+        await checkAdminStatus();
+
+        await loadPerson();
 
     }
 );
