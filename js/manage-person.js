@@ -64,14 +64,25 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     await loadPeopleSelector();
 
-    createSourceManagementForm();
-    createDocumentManagementForm();
+    /*
+       Management forms are ONLY created
+       for the admin.
+    */
+
+    if (CBRA_IS_ADMIN) {
+
+        createSourceManagementForm();
+        createDocumentManagementForm();
+
+    }
 
     setupPersonSelector();
     setupPersonForm();
     setupLoginForm();
     setupLogoutButton();
     setupMugshotForm();
+
+    updateAdminInterface();
 
 });
 
@@ -91,13 +102,19 @@ async function checkAdmin() {
             error
         } = await supabaseClient.auth.getUser();
 
+
         if (error || !user) {
+
             CBRA_IS_ADMIN = false;
+
             return;
+
         }
+
 
         CBRA_IS_ADMIN =
             user.id === CBRA_ADMIN_USER_ID;
+
 
     } catch (error) {
 
@@ -107,7 +124,98 @@ async function checkAdmin() {
         );
 
         CBRA_IS_ADMIN = false;
+
     }
+
+}
+
+
+/* =========================================
+   ADMIN INTERFACE
+   ========================================= */
+
+function updateAdminInterface() {
+
+    /*
+       Person edit form
+    */
+
+    const personForm =
+        document.getElementById(
+            "person-form"
+        );
+
+    if (personForm) {
+
+        personForm.style.display =
+            CBRA_IS_ADMIN
+                ? ""
+                : "none";
+
+    }
+
+
+    /*
+       Static management containers that
+       may exist in Manage Person HTML.
+    */
+
+    const adminContainers = [
+
+        "person-mugshot-form",
+        "person-mugshots-form",
+        "person-document-form",
+        "person-source-form"
+
+    ];
+
+
+    adminContainers.forEach(id => {
+
+        const element =
+            document.getElementById(id);
+
+        if (!element) return;
+
+        element.style.display =
+            CBRA_IS_ADMIN
+                ? ""
+                : "none";
+
+    });
+
+
+    /*
+       Admin-only buttons already present
+       in HTML.
+    */
+
+    const adminButtons = [
+
+        "add-mugshot-button",
+        "add-person-mugshot-button",
+        "add-person-document-button",
+        "add-person-source-button",
+        "assign-person-source-button",
+        "save-person-button"
+
+    ];
+
+
+    adminButtons.forEach(id => {
+
+        const button =
+            document.getElementById(id);
+
+        if (!button) return;
+
+        button.style.display =
+            CBRA_IS_ADMIN
+                ? ""
+                : "none";
+
+    });
+
 }
 
 
@@ -118,12 +226,16 @@ async function checkAdmin() {
 async function loadPeopleSelector() {
 
     const selector =
-        document.getElementById("person-selector");
+        document.getElementById(
+            "person-selector"
+        );
 
     if (!selector) return;
 
+
     selector.innerHTML =
         '<option value="">Select a person...</option>';
+
 
     const {
         data,
@@ -131,9 +243,13 @@ async function loadPeopleSelector() {
     } = await supabaseClient
         .from("people")
         .select("id, display_name")
-        .order("display_name", {
-            ascending: true
-        });
+        .order(
+            "display_name",
+            {
+                ascending: true
+            }
+        );
+
 
     if (error) {
 
@@ -143,20 +259,31 @@ async function loadPeopleSelector() {
         );
 
         return;
+
     }
+
 
     (data || []).forEach(person => {
 
         const option =
             document.createElement("option");
 
-        option.value = person.id;
-        option.textContent =
-            person.display_name || "Unnamed Person";
 
-        selector.appendChild(option);
+        option.value =
+            person.id;
+
+
+        option.textContent =
+            person.display_name ||
+            "Unnamed Person";
+
+
+        selector.appendChild(
+            option
+        );
 
     });
+
 }
 
 
@@ -167,9 +294,12 @@ async function loadPeopleSelector() {
 function setupPersonSelector() {
 
     const selector =
-        document.getElementById("person-selector");
+        document.getElementById(
+            "person-selector"
+        );
 
     if (!selector) return;
+
 
     selector.addEventListener(
         "change",
@@ -178,22 +308,51 @@ function setupPersonSelector() {
             const personId =
                 this.value;
 
+
             if (!personId) {
 
-                currentPersonId = null;
+                currentPersonId =
+                    null;
+
+                updateCurrentPersonId();
 
                 clearPersonManagement();
 
                 return;
+
             }
+
 
             currentPersonId =
                 Number(personId);
 
-            await loadPerson(currentPersonId);
+
+            updateCurrentPersonId();
+
+
+            await loadPerson(
+                currentPersonId
+            );
 
         }
     );
+
+}
+
+
+/* =========================================
+   CURRENT PERSON ID
+   ========================================= */
+
+function updateCurrentPersonId() {
+
+    /*
+       Keep global reference synchronized.
+    */
+
+    window.currentPersonId =
+        currentPersonId;
+
 }
 
 
@@ -209,8 +368,12 @@ async function loadPerson(personId) {
     } = await supabaseClient
         .from("people")
         .select("*")
-        .eq("id", personId)
+        .eq(
+            "id",
+            personId
+        )
         .single();
+
 
     if (error) {
 
@@ -220,40 +383,60 @@ async function loadPerson(personId) {
         );
 
         return;
+
     }
 
+
     if (!data) return;
+
 
     setValue(
         "person-display-name",
         data.display_name
     );
 
+
     setValue(
         "person-age",
         data.age_at_case
     );
+
 
     setValue(
         "person-gender",
         data.gender
     );
 
+
     setValue(
         "person-date-of-birth",
         data.date_of_birth
     );
 
-    await loadPersonCases(personId);
-    await loadPersonSources(personId);
-    await loadPersonMugshots(personId);
+
+    await loadPersonCases(
+        personId
+    );
+
+
+    await loadPersonSources(
+        personId
+    );
+
+
+    await loadPersonMugshots(
+        personId
+    );
+
 
     if (
         typeof loadPersonDocuments ===
         "function"
     ) {
 
-        await loadPersonDocuments(personId);
+        await loadPersonDocuments(
+            personId
+        );
 
     }
 
@@ -267,19 +450,26 @@ async function loadPerson(personId) {
 function clearPersonManagement() {
 
     const fields = [
+
         "person-display-name",
         "person-age",
         "person-gender",
         "person-date-of-birth"
+
     ];
+
 
     fields.forEach(id => {
 
         const element =
             document.getElementById(id);
 
+
         if (element) {
-            element.value = "";
+
+            element.value =
+                "";
+
         }
 
     });
@@ -289,6 +479,7 @@ function clearPersonManagement() {
         document.getElementById(
             "person-cases-management"
         );
+
 
     if (cases) {
 
@@ -303,10 +494,21 @@ function clearPersonManagement() {
             "person-sources-management"
         );
 
+
     if (sources) {
 
-        sources.innerHTML =
-            "<p>Select a person to view their sources.</p>";
+        if (CBRA_IS_ADMIN) {
+
+            sources.innerHTML = "";
+
+            createSourceManagementForm();
+
+        } else {
+
+            sources.innerHTML =
+                "<p>Select a person to view their sources.</p>";
+
+        }
 
     }
 
@@ -316,10 +518,35 @@ function clearPersonManagement() {
             "person-mugshots-management"
         );
 
+
     if (mugshots) {
 
         mugshots.innerHTML =
             "<p>Select a person to view their mugshots.</p>";
+
+    }
+
+
+    const documents =
+        document.getElementById(
+            "person-documents-management"
+        );
+
+
+    if (documents) {
+
+        if (CBRA_IS_ADMIN) {
+
+            documents.innerHTML = "";
+
+            createDocumentManagementForm();
+
+        } else {
+
+            documents.innerHTML =
+                "<p>Select a person to view their documents.</p>";
+
+        }
 
     }
 
@@ -337,13 +564,33 @@ function setupPersonForm() {
             "person-form"
         );
 
+
     if (!form) return;
+
 
     form.addEventListener(
         "submit",
         async function (event) {
 
             event.preventDefault();
+
+
+            /*
+               Frontend protection.
+               RLS remains the actual security.
+            */
+
+            if (!CBRA_IS_ADMIN) {
+
+                setMessage(
+                    "person-message",
+                    "You do not have permission to edit people."
+                );
+
+                return;
+
+            }
+
 
             if (!currentPersonId) {
 
@@ -353,33 +600,40 @@ function setupPersonForm() {
                 );
 
                 return;
+
             }
+
 
             const displayName =
                 getValue(
                     "person-display-name"
                 );
 
+
             const age =
                 getValue(
                     "person-age"
                 );
+
 
             const gender =
                 getValue(
                     "person-gender"
                 );
 
+
             const dateOfBirth =
                 getValue(
                     "person-date-of-birth"
                 );
+
 
             const {
                 error
             } = await supabaseClient
                 .from("people")
                 .update({
+
                     display_name:
                         displayName || null,
 
@@ -393,11 +647,13 @@ function setupPersonForm() {
 
                     date_of_birth:
                         dateOfBirth || null
+
                 })
                 .eq(
                     "id",
                     currentPersonId
                 );
+
 
             if (error) {
 
@@ -406,33 +662,43 @@ function setupPersonForm() {
                     error
                 );
 
+
                 setMessage(
                     "person-message",
                     "Could not save person."
                 );
 
+
                 return;
+
             }
+
 
             setMessage(
                 "person-message",
                 "Person saved."
             );
 
+
             await loadPeopleSelector();
+
 
             const selector =
                 document.getElementById(
                     "person-selector"
                 );
 
+
             if (selector) {
+
                 selector.value =
                     currentPersonId;
+
             }
 
         }
     );
+
 }
 
 
@@ -447,7 +713,9 @@ async function loadPersonCases(personId) {
             "person-cases-management"
         );
 
+
     if (!container) return;
+
 
     container.innerHTML =
         "<p>Loading cases...</p>";
@@ -485,23 +753,32 @@ async function loadPersonCases(personId) {
             error
         );
 
+
         container.innerHTML =
             "<p>Could not load cases.</p>";
 
+
         return;
+
     }
 
 
-    if (!data || data.length === 0) {
+    if (
+        !data ||
+        data.length === 0
+    ) {
 
         container.innerHTML =
             "<p>This person is not connected to any cases.</p>";
 
+
         return;
+
     }
 
 
-    container.innerHTML = "";
+    container.innerHTML =
+        "";
 
 
     data.forEach(connection => {
@@ -509,11 +786,15 @@ async function loadPersonCases(personId) {
         const caseData =
             connection.cases;
 
+
         if (!caseData) return;
 
 
         const card =
-            document.createElement("div");
+            document.createElement(
+                "div"
+            );
+
 
         card.className =
             "management-card";
@@ -651,7 +932,9 @@ async function loadPersonCases(personId) {
         `;
 
 
-        container.appendChild(card);
+        container.appendChild(
+            card
+        );
 
     });
 
@@ -664,12 +947,38 @@ async function loadPersonCases(personId) {
 
 function createSourceManagementForm() {
 
+    /*
+       NEVER create this interface for
+       non-admin users.
+    */
+
+    if (!CBRA_IS_ADMIN) {
+        return;
+    }
+
+
     const container =
         document.getElementById(
             "person-sources-management"
         );
 
+
     if (!container) return;
+
+
+    /*
+       Prevent duplicate forms.
+    */
+
+    if (
+        document.getElementById(
+            "person-source-form"
+        )
+    ) {
+
+        return;
+
+    }
 
 
     container.innerHTML = `
@@ -838,6 +1147,7 @@ function createSourceManagementForm() {
             "assign-person-source-button"
         );
 
+
     if (assignButton) {
 
         assignButton.addEventListener(
@@ -852,6 +1162,7 @@ function createSourceManagementForm() {
         document.getElementById(
             "add-person-source-button"
         );
+
 
     if (addButton) {
 
@@ -873,10 +1184,14 @@ async function loadPersonSourceCases(
     personId
 ) {
 
+    if (!CBRA_IS_ADMIN) return;
+
+
     const selector =
         document.getElementById(
             "person-source-case"
         );
+
 
     if (!selector) return;
 
@@ -914,6 +1229,7 @@ async function loadPersonSourceCases(
         );
 
         return;
+
     }
 
 
@@ -922,14 +1238,19 @@ async function loadPersonSourceCases(
         const caseData =
             connection.cases;
 
+
         if (!caseData) return;
 
 
         const option =
-            document.createElement("option");
+            document.createElement(
+                "option"
+            );
+
 
         option.value =
             caseData.id;
+
 
         let label =
             caseData.case_name ||
@@ -947,7 +1268,10 @@ async function loadPersonSourceCases(
         option.textContent =
             label;
 
-        selector.appendChild(option);
+
+        selector.appendChild(
+            option
+        );
 
     });
 
@@ -962,10 +1286,14 @@ async function loadExistingSourcesForPerson(
     personId
 ) {
 
+    if (!CBRA_IS_ADMIN) return;
+
+
     const selector =
         document.getElementById(
             "person-existing-source"
         );
+
 
     if (!selector) return;
 
@@ -994,20 +1322,32 @@ async function loadExistingSourcesForPerson(
         );
 
         return;
+
     }
 
 
     const caseIds =
         (caseConnections || [])
-            .map(row => Number(row.case_id))
+            .map(row =>
+                Number(row.case_id)
+            )
             .filter(Boolean);
 
 
     if (caseIds.length === 0) {
 
         return;
+
     }
 
+
+    /*
+       Existing source architecture still uses
+       sources.case_id here.
+
+       This is intentional for compatibility
+       with your current source system.
+    */
 
     const {
         data: sources,
@@ -1042,6 +1382,7 @@ async function loadExistingSourcesForPerson(
         );
 
         return;
+
     }
 
 
@@ -1065,6 +1406,7 @@ async function loadExistingSourcesForPerson(
         );
 
         return;
+
     }
 
 
@@ -1084,12 +1426,16 @@ async function loadExistingSourcesForPerson(
                 Number(source.id)
             )
         ) {
+
             return;
+
         }
 
 
         const option =
-            document.createElement("option");
+            document.createElement(
+                "option"
+            );
 
 
         option.value =
@@ -1121,7 +1467,9 @@ async function loadExistingSourcesForPerson(
             label;
 
 
-        selector.appendChild(option);
+        selector.appendChild(
+            option
+        );
 
     });
 
@@ -1136,40 +1484,56 @@ async function loadPersonSources(
     personId
 ) {
 
-    let form =
-        document.getElementById(
-            "person-source-form"
+    /*
+       Only create the management interface
+       for the admin.
+    */
+
+    if (CBRA_IS_ADMIN) {
+
+        let form =
+            document.getElementById(
+                "person-source-form"
+            );
+
+
+        if (!form) {
+
+            createSourceManagementForm();
+
+        }
+
+
+        await loadPersonSourceCases(
+            personId
         );
 
 
-    /*
-       clearPersonManagement() destroys
-       this dynamic form, so recreate it
-       whenever it is missing.
-    */
-
-    if (!form) {
-
-        createSourceManagementForm();
+        await loadExistingSourcesForPerson(
+            personId
+        );
 
     }
 
 
-    await loadPersonSourceCases(
-        personId
-    );
-
-    await loadExistingSourcesForPerson(
-        personId
-    );
-
+    /*
+       The linked source list itself is
+       available to the admin management page.
+    */
 
     const list =
         document.getElementById(
             "person-sources-list"
         );
 
-    if (!list) return;
+
+    if (!list) {
+
+        if (!CBRA_IS_ADMIN) return;
+
+        return;
+
+    }
 
 
     list.innerHTML =
@@ -1205,23 +1569,32 @@ async function loadPersonSources(
             error
         );
 
+
         list.innerHTML =
             "<p>Could not load sources.</p>";
 
+
         return;
+
     }
 
 
-    if (!data || data.length === 0) {
+    if (
+        !data ||
+        data.length === 0
+    ) {
 
         list.innerHTML =
             "<p>No sources are linked to this person.</p>";
 
+
         return;
+
     }
 
 
-    list.innerHTML = "";
+    list.innerHTML =
+        "";
 
 
     data.forEach(connection => {
@@ -1229,11 +1602,15 @@ async function loadPersonSources(
         const source =
             connection.sources;
 
+
         if (!source) return;
 
 
         const card =
-            document.createElement("div");
+            document.createElement(
+                "div"
+            );
+
 
         card.className =
             "management-card";
@@ -1305,17 +1682,25 @@ async function loadPersonSources(
                     : ""
             }
 
-            <button
-                type="button"
-                onclick="removePersonSourceConnection(${Number(source.id)})"
-            >
-                Remove From Person
-            </button>
+            ${
+                CBRA_IS_ADMIN
+                    ? `
+                    <button
+                        type="button"
+                        onclick="removePersonSourceConnection(${Number(source.id)})"
+                    >
+                        Remove From Person
+                    </button>
+                    `
+                    : ""
+            }
 
         `;
 
 
-        list.appendChild(card);
+        list.appendChild(
+            card
+        );
 
     });
 
@@ -1328,6 +1713,13 @@ async function loadPersonSources(
 
 async function assignExistingSourceToPerson() {
 
+    if (!CBRA_IS_ADMIN) {
+
+        return;
+
+    }
+
+
     if (!currentPersonId) {
 
         setMessage(
@@ -1336,6 +1728,7 @@ async function assignExistingSourceToPerson() {
         );
 
         return;
+
     }
 
 
@@ -1359,6 +1752,7 @@ async function assignExistingSourceToPerson() {
         );
 
         return;
+
     }
 
 
@@ -1391,6 +1785,7 @@ async function assignExistingSourceToPerson() {
         );
 
         return;
+
     }
 
 
@@ -1402,6 +1797,7 @@ async function assignExistingSourceToPerson() {
         );
 
         return;
+
     }
 
 
@@ -1427,12 +1823,15 @@ async function assignExistingSourceToPerson() {
             error
         );
 
+
         setMessage(
             "person-source-message",
             "Could not assign source."
         );
 
+
         return;
+
     }
 
 
@@ -1455,6 +1854,13 @@ async function assignExistingSourceToPerson() {
 
 async function addPersonSource() {
 
+    if (!CBRA_IS_ADMIN) {
+
+        return;
+
+    }
+
+
     if (!currentPersonId) {
 
         setMessage(
@@ -1463,6 +1869,7 @@ async function addPersonSource() {
         );
 
         return;
+
     }
 
 
@@ -1510,6 +1917,7 @@ async function addPersonSource() {
         );
 
         return;
+
     }
 
 
@@ -1521,6 +1929,7 @@ async function addPersonSource() {
         );
 
         return;
+
     }
 
 
@@ -1532,6 +1941,7 @@ async function addPersonSource() {
         );
 
         return;
+
     }
 
 
@@ -1540,9 +1950,8 @@ async function addPersonSource() {
 
 
     /*
-       Create the source WITH the case_id.
-       This is the important fix that makes
-       the source appear under Manage Cases.
+       Create source with case_id for
+       compatibility with Manage Cases.
     */
 
     const {
@@ -1579,12 +1988,15 @@ async function addPersonSource() {
             sourceError
         );
 
+
         setMessage(
             "person-source-message",
             "Could not create source."
         );
 
+
         return;
+
     }
 
 
@@ -1607,12 +2019,6 @@ async function addPersonSource() {
         });
 
 
-    /*
-       If relationship creation fails,
-       delete the source we just created
-       so we don't leave an orphan source.
-    */
-
     if (relationshipError) {
 
         console.error(
@@ -1620,6 +2026,10 @@ async function addPersonSource() {
             relationshipError
         );
 
+
+        /*
+           Clean up orphan source.
+        */
 
         await supabaseClient
             .from("sources")
@@ -1635,7 +2045,45 @@ async function addPersonSource() {
             "Source was created, but could not be connected to the person."
         );
 
+
         return;
+
+    }
+
+
+    /*
+       Also connect the source through the
+       central source_cases system.
+    */
+
+    const {
+        error: caseRelationshipError
+    } = await supabaseClient
+        .from("source_cases")
+        .insert({
+
+            case_id:
+                numericCaseId,
+
+            source_id:
+                source.id
+
+        });
+
+
+    /*
+       If it already exists, PostgreSQL may
+       reject the duplicate. The source itself
+       is still valid, so don't delete it.
+    */
+
+    if (caseRelationshipError) {
+
+        console.warn(
+            "Source case relationship could not be created:",
+            caseRelationshipError
+        );
+
     }
 
 
@@ -1645,24 +2093,23 @@ async function addPersonSource() {
     );
 
 
-    /*
-       Reset new-source fields.
-    */
-
     setValue(
         "person-source-title",
         ""
     );
+
 
     setValue(
         "person-source-type",
         ""
     );
 
+
     setValue(
         "person-source-date",
         ""
     );
+
 
     setValue(
         "person-source-url",
@@ -1677,7 +2124,7 @@ async function addPersonSource() {
 
     /*
        Refresh Manage Cases source list
-       if that function exists.
+       if available.
     */
 
     if (
@@ -1702,7 +2149,18 @@ async function removePersonSourceConnection(
     sourceId
 ) {
 
-    if (!currentPersonId) return;
+    if (!CBRA_IS_ADMIN) {
+
+        return;
+
+    }
+
+
+    if (!currentPersonId) {
+
+        return;
+
+    }
 
 
     const {
@@ -1728,6 +2186,7 @@ async function removePersonSourceConnection(
         );
 
         return;
+
     }
 
 
@@ -1750,6 +2209,7 @@ async function loadPersonMugshots(
         document.getElementById(
             "person-mugshots-management"
         );
+
 
     if (!container) return;
 
@@ -1783,29 +2243,41 @@ async function loadPersonMugshots(
             error
         );
 
+
         container.innerHTML =
             "<p>Could not load mugshots.</p>";
 
+
         return;
+
     }
 
 
-    if (!data || data.length === 0) {
+    if (
+        !data ||
+        data.length === 0
+    ) {
 
         container.innerHTML =
             "<p>No mugshots uploaded.</p>";
 
+
         return;
+
     }
 
 
-    container.innerHTML = "";
+    container.innerHTML =
+        "";
 
 
     data.forEach(mugshot => {
 
         const card =
-            document.createElement("div");
+            document.createElement(
+                "div"
+            );
+
 
         card.className =
             "management-card";
@@ -1844,7 +2316,9 @@ async function loadPersonMugshots(
         `;
 
 
-        container.appendChild(card);
+        container.appendChild(
+            card
+        );
 
     });
 
@@ -1858,8 +2332,12 @@ async function loadPersonMugshots(
 function setupMugshotForm() {
 
     /*
-       Existing mugshot form logic is preserved
-       if your HTML provides its own controls.
+       Existing mugshot form logic is
+       preserved if the HTML provides
+       its own controls.
+
+       Any actual write operation should
+       still check CBRA_IS_ADMIN.
     */
 
 }
@@ -1871,18 +2349,24 @@ function setupMugshotForm() {
 
 function createDocumentManagementForm() {
 
+    if (!CBRA_IS_ADMIN) {
+
+        return;
+
+    }
+
+
     const container =
         document.getElementById(
             "person-documents-management"
         );
 
+
     if (!container) return;
 
 
     /*
-       Do not overwrite an existing document
-       management interface if another script
-       already created it.
+       Don't overwrite an existing form.
     */
 
     if (
@@ -1890,7 +2374,9 @@ function createDocumentManagementForm() {
             "person-document-form"
         )
     ) {
+
         return;
+
     }
 
 
@@ -2022,6 +2508,7 @@ async function loadPersonDocuments(
             "person-documents-list"
         );
 
+
     if (!list) return;
 
 
@@ -2055,29 +2542,41 @@ async function loadPersonDocuments(
             error
         );
 
+
         list.innerHTML =
             "<p>Could not load documents.</p>";
 
+
         return;
+
     }
 
 
-    if (!data || data.length === 0) {
+    if (
+        !data ||
+        data.length === 0
+    ) {
 
         list.innerHTML =
             "<p>No documents.</p>";
 
+
         return;
+
     }
 
 
-    list.innerHTML = "";
+    list.innerHTML =
+        "";
 
 
     data.forEach(documentData => {
 
         const card =
-            document.createElement("div");
+            document.createElement(
+                "div"
+            );
+
 
         card.className =
             "management-card";
@@ -2121,15 +2620,17 @@ async function loadPersonDocuments(
             ${
                 documentData.document_url
                     ? `
-                    <a
-                        href="${escapeAttribute(
-                            documentData.document_url
-                        )}"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        Open Document
-                    </a>
+                    <p>
+                        <a
+                            href="${escapeAttribute(
+                                documentData.document_url
+                            )}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            Open Document
+                        </a>
+                    </p>
                     `
                     : ""
             }
@@ -2137,7 +2638,9 @@ async function loadPersonDocuments(
         `;
 
 
-        list.appendChild(card);
+        list.appendChild(
+            card
+        );
 
     });
 
@@ -2150,6 +2653,13 @@ async function loadPersonDocuments(
 
 async function addPersonDocument() {
 
+    if (!CBRA_IS_ADMIN) {
+
+        return;
+
+    }
+
+
     if (!currentPersonId) {
 
         setMessage(
@@ -2158,6 +2668,7 @@ async function addPersonDocument() {
         );
 
         return;
+
     }
 
 
@@ -2199,6 +2710,7 @@ async function addPersonDocument() {
         );
 
         return;
+
     }
 
 
@@ -2236,12 +2748,15 @@ async function addPersonDocument() {
             error
         );
 
+
         setMessage(
             "person-document-message",
             "Could not add document."
         );
 
+
         return;
+
     }
 
 
@@ -2256,20 +2771,24 @@ async function addPersonDocument() {
         ""
     );
 
+
     setValue(
         "person-document-type",
         ""
     );
+
 
     setValue(
         "person-document-date",
         ""
     );
 
+
     setValue(
         "person-document-url",
         ""
     );
+
 
     setValue(
         "person-document-description",
@@ -2295,6 +2814,7 @@ function setupLoginForm() {
             "login-form"
         );
 
+
     if (!form) return;
 
 
@@ -2306,18 +2826,27 @@ function setupLoginForm() {
 
 
             const email =
-                getValue("login-email");
+                getValue(
+                    "login-email"
+                );
+
 
             const password =
-                getValue("login-password");
+                getValue(
+                    "login-password"
+                );
 
 
             const {
                 error
-            } = await supabaseClient.auth.signInWithPassword({
-                email,
-                password
-            });
+            } =
+                await supabaseClient.auth
+                    .signInWithPassword({
+
+                        email,
+                        password
+
+                    });
 
 
             if (error) {
@@ -2327,16 +2856,51 @@ function setupLoginForm() {
                     error.message
                 );
 
+
                 return;
+
             }
 
 
             await checkAdmin();
 
+
+            updateAdminInterface();
+
+
+            /*
+               Create admin-only forms after
+               successful admin login.
+            */
+
+            if (CBRA_IS_ADMIN) {
+
+                createSourceManagementForm();
+                createDocumentManagementForm();
+
+            }
+
+
             setMessage(
                 "login-message",
-                "Logged in."
+                CBRA_IS_ADMIN
+                    ? "Logged in."
+                    : "Logged in."
             );
+
+
+            /*
+               If a person was already selected,
+               refresh the management interface.
+            */
+
+            if (currentPersonId) {
+
+                await loadPerson(
+                    currentPersonId
+                );
+
+            }
 
         }
     );
@@ -2355,6 +2919,7 @@ function setupLogoutButton() {
             "logout-button"
         );
 
+
     if (!button) return;
 
 
@@ -2364,7 +2929,17 @@ function setupLogoutButton() {
 
             await supabaseClient.auth.signOut();
 
-            CBRA_IS_ADMIN = false;
+
+            CBRA_IS_ADMIN =
+                false;
+
+
+            currentPersonId =
+                null;
+
+
+            updateCurrentPersonId();
+
 
             window.location.reload();
 
@@ -2383,7 +2958,9 @@ function getValue(id) {
     const element =
         document.getElementById(id);
 
+
     if (!element) return "";
+
 
     return element.value.trim();
 
@@ -2398,7 +2975,9 @@ function setValue(
     const element =
         document.getElementById(id);
 
+
     if (!element) return;
+
 
     element.value =
         value ?? "";
@@ -2414,7 +2993,9 @@ function setMessage(
     const element =
         document.getElementById(id);
 
+
     if (!element) return;
+
 
     element.textContent =
         message;
@@ -2427,18 +3008,35 @@ function escapeHTML(value) {
     return String(
         value ?? ""
     )
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
+        .replaceAll(
+            "&",
+            "&amp;"
+        )
+        .replaceAll(
+            "<",
+            "&lt;"
+        )
+        .replaceAll(
+            ">",
+            "&gt;"
+        )
+        .replaceAll(
+            '"',
+            "&quot;"
+        )
+        .replaceAll(
+            "'",
+            "&#039;"
+        );
 
 }
 
 
 function escapeAttribute(value) {
 
-    return escapeHTML(value);
+    return escapeHTML(
+        value
+    );
 
 }
 
@@ -2447,11 +3045,15 @@ function escapeAttribute(value) {
    PUBLIC PERSON LINK
    ========================================= */
 
-function getPersonPublicUrl(personId) {
+function getPersonPublicUrl(
+    personId
+) {
 
     return (
         "person.html?id=" +
-        encodeURIComponent(personId)
+        encodeURIComponent(
+            personId
+        )
     );
 
 }
@@ -2464,32 +3066,61 @@ function getPersonPublicUrl(personId) {
 window.supabaseClient =
     supabaseClient;
 
-window.currentPersonId =
-    currentPersonId;
 
 window.loadPerson =
     loadPerson;
 
+
 window.loadPersonCases =
     loadPersonCases;
+
 
 window.loadPersonSources =
     loadPersonSources;
 
+
 window.loadPersonMugshots =
     loadPersonMugshots;
+
 
 window.loadPersonDocuments =
     loadPersonDocuments;
 
+
 window.removePersonSourceConnection =
     removePersonSourceConnection;
+
 
 window.addPersonSource =
     addPersonSource;
 
+
 window.assignExistingSourceToPerson =
     assignExistingSourceToPerson;
 
+
+window.addPersonDocument =
+    addPersonDocument;
+
+
 window.getPersonPublicUrl =
     getPersonPublicUrl;
+
+
+/*
+   Use a getter so window.currentPersonId
+   always reflects the actual current ID.
+*/
+
+Object.defineProperty(
+    window,
+    "currentPersonId",
+    {
+        configurable: true,
+
+        get() {
+            return currentPersonId;
+        }
+
+    }
+);
