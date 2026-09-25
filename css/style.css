@@ -5499,3 +5499,10 @@ body:has(.case-header) .case-header-date::before {
         transform: rotate(-5deg);
     }
 }
+
+/* Remove repetitive FILE SECTION labels */
+
+body:has(.case-header) .case-section h2::before {
+    content: none !important;
+    display: none !important;
+}
