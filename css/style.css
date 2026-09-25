@@ -1,7 +1,6 @@
 /* =========================================================
    CBRA — CRIMINAL BEHAVIOR RESEARCH ARCHIVE
-   MASTER STYLESHEET
-   CLEAN / STABLE VERSION
+   1990s LAW / CRIME ARCHIVE EDITION
    ========================================================= */
 
 
@@ -10,45 +9,108 @@
    ========================================================= */
 
 :root {
-    --bg: #1d1c1b;
-    --bg-soft: #252422;
-    --bg-raised: #2b2927;
-    --bg-dark: #111110;
 
-    --paper: #e3e0d7;
-    --paper-soft: #dad7ce;
-    --paper-dark: #d0cdc3;
-    --paper-light: #efede6;
+    /* -----------------------------------------
+       ARCHIVE / BACKGROUND
+       ----------------------------------------- */
 
-    --ink: #292826;
-    --ink-soft: #57544e;
-    --ink-muted: #77736b;
+    --bg: #252722;
+    --bg-soft: #30322c;
+    --bg-raised: #393b34;
+    --bg-dark: #171914;
 
-    --white: #d9d6ce;
-    --white-muted: #aaa69e;
+    /* -----------------------------------------
+       PAPER
+       ----------------------------------------- */
 
-    --border-dark: #3a3835;
-    --border-light: #c7c3b9;
+    --paper: #eee9dc;
+    --paper-soft: #e5dfd0;
+    --paper-dark: #d8d0bf;
+    --paper-light: #f6f2e8;
 
-    --accent: #704345;
-    --accent-dark: #593537;
-    --accent-soft: #ddd0cd;
+    /* -----------------------------------------
+       INK
+       ----------------------------------------- */
 
-    --success: #586452;
-    --warning: #786548;
-    --danger: #704345;
+    --ink: #24251f;
+    --ink-soft: #4d4c43;
+    --ink-muted: #777365;
 
-    --mono: "IBM Plex Mono", "Courier New", monospace;
-    --sans: "Inter", "Helvetica Neue", Arial, sans-serif;
-    --serif: "DM Serif Display", Georgia, "Times New Roman", serif;
+    --white: #eeeae0;
+    --white-muted: #bdb8aa;
+
+    /* -----------------------------------------
+       BORDERS
+       ----------------------------------------- */
+
+    --border-dark: #45483f;
+    --border-light: #c8c0ad;
+
+    /* -----------------------------------------
+       ARCHIVE ACCENTS
+       ----------------------------------------- */
+
+    --accent: #713b3c;
+    --accent-dark: #572d2e;
+    --accent-soft: #dfcfca;
+
+    --navy: #293b46;
+    --navy-dark: #1e2d35;
+
+    --green: #465446;
+    --green-dark: #354235;
+
+    --stamp: #8a3333;
+
+    /* -----------------------------------------
+       STATUS
+       ----------------------------------------- */
+
+    --success: #4d604d;
+    --warning: #806b42;
+    --danger: #713b3c;
+
+    /* -----------------------------------------
+       TYPE
+       ----------------------------------------- */
+
+    --mono:
+        "IBM Plex Mono",
+        "Courier New",
+        Courier,
+        monospace;
+
+    --sans:
+        "Inter",
+        "Helvetica Neue",
+        Arial,
+        sans-serif;
+
+    --serif:
+        "DM Serif Display",
+        Georgia,
+        "Times New Roman",
+        serif;
+
+    --typewriter:
+        "Courier New",
+        Courier,
+        monospace;
 
     --content-width: 1180px;
 
+    /* -----------------------------------------
+       SHADOWS
+       ----------------------------------------- */
+
     --shadow-small:
-        0 2px 7px rgba(0, 0, 0, 0.07);
+        0 2px 5px rgba(20, 20, 17, 0.12);
 
     --shadow:
-        0 8px 30px rgba(0, 0, 0, 0.11);
+        0 8px 24px rgba(15, 16, 13, 0.18);
+
+    --paper-shadow:
+        0 3px 10px rgba(20, 19, 15, 0.16);
 
     --transition: 160ms ease;
 }
@@ -74,12 +136,13 @@ body {
 }
 
 body {
+
     margin: 0;
 
     background:
         linear-gradient(
-            rgba(255, 255, 255, 0.015),
-            rgba(255, 255, 255, 0.015)
+            rgba(255,255,255,0.018),
+            rgba(255,255,255,0.018)
         ),
         var(--bg);
 
@@ -94,7 +157,6 @@ body {
 
 img {
     display: block;
-
     max-width: 100%;
 }
 
@@ -103,7 +165,6 @@ input,
 select,
 textarea {
     max-width: 100%;
-
     font: inherit;
 }
 
@@ -149,6 +210,7 @@ h3,
 h4,
 h5,
 h6 {
+
     margin-top: 0;
 
     line-height: 1.2;
@@ -160,6 +222,7 @@ h1,
 h2,
 h3,
 h4 {
+
     font-family: var(--serif);
 
     font-weight: 400;
@@ -167,14 +230,12 @@ h4 {
 
 p {
     margin-top: 0;
-
     overflow-wrap: anywhere;
 }
 
 ::selection {
     background: var(--accent);
-
-    color: white;
+    color: #fff;
 }
 
 
@@ -183,24 +244,47 @@ p {
    ========================================================= */
 
 header {
+
     position: relative;
 
     background:
         linear-gradient(
-            90deg,
-            rgba(255, 255, 255, 0.025),
-            transparent 60%
-        ),
-        #111;
+            180deg,
+            #171914,
+            #20221d
+        );
 
-    border-bottom: 1px solid var(--border-dark);
+    border-bottom: 1px solid #0f100d;
 
-    padding: 34px 40px 30px;
+    padding: 30px 40px 26px;
 
     overflow: hidden;
 }
 
+header::before {
+
+    content: "";
+
+    position: absolute;
+
+    left: 0;
+    top: 0;
+
+    width: 100%;
+    height: 4px;
+
+    background:
+        linear-gradient(
+            90deg,
+            var(--accent),
+            var(--navy),
+            var(--green),
+            transparent
+        );
+}
+
 header::after {
+
     content: "";
 
     position: absolute;
@@ -209,19 +293,15 @@ header::after {
     bottom: 0;
 
     width: 100%;
-    height: 2px;
+    height: 1px;
 
-    background:
-        linear-gradient(
-            90deg,
-            var(--accent),
-            transparent 45%
-        );
+    background: #55584d;
 
     opacity: 0.8;
 }
 
 .header-content {
+
     width: 100%;
 
     max-width: var(--content-width);
@@ -230,9 +310,10 @@ header::after {
 }
 
 header h1 {
+
     margin: 0;
 
-    color: var(--white);
+    color: #eeeae0;
 
     font-family: var(--serif);
 
@@ -242,13 +323,14 @@ header h1 {
 }
 
 header p {
-    margin: 9px 0 0;
 
-    color: var(--white-muted);
+    margin: 8px 0 0;
+
+    color: #aaa699;
 
     font-family: var(--mono);
 
-    font-size: 10px;
+    font-size: 9px;
 
     letter-spacing: 1.8px;
 
@@ -261,39 +343,48 @@ header p {
    ========================================================= */
 
 nav {
+
     display: flex;
 
     flex-wrap: wrap;
 
     align-items: center;
 
-    gap: 3px;
+    gap: 0;
 
-    background: #181818;
+    background:
+        linear-gradient(
+            180deg,
+            #30332d,
+            #292b26
+        );
 
-    border-bottom: 1px solid var(--border-dark);
+    border-bottom: 2px solid #181a16;
 
     padding: 0 40px;
 }
 
 nav a {
+
     position: relative;
 
     display: inline-flex;
 
     align-items: center;
 
-    min-height: 49px;
+    min-height: 46px;
 
-    padding: 0 14px;
+    padding: 0 15px;
 
-    color: #aaa7a0;
+    color: #c3c0b5;
+
+    border-right: 1px solid rgba(255,255,255,0.06);
 
     font-family: var(--mono);
 
-    font-size: 10px;
+    font-size: 9px;
 
-    letter-spacing: 0.6px;
+    letter-spacing: 0.7px;
 
     text-decoration: none;
 
@@ -304,16 +395,21 @@ nav a {
         background-color var(--transition);
 }
 
+nav a:first-child {
+    border-left: 1px solid rgba(255,255,255,0.06);
+}
+
 nav a::after {
+
     content: "";
 
     position: absolute;
 
-    left: 14px;
-    right: 14px;
-    bottom: 0;
+    left: 10px;
+    right: 10px;
+    bottom: -2px;
 
-    height: 2px;
+    height: 3px;
 
     background: var(--accent);
 
@@ -325,9 +421,10 @@ nav a::after {
 }
 
 nav a:hover {
-    color: var(--white);
 
-    background: rgba(255, 255, 255, 0.035);
+    color: #fff;
+
+    background: rgba(255,255,255,0.055);
 }
 
 nav a:hover::after {
@@ -340,6 +437,7 @@ nav a:hover::after {
    ========================================================= */
 
 main {
+
     width: min(
         calc(100% - 48px),
         var(--content-width)
@@ -347,39 +445,73 @@ main {
 
     margin: 0 auto;
 
-    padding: 50px 0 80px;
+    padding: 46px 0 80px;
 
     min-width: 0;
 }
 
 main > h2 {
+
     margin-bottom: 10px;
 
-    color: var(--white);
+    color: #eeeae0;
 
     font-size: clamp(28px, 4vw, 38px);
 }
 
 main > p {
+
     max-width: 760px;
 
-    color: #aaa7a0;
+    color: #b4b0a5;
 
     line-height: 1.7;
 }
 
 
 /* =========================================================
-   07. GENERAL CARDS
+   07. PAPER TEXTURE
+   ========================================================= */
+
+.card,
+.case-section,
+.about-section,
+.resource-card,
+.statistics-intro,
+.statistics-filters,
+.statistics-results,
+.manage-section,
+.management-section,
+.management-panel,
+.copyright-section,
+.content-section,
+.case-card,
+.no-cases {
+
+    background-color: var(--paper);
+
+    background-image:
+        radial-gradient(
+            rgba(80,70,50,0.045) 0.7px,
+            transparent 0.7px
+        );
+
+    background-size: 5px 5px;
+}
+
+
+/* =========================================================
+   08. GENERAL CARDS
    ========================================================= */
 
 .cards {
+
     display: grid;
 
     grid-template-columns:
         repeat(2, minmax(0, 1fr));
 
-    gap: 15px;
+    gap: 17px;
 
     margin-top: 32px;
 
@@ -387,6 +519,7 @@ main > p {
 }
 
 .card {
+
     position: relative;
 
     display: block;
@@ -394,9 +527,9 @@ main > p {
     min-width: 0;
     min-height: 175px;
 
-    padding: 26px;
+    padding: 27px;
 
-    background: var(--paper);
+    background-color: var(--paper);
 
     border: 1px solid var(--border-light);
 
@@ -404,7 +537,7 @@ main > p {
 
     text-decoration: none;
 
-    box-shadow: var(--shadow-small);
+    box-shadow: var(--paper-shadow);
 
     overflow: hidden;
 
@@ -415,28 +548,52 @@ main > p {
 }
 
 .card::before {
-    content: "CBRA / ARCHIVE";
+
+    content: "CRIMINAL BEHAVIOR RESEARCH ARCHIVE";
 
     display: block;
 
-    margin-bottom: 22px;
+    margin-bottom: 20px;
 
     color: var(--accent);
 
     font-family: var(--mono);
 
-    font-size: 9px;
+    font-size: 8px;
 
-    letter-spacing: 1.4px;
+    letter-spacing: 1.2px;
+
+    border-bottom: 1px solid #d1c9b8;
+
+    padding-bottom: 7px;
+}
+
+.card::after {
+
+    content: "→";
+
+    position: absolute;
+
+    right: 23px;
+    bottom: 20px;
+
+    color: var(--accent);
+
+    font-family: var(--mono);
+
+    font-size: 18px;
+
+    transition: transform var(--transition);
 }
 
 .card:hover {
+
     transform: translateY(-2px);
 
     border-color: var(--accent);
 
     box-shadow:
-        0 10px 28px rgba(0, 0, 0, 0.22);
+        0 8px 20px rgba(20,20,17,0.2);
 }
 
 .card:hover::after {
@@ -444,12 +601,14 @@ main > p {
 }
 
 .card h3 {
+
     margin-bottom: 8px;
 
     font-size: 22px;
 }
 
 .card p {
+
     margin: 0;
 
     max-width: 500px;
@@ -463,7 +622,7 @@ main > p {
 
 
 /* =========================================================
-   08. GENERAL SECTIONS
+   09. GENERAL SECTIONS
    ========================================================= */
 
 .case-section,
@@ -475,25 +634,27 @@ main > p {
 .manage-section,
 .management-section,
 .management-panel {
+
     min-width: 0;
 
-    background: var(--paper);
+    background-color: var(--paper);
 
     border: 1px solid var(--border-light);
 
     color: var(--ink);
 
-    box-shadow: var(--shadow-small);
+    box-shadow: var(--paper-shadow);
 }
 
 
 /* =========================================================
-   09. SECTION HEADINGS
+   10. SECTION HEADINGS
    ========================================================= */
 
 .case-section,
 .about-section,
 .resource-card {
+
     padding: 25px;
 
     margin-top: 18px;
@@ -502,6 +663,7 @@ main > p {
 .case-section h2,
 .about-section h3,
 .resource-card h3 {
+
     margin-bottom: 10px;
 
     color: var(--ink);
@@ -512,11 +674,12 @@ main > p {
 .case-section h2::after,
 .about-section h3::after,
 .resource-card h3::after {
+
     content: "";
 
     display: block;
 
-    width: 32px;
+    width: 38px;
 
     height: 2px;
 
@@ -527,10 +690,11 @@ main > p {
 
 
 /* =========================================================
-   10. SECTION DESCRIPTION
+   11. SECTION DESCRIPTION
    ========================================================= */
 
 .section-description {
+
     color: var(--ink-muted);
 
     font-size: 13px;
@@ -540,10 +704,11 @@ main > p {
 
 
 /* =========================================================
-   11. RESOURCE PAGE
+   12. RESOURCE PAGE
    ========================================================= */
 
 .resource-list {
+
     display: grid;
 
     grid-template-columns:
@@ -557,6 +722,7 @@ main > p {
 }
 
 .resource-card {
+
     position: relative;
 
     margin-top: 0;
@@ -569,28 +735,35 @@ main > p {
 }
 
 .resource-card::before {
-    content: "RESOURCE FILE";
+
+    content: "REFERENCE / RESOURCE FILE";
 
     display: block;
 
     margin-bottom: 20px;
 
-    color: var(--accent);
+    color: var(--navy);
 
     font-family: var(--mono);
 
-    font-size: 9px;
+    font-size: 8px;
 
-    letter-spacing: 1.4px;
+    letter-spacing: 1.3px;
+
+    padding-bottom: 7px;
+
+    border-bottom: 1px solid #d1c9b8;
 }
 
 .resource-card:hover {
+
     transform: translateY(-2px);
 
     border-color: var(--accent);
 }
 
 .resource-card p {
+
     color: var(--ink-soft);
 
     font-size: 13px;
@@ -600,16 +773,18 @@ main > p {
 
 
 /* =========================================================
-   12. ABOUT
+   13. ABOUT
    ========================================================= */
 
 .about-section {
+
     position: relative;
 
     padding-left: 29px;
 }
 
 .about-section::before {
+
     content: "";
 
     position: absolute;
@@ -618,12 +793,17 @@ main > p {
     top: 0;
     bottom: 0;
 
-    width: 3px;
+    width: 4px;
 
-    background: var(--accent);
+    background:
+        linear-gradient(
+            var(--accent),
+            var(--navy)
+        );
 }
 
 .about-section p {
+
     max-width: 820px;
 
     color: var(--ink-soft);
@@ -633,27 +813,30 @@ main > p {
     line-height: 1.75;
 }
 
+
 /* =========================================================
-   13. COPYRIGHT & USAGE
+   14. COPYRIGHT & USAGE
    ========================================================= */
 
 .copyright-section {
+
     min-width: 0;
 
     padding: 25px;
 
     margin-top: 18px;
 
-    background: var(--paper);
+    background-color: var(--paper);
 
     border: 1px solid var(--border-light);
 
     color: var(--ink);
 
-    box-shadow: var(--shadow-small);
+    box-shadow: var(--paper-shadow);
 }
 
 .copyright-section h2 {
+
     margin-bottom: 10px;
 
     color: var(--ink);
@@ -662,11 +845,12 @@ main > p {
 }
 
 .copyright-section h2::after {
+
     content: "";
 
     display: block;
 
-    width: 32px;
+    width: 38px;
 
     height: 2px;
 
@@ -676,6 +860,7 @@ main > p {
 }
 
 .copyright-section h3 {
+
     margin-top: 28px;
 
     margin-bottom: 9px;
@@ -687,6 +872,7 @@ main > p {
 
 .copyright-section p,
 .copyright-section li {
+
     color: var(--ink-soft);
 
     font-size: 13px;
@@ -695,12 +881,14 @@ main > p {
 }
 
 .copyright-section p {
+
     max-width: 820px;
 
     margin-bottom: 14px;
 }
 
 .copyright-section ul {
+
     max-width: 820px;
 
     margin: 8px 0 18px 20px;
@@ -712,23 +900,25 @@ main > p {
     margin-bottom: 6px;
 }
 
+
 /* =========================================================
-   13. ARCHIVE SEARCH
+   15. ARCHIVE SEARCH
    ========================================================= */
 
 .archive-panel {
+
     margin-top: 28px;
 
     padding: 22px;
 
     background:
         linear-gradient(
-            135deg,
-            #242423,
-            #1b1b1a
+            180deg,
+            #34372f,
+            #292b26
         );
 
-    border: 1px solid var(--border-dark);
+    border: 1px solid #4a4d44;
 
     box-shadow: var(--shadow);
 
@@ -736,15 +926,16 @@ main > p {
 }
 
 .archive-search input {
+
     width: 100%;
 
     padding: 13px 15px;
 
-    background: #111;
+    background: #f2eee3;
 
-    border: 1px solid #444;
+    border: 1px solid #8d897d;
 
-    color: var(--white);
+    color: var(--ink);
 
     font-family: var(--mono);
 
@@ -754,22 +945,24 @@ main > p {
 }
 
 .archive-search input::placeholder {
-    color: #777;
+    color: #77736a;
 }
 
 .archive-search input:focus {
+
     border-color: var(--accent);
 
     box-shadow:
-        0 0 0 3px rgba(116, 60, 61, 0.15);
+        0 0 0 3px rgba(113,59,60,0.18);
 }
 
 
 /* =========================================================
-   14. ARCHIVE FILTERS
+   16. ARCHIVE FILTERS
    ========================================================= */
 
 .archive-filters {
+
     display: grid;
 
     grid-template-columns:
@@ -783,6 +976,7 @@ main > p {
 }
 
 .archive-filter {
+
     display: flex;
 
     flex-direction: column;
@@ -793,11 +987,12 @@ main > p {
 }
 
 .archive-filter label {
-    color: #a9a69f;
+
+    color: #c3c0b5;
 
     font-family: var(--mono);
 
-    font-size: 9px;
+    font-size: 8px;
 
     letter-spacing: 1px;
 
@@ -805,17 +1000,18 @@ main > p {
 }
 
 .archive-filter select {
+
     width: 100%;
 
     min-width: 0;
 
     padding: 10px;
 
-    background: #151515;
+    background: #efebdf;
 
-    border: 1px solid #41413f;
+    border: 1px solid #858277;
 
-    color: #e7e4dc;
+    color: var(--ink);
 
     font-size: 12px;
 
@@ -829,11 +1025,12 @@ main > p {
 
 
 /* =========================================================
-   15. BUTTONS
+   17. BUTTONS
    ========================================================= */
 
 .primary-button,
 .secondary-button {
+
     display: inline-flex;
 
     align-items: center;
@@ -850,7 +1047,7 @@ main > p {
 
     font-family: var(--mono);
 
-    font-size: 10px;
+    font-size: 9px;
 
     letter-spacing: 0.7px;
 
@@ -874,14 +1071,19 @@ main > p {
 }
 
 .primary-button {
+
     background: var(--accent);
 
     border: 1px solid var(--accent);
 
     color: white;
+
+    box-shadow:
+        inset 0 1px rgba(255,255,255,0.08);
 }
 
 .primary-button:hover {
+
     background: var(--accent-dark);
 
     border-color: var(--accent-dark);
@@ -890,25 +1092,28 @@ main > p {
 }
 
 .secondary-button {
+
     background: transparent;
 
-    border: 1px solid #aaa69e;
+    border: 1px solid #918d82;
 
     color: var(--ink);
 }
 
 .secondary-button:hover {
-    background: #d8d5cc;
+
+    background: #ddd7c9;
 
     border-color: var(--ink);
 }
 
 
 /* =========================================================
-   16. ARCHIVE RESULTS HEADER
+   18. ARCHIVE RESULTS HEADER
    ========================================================= */
 
 .archive-results-header {
+
     display: flex;
 
     justify-content: space-between;
@@ -921,17 +1126,18 @@ main > p {
 
     padding-bottom: 10px;
 
-    border-bottom: 1px solid var(--border-dark);
+    border-bottom: 1px solid #55584f;
 
     min-width: 0;
 }
 
 #case-count {
-    color: var(--white);
+
+    color: #ddd9ce;
 
     font-family: var(--mono);
 
-    font-size: 11px;
+    font-size: 10px;
 
     letter-spacing: 0.5px;
 
@@ -939,11 +1145,12 @@ main > p {
 }
 
 #filter-summary {
-    color: #8e8b84;
+
+    color: #aaa69a;
 
     font-family: var(--mono);
 
-    font-size: 9px;
+    font-size: 8px;
 
     text-align: right;
 
@@ -952,10 +1159,11 @@ main > p {
 
 
 /* =========================================================
-   17. CASE LIST
+   19. CASE LIST
    ========================================================= */
 
 .case-list {
+
     display: grid;
 
     gap: 10px;
@@ -964,13 +1172,14 @@ main > p {
 }
 
 .case-card {
+
     position: relative;
 
     min-width: 0;
 
     padding: 20px 22px;
 
-    background: var(--paper);
+    background-color: var(--paper);
 
     border: 1px solid var(--border-light);
 
@@ -978,7 +1187,7 @@ main > p {
 
     cursor: pointer;
 
-    box-shadow: var(--shadow-small);
+    box-shadow: var(--paper-shadow);
 
     transition:
         transform var(--transition),
@@ -987,11 +1196,16 @@ main > p {
 }
 
 .case-card::before {
-    content: "CASE FILE";
+
+    content: "CASE FILE  /  ARCHIVE RECORD";
 
     display: block;
 
     margin-bottom: 10px;
+
+    padding-bottom: 7px;
+
+    border-bottom: 1px solid #d1c9b8;
 
     color: var(--accent);
 
@@ -999,18 +1213,21 @@ main > p {
 
     font-size: 8px;
 
-    letter-spacing: 1.4px;
+    letter-spacing: 1.3px;
 }
 
 .case-card:hover {
-    transform: translateX(2px);
+
+    transform: translateX(3px);
 
     border-color: var(--accent);
 
-    box-shadow: var(--shadow);
+    box-shadow:
+        0 6px 18px rgba(20,20,17,0.2);
 }
 
 .case-card h3 {
+
     margin-bottom: 6px;
 
     color: var(--ink);
@@ -1021,6 +1238,7 @@ main > p {
 }
 
 .case-card p {
+
     color: var(--ink-soft);
 
     font-size: 13px;
@@ -1031,6 +1249,7 @@ main > p {
 }
 
 .case-card-details {
+
     display: flex;
 
     flex-wrap: wrap;
@@ -1041,18 +1260,19 @@ main > p {
 }
 
 .case-card-details span {
+
     color: var(--ink-muted);
 
     font-family: var(--mono);
 
-    font-size: 9px;
+    font-size: 8px;
 
     overflow-wrap: anywhere;
 }
 
 
 /* =========================================================
-   18. ARCHIVE TAGS
+   20. ARCHIVE TAGS
    ========================================================= */
 
 .archive-case-tags {
@@ -1060,21 +1280,22 @@ main > p {
 }
 
 .archive-case-tag {
+
     display: inline-block;
 
     padding: 4px 8px;
 
     margin: 2px 3px 2px 0;
 
-    background: var(--paper-soft);
+    background: #ddd7c9;
 
-    border: 1px solid #c5c2b9;
+    border: 1px solid #c2baa8;
 
     color: var(--ink-soft);
 
     font-family: var(--mono);
 
-    font-size: 9px;
+    font-size: 8px;
 
     text-decoration: none;
 
@@ -1083,7 +1304,7 @@ main > p {
 
 
 /* =========================================================
-   19. EMPTY STATES
+   21. EMPTY STATES
    ========================================================= */
 
 .no-cases,
@@ -1092,9 +1313,10 @@ main > p {
 }
 
 .no-cases {
+
     padding: 28px;
 
-    background: var(--paper);
+    background-color: var(--paper);
 
     border: 1px solid var(--border-light);
 
@@ -1107,10 +1329,13 @@ main > p {
 
 
 /* =========================================================
-   20. CASE HEADER
+   22. CASE HEADER — PAPER FILE
    ========================================================= */
 
 .case-header {
+
+    position: relative;
+
     display: flex;
 
     justify-content: space-between;
@@ -1121,20 +1346,66 @@ main > p {
 
     margin-bottom: 20px;
 
-    padding: 27px 29px;
+    padding: 31px 32px;
 
-    background:
-        linear-gradient(
-            135deg,
-            #242423,
-            #1a1a19
+    background-color: var(--paper);
+
+    background-image:
+        radial-gradient(
+            rgba(70,60,45,0.04) 0.8px,
+            transparent 0.8px
         );
 
-    border: 1px solid var(--border-dark);
+    background-size: 5px 5px;
 
-    box-shadow: var(--shadow);
+    border: 1px solid #bcb3a0;
+
+    color: var(--ink);
+
+    box-shadow:
+        0 4px 13px rgba(20,19,15,0.18);
 
     min-width: 0;
+}
+
+/* top file line */
+
+.case-header::before {
+
+    content: "CRIMINAL BEHAVIOR RESEARCH ARCHIVE  /  CASE FILE";
+
+    position: absolute;
+
+    left: 32px;
+    top: 12px;
+
+    color: var(--accent);
+
+    font-family: var(--mono);
+
+    font-size: 7px;
+
+    letter-spacing: 1.5px;
+}
+
+/* file number line */
+
+.case-header::after {
+
+    content: "ARCHIVE RECORD";
+
+    position: absolute;
+
+    right: 24px;
+    top: 12px;
+
+    color: #777265;
+
+    font-family: var(--mono);
+
+    font-size: 7px;
+
+    letter-spacing: 1.2px;
 }
 
 .case-header > * {
@@ -1143,9 +1414,10 @@ main > p {
 
 .case-header h1,
 .case-header h2 {
+
     margin-bottom: 6px;
 
-    color: var(--white);
+    color: var(--ink);
 
     font-size: clamp(29px, 5vw, 44px);
 
@@ -1153,13 +1425,14 @@ main > p {
 }
 
 .case-header p {
+
     margin: 0;
 
-    color: #aaa7a0;
+    color: var(--ink-muted);
 
     font-family: var(--mono);
 
-    font-size: 10px;
+    font-size: 9px;
 
     letter-spacing: 0.7px;
 
@@ -1167,21 +1440,23 @@ main > p {
 }
 
 .case-header-date {
+
     flex: 0 0 auto;
 
     min-width: 135px;
 
     padding-left: 20px;
 
-    border-left: 1px solid #444;
+    border-left: 1px solid #bdb5a5;
 }
 
 .case-header-date span {
+
     display: block;
 
     margin-bottom: 4px;
 
-    color: #777;
+    color: #777265;
 
     font-family: var(--mono);
 
@@ -1193,7 +1468,8 @@ main > p {
 }
 
 .case-header-date strong {
-    color: var(--white);
+
+    color: var(--ink);
 
     font-family: var(--mono);
 
@@ -1204,10 +1480,11 @@ main > p {
 
 
 /* =========================================================
-   21. CASE INFORMATION
+   23. CASE INFORMATION
    ========================================================= */
 
 .case-information {
+
     display: grid;
 
     grid-template-columns:
@@ -1217,7 +1494,7 @@ main > p {
 
     background: var(--paper);
 
-    border-top: 1px solid var(--border-light);
+    border-top: 2px solid #8d877a;
 
     border-bottom: 1px solid var(--border-light);
 
@@ -1225,6 +1502,7 @@ main > p {
 }
 
 .case-info-item {
+
     display: flex;
 
     flex-direction: column;
@@ -1251,6 +1529,7 @@ main > p {
 .info-label,
 .case-information-label,
 .case-info-item .info-label {
+
     display: block;
 
     margin-bottom: 4px;
@@ -1271,6 +1550,7 @@ main > p {
 }
 
 .case-info-value {
+
     display: block;
 
     min-width: 0;
@@ -1289,14 +1569,16 @@ main > p {
 }
 
 .case-info-primary {
-    background: var(--paper);
 
-    border-left: 3px solid var(--accent);
+    background: #e6e0d1;
 
-    padding-left: 13px;
+    border-left: 4px solid var(--accent);
+
+    padding-left: 12px;
 }
 
 .case-info-primary .case-info-value {
+
     color: var(--ink);
 
     font-size: 14px;
@@ -1305,6 +1587,7 @@ main > p {
 }
 
 .case-info-wide {
+
     grid-column: 1 / -1;
 
     border-right: none !important;
@@ -1312,6 +1595,7 @@ main > p {
 
 .case-info-grid,
 .case-information-grid {
+
     display: grid;
 
     grid-template-columns:
@@ -1330,6 +1614,7 @@ main > p {
 
 .info-item,
 .case-information-item {
+
     min-width: 0;
     min-height: 68px;
 
@@ -1349,6 +1634,7 @@ main > p {
 
 .info-item span:last-child,
 .case-information-item span:last-child {
+
     color: var(--ink);
 
     font-size: 13px;
@@ -1360,10 +1646,11 @@ main > p {
 
 
 /* =========================================================
-   22. PEOPLE
+   24. PEOPLE
    ========================================================= */
 
 .people-grid {
+
     display: grid;
 
     grid-template-columns:
@@ -1375,15 +1662,16 @@ main > p {
 }
 
 .case-person {
+
     position: relative;
 
     min-width: 0;
 
-    padding: 16px;
+    padding: 17px;
 
-    background: #e8e6df;
+    background: #e6e0d2;
 
-    border: 1px solid var(--border-light);
+    border: 1px solid #c8c0ae;
 
     color: var(--ink);
 
@@ -1392,13 +1680,32 @@ main > p {
         transform var(--transition);
 }
 
+.case-person::before {
+
+    content: "PERSON OF RECORD";
+
+    display: block;
+
+    margin-bottom: 9px;
+
+    color: var(--navy);
+
+    font-family: var(--mono);
+
+    font-size: 7px;
+
+    letter-spacing: 1.2px;
+}
+
 .case-person:hover {
+
     border-color: var(--accent);
 
     transform: translateY(-1px);
 }
 
 .case-person h4 {
+
     margin-bottom: 5px;
 
     color: var(--ink);
@@ -1409,6 +1716,7 @@ main > p {
 }
 
 .case-person p {
+
     margin: 3px 0;
 
     color: var(--ink-soft);
@@ -1420,10 +1728,11 @@ main > p {
 
 
 /* =========================================================
-   23. TAGS
+   25. TAGS
    ========================================================= */
 
 .tag-list {
+
     display: flex;
 
     flex-wrap: wrap;
@@ -1434,21 +1743,22 @@ main > p {
 }
 
 .case-tag {
+
     display: inline-block;
 
     max-width: 100%;
 
     padding: 6px 10px;
 
-    background: var(--paper-soft);
+    background: #ded7c8;
 
-    border: 1px solid #c4c1b8;
+    border: 1px solid #c0b8a6;
 
     color: var(--ink-soft);
 
     font-family: var(--mono);
 
-    font-size: 9px;
+    font-size: 8px;
 
     line-height: 1.35;
 
@@ -1462,6 +1772,7 @@ main > p {
 }
 
 .case-tag:hover {
+
     background: var(--accent-soft);
 
     border-color: var(--accent);
@@ -1471,18 +1782,20 @@ main > p {
 
 
 /* =========================================================
-   24. SUBSECTIONS
+   26. SUBSECTIONS
    ========================================================= */
 
 .subsection {
+
     margin-top: 24px;
 
     padding-top: 20px;
 
-    border-top: 1px solid var(--border-light);
+    border-top: 1px solid #c9c1b0;
 }
 
 .subsection h3 {
+
     margin-bottom: 12px;
 
     color: var(--ink);
@@ -1492,20 +1805,22 @@ main > p {
 
 
 /* =========================================================
-   25. TIMELINE — LEGACY SUPPORT
+   27. TIMELINE — LEGACY SUPPORT
    ========================================================= */
 
 .case-timeline-event {
+
     position: relative;
 
     margin-left: 7px;
 
     padding: 3px 0 20px 22px;
 
-    border-left: 2px solid #b5b1a8;
+    border-left: 2px solid #aaa394;
 }
 
 .case-timeline-event::before {
+
     content: "";
 
     position: absolute;
@@ -1526,6 +1841,7 @@ main > p {
 }
 
 .timeline-date {
+
     color: var(--accent);
 
     font-family: var(--mono);
@@ -1538,6 +1854,7 @@ main > p {
 }
 
 .case-timeline-event h4 {
+
     margin: 5px 0;
 
     color: var(--ink);
@@ -1546,6 +1863,7 @@ main > p {
 }
 
 .case-timeline-event p {
+
     margin: 0;
 
     color: var(--ink-soft);
@@ -1556,6 +1874,7 @@ main > p {
 }
 
 .timeline-source {
+
     display: inline-block;
 
     margin-top: 7px;
@@ -1573,15 +1892,20 @@ main > p {
 
 
 /* =========================================================
-   26. SOURCES
+   28. SOURCES
    ========================================================= */
 
 .case-source {
+
+    position: relative;
+
     min-width: 0;
 
-    padding: 13px 0;
+    padding: 15px 0 15px 15px;
 
     border-bottom: 1px solid var(--border-light);
+
+    border-left: 2px solid #c4bcaa;
 }
 
 .case-source:first-child {
@@ -1589,12 +1913,14 @@ main > p {
 }
 
 .case-source:last-child {
+
     padding-bottom: 0;
 
     border-bottom: none;
 }
 
 .source-title {
+
     display: inline-block;
 
     max-width: 100%;
@@ -1613,15 +1939,17 @@ main > p {
 }
 
 .source-title:hover {
+
     color: var(--accent-dark);
 
     text-decoration: underline;
 }
 
 .source-type {
+
     margin-top: 3px;
 
-    color: var(--ink-muted);
+    color: var(--navy);
 
     font-family: var(--mono);
 
@@ -1631,9 +1959,10 @@ main > p {
 }
 
 .source-date {
+
     margin-top: 2px;
 
-    color: #99958c;
+    color: #8d887c;
 
     font-family: var(--mono);
 
@@ -1642,13 +1971,14 @@ main > p {
 
 
 /* =========================================================
-   27. DOCUMENTS / LINKS / RELATED CASES
+   29. DOCUMENTS / LINKS / RELATED CASES
    ========================================================= */
 
 .document-list,
 .source-list,
 .external-link-list,
 .related-case-list {
+
     display: grid;
 
     gap: 8px;
@@ -1657,11 +1987,12 @@ main > p {
 }
 
 .related-case {
+
     min-width: 0;
 
     padding: 14px;
 
-    background: #e9e7e0;
+    background: #e4ded0;
 
     border: 1px solid var(--border-light);
 
@@ -1673,18 +2004,20 @@ main > p {
 }
 
 .related-case:hover {
-    background: #e3e0d8;
+
+    background: #ddd6c8;
 
     border-color: var(--accent);
 }
 
 
 /* =========================================================
-   28. CRIME SCENE PHOTOS / MUGSHOTS
+   30. CRIME SCENE PHOTOS / MUGSHOTS
    ========================================================= */
 
 .crime-scene-grid,
 .case-mugshot-grid {
+
     display: grid;
 
     grid-template-columns:
@@ -1696,12 +2029,14 @@ main > p {
 }
 
 .case-mugshot-person {
+
     min-width: 0;
 
     margin-bottom: 24px;
 }
 
 .case-mugshot-person h4 {
+
     margin-bottom: 3px;
 
     color: var(--ink);
@@ -1710,6 +2045,7 @@ main > p {
 }
 
 .case-mugshot-role {
+
     color: var(--ink-muted);
 
     font-family: var(--mono);
@@ -1720,32 +2056,37 @@ main > p {
 }
 
 .case-mugshot-card {
+
     width: 100%;
 
     min-width: 0;
 
     padding: 8px;
 
-    background: #e4e1d9;
+    background: #ded8ca;
 
-    border: 1px solid var(--border-light);
+    border: 1px solid #bdb4a2;
+
+    box-shadow: var(--shadow-small);
 }
 
 .case-mugshot-image,
 .manage-mugshot-preview,
 .case-crime-scene-image {
+
     display: block;
 
     width: 100%;
 
     height: auto;
 
-    border: 1px solid #c4c0b6;
+    border: 1px solid #b8b09f;
 
-    background: #d6d3cb;
+    background: #d2ccbd;
 }
 
 .case-mugshot-card h5 {
+
     margin: 8px 2px 4px;
 
     color: var(--ink);
@@ -1756,6 +2097,7 @@ main > p {
 }
 
 .case-mugshot-card p {
+
     margin: 4px 2px;
 
     color: var(--ink-soft);
@@ -1767,6 +2109,7 @@ main > p {
 
 .case-mugshot-date,
 .case-mugshot-source {
+
     font-family: var(--mono);
 
     font-size: 9px !important;
@@ -1774,10 +2117,11 @@ main > p {
 
 
 /* =========================================================
-   29. STATISTICS
+   31. STATISTICS
    ========================================================= */
 
 .statistics-intro {
+
     position: relative;
 
     padding: 24px 26px;
@@ -1787,14 +2131,15 @@ main > p {
     background:
         linear-gradient(
             135deg,
-            #e8e5dd,
-            #dedbd2
+            #ebe5d8,
+            #dfd8c8
         );
 
-    border-left: 3px solid var(--accent);
+    border-left: 4px solid var(--navy);
 }
 
 .statistics-intro p {
+
     max-width: 850px;
 
     margin-bottom: 8px;
@@ -1807,6 +2152,7 @@ main > p {
 }
 
 .statistics-intro p:last-child {
+
     margin-bottom: 0;
 
     color: var(--ink-muted);
@@ -1816,10 +2162,11 @@ main > p {
 
 
 /* =========================================================
-   30. STATISTICS FILTERS
+   32. STATISTICS FILTERS
    ========================================================= */
 
 .statistics-filters {
+
     display: grid;
 
     grid-template-columns:
@@ -1841,13 +2188,14 @@ main > p {
 }
 
 .statistics-filters > h3 {
+
     grid-column: 1 / -1;
 
     padding-bottom: 14px;
 
     margin-bottom: 8px;
 
-    border-bottom: 1px solid var(--border-light);
+    border-bottom: 2px solid #aaa293;
 
     color: var(--ink);
 
@@ -1855,13 +2203,14 @@ main > p {
 }
 
 .statistics-filters > h3::before {
-    content: "RESEARCH QUERY";
+
+    content: "RESEARCH QUERY  /  ARCHIVE DATABASE";
 
     display: block;
 
     margin-bottom: 7px;
 
-    color: var(--accent);
+    color: var(--navy);
 
     font-family: var(--mono);
 
@@ -1873,6 +2222,7 @@ main > p {
 }
 
 .statistics-filters > label {
+
     color: var(--ink-muted);
 
     font-family: var(--mono);
@@ -1887,6 +2237,7 @@ main > p {
 }
 
 .statistics-filters > select {
+
     width: 100%;
 
     min-width: 0;
@@ -1894,7 +2245,7 @@ main > p {
 
     padding: 9px 11px;
 
-    background: #f8f6f0;
+    background: #f8f4ea;
 
     border: 1px solid var(--border-light);
 
@@ -1913,22 +2264,24 @@ main > p {
 }
 
 .statistics-filters > select:hover {
-    border-color: #aaa69d;
+    border-color: #999386;
 }
 
 .statistics-filters > select:focus {
+
     border-color: var(--accent);
 
     box-shadow:
-        0 0 0 3px rgba(116, 60, 61, 0.10);
+        0 0 0 3px rgba(113,59,60,0.10);
 }
 
 
 /* =========================================================
-   31. STATISTICS TAG FILTERS
+   33. STATISTICS TAG FILTERS
    ========================================================= */
 
 .statistics-tag-filters {
+
     grid-column: 1 / -1;
 
     display: grid;
@@ -1948,6 +2301,7 @@ main > p {
 }
 
 .statistics-tag-filters > h4 {
+
     grid-column: 1 / -1;
 
     margin: 0;
@@ -1962,13 +2316,14 @@ main > p {
 }
 
 .statistics-tag-filters > h4::before {
+
     content: "TAG SYSTEM";
 
     display: block;
 
     margin-bottom: 6px;
 
-    color: var(--accent);
+    color: var(--navy);
 
     font-family: var(--mono);
 
@@ -1978,12 +2333,14 @@ main > p {
 }
 
 .statistics-tag-filters > .filter-help {
+
     grid-column: 1 / -1;
 
     margin: -5px 0 3px;
 }
 
 .statistics-tag-category {
+
     display: flex;
 
     flex-direction: column;
@@ -1992,7 +2349,7 @@ main > p {
 
     padding: 17px;
 
-    background: #e9e6de;
+    background: #e6dfd1;
 
     border: 1px solid var(--border-light);
 
@@ -2002,12 +2359,14 @@ main > p {
 }
 
 .statistics-tag-category:hover {
-    border-color: #aaa69e;
+
+    border-color: #aaa296;
 
     box-shadow: var(--shadow-small);
 }
 
 .statistics-tag-category label {
+
     display: block;
 
     margin-bottom: 9px;
@@ -2026,6 +2385,7 @@ main > p {
 }
 
 .statistics-tag-category label::after {
+
     content: "";
 
     display: block;
@@ -2040,6 +2400,7 @@ main > p {
 }
 
 .statistics-tag-category select[multiple] {
+
     width: 100%;
 
     min-width: 0;
@@ -2047,9 +2408,9 @@ main > p {
 
     padding: 4px;
 
-    background: #f7f5ef;
+    background: #f7f3e9;
 
-    border: 1px solid #c6c2b8;
+    border: 1px solid #c0b8a7;
 
     border-radius: 0;
 
@@ -2069,27 +2430,31 @@ main > p {
 }
 
 .statistics-tag-category select[multiple]:focus {
+
     border-color: var(--accent);
 
     box-shadow:
-        0 0 0 3px rgba(116, 60, 61, 0.10);
+        0 0 0 3px rgba(113,59,60,0.10);
 }
 
 .statistics-tag-category select[multiple] option {
+
     padding: 7px 9px;
 
-    background: #f7f5ef;
+    background: #f7f3e9;
 
     color: var(--ink);
 }
 
 .statistics-tag-category select[multiple] option:checked {
+
     background: var(--accent);
 
     color: white;
 }
 
 .statistics-tag-category .filter-help {
+
     margin: 9px 0 0;
 
     padding: 0;
@@ -2112,12 +2477,14 @@ main > p {
 }
 
 .statistics-filters > #tag-mode + .filter-help {
+
     grid-column: 2;
 
     margin: -3px 0 2px;
 }
 
 .statistics-filters .filter-help {
+
     color: var(--ink-muted);
 
     font-size: 11px;
@@ -2126,6 +2493,7 @@ main > p {
 }
 
 .statistics-filters .filter-help strong {
+
     color: var(--ink);
 
     font-weight: 600;
@@ -2133,10 +2501,11 @@ main > p {
 
 
 /* =========================================================
-   32. STATISTICS RESULTS
+   34. STATISTICS RESULTS
    ========================================================= */
 
 .statistics-results {
+
     padding: 27px;
 
     margin-top: 20px;
@@ -2149,11 +2518,12 @@ main > p {
 }
 
 .statistics-results > h3 {
+
     padding-bottom: 14px;
 
     margin-bottom: 0;
 
-    border-bottom: 1px solid var(--border-light);
+    border-bottom: 2px solid #aaa293;
 
     color: var(--ink);
 
@@ -2161,13 +2531,14 @@ main > p {
 }
 
 .statistics-results > h3::before {
+
     content: "ARCHIVE ANALYSIS";
 
     display: block;
 
     margin-bottom: 7px;
 
-    color: var(--accent);
+    color: var(--navy);
 
     font-family: var(--mono);
 
@@ -2177,18 +2548,20 @@ main > p {
 }
 
 .statistics-summary {
+
     margin-top: 22px;
 
     padding: 17px 19px;
 
-    background: #e9e6de;
+    background: #e5ded0;
 
     border: 1px solid var(--border-light);
 
-    border-left: 3px solid var(--accent);
+    border-left: 4px solid var(--navy);
 }
 
 .statistics-summary h3 {
+
     margin-bottom: 7px;
 
     color: var(--ink);
@@ -2197,6 +2570,7 @@ main > p {
 }
 
 .statistics-summary p {
+
     margin: 0;
 
     color: var(--ink-soft);
@@ -2210,10 +2584,11 @@ main > p {
 
 
 /* =========================================================
-   33. STATISTICS CARDS
+   35. STATISTICS CARDS
    ========================================================= */
 
 .stat-grid {
+
     display: grid;
 
     grid-template-columns:
@@ -2227,6 +2602,7 @@ main > p {
 }
 
 .stat-card {
+
     position: relative;
 
     min-width: 0;
@@ -2237,13 +2613,13 @@ main > p {
     background:
         linear-gradient(
             135deg,
-            #e9e6de,
-            #dedbd2
+            #e8e1d3,
+            #ddd5c5
         );
 
     border: 1px solid var(--border-light);
 
-    border-top: 3px solid var(--accent);
+    border-top: 3px solid var(--navy);
 
     box-shadow: var(--shadow-small);
 
@@ -2251,6 +2627,7 @@ main > p {
 }
 
 .stat-card::after {
+
     content: "CBRA / DATA";
 
     position: absolute;
@@ -2258,7 +2635,7 @@ main > p {
     right: 14px;
     bottom: 11px;
 
-    color: rgba(41, 40, 38, 0.18);
+    color: rgba(41,40,38,0.18);
 
     font-family: var(--mono);
 
@@ -2268,6 +2645,7 @@ main > p {
 }
 
 .stat-card strong {
+
     display: block;
 
     margin-bottom: 8px;
@@ -2286,6 +2664,7 @@ main > p {
 }
 
 .stat-card span {
+
     color: var(--ink-muted);
 
     font-family: var(--mono);
@@ -2299,15 +2678,16 @@ main > p {
 
 
 /* =========================================================
-   34. STATISTICS CHARTS
+   36. STATISTICS CHARTS
    ========================================================= */
 
 .statistics-chart-section {
+
     margin-top: 18px;
 
     padding: 21px;
 
-    background: #e9e6de;
+    background: #e7e0d2;
 
     border: 1px solid var(--border-light);
 
@@ -2315,6 +2695,7 @@ main > p {
 }
 
 .statistics-chart-section h3 {
+
     margin-bottom: 5px;
 
     color: var(--ink);
@@ -2323,6 +2704,7 @@ main > p {
 }
 
 .statistics-chart-section h3::after {
+
     content: "";
 
     display: block;
@@ -2337,6 +2719,7 @@ main > p {
 }
 
 .chart-note {
+
     margin: 9px 0 16px;
 
     color: var(--ink-muted);
@@ -2347,6 +2730,7 @@ main > p {
 }
 
 .statistics-bar-row {
+
     width: 100%;
 
     margin-bottom: 15px;
@@ -2357,6 +2741,7 @@ main > p {
 }
 
 .statistics-bar-label {
+
     display: block;
 
     margin-bottom: 6px;
@@ -2375,33 +2760,36 @@ main > p {
 }
 
 .statistics-bar {
+
     width: 100%;
 
     height: 9px;
 
-    background: #d1cec5;
+    background: #cfc7b7;
 
-    border: 1px solid #c1beb5;
+    border: 1px solid #b9b09f;
 
     overflow: hidden;
 }
 
 .statistics-bar-fill {
+
     width: 0;
 
     height: 100%;
 
-    background: var(--accent);
+    background: var(--navy);
 
     transition: width 0.3s ease;
 }
 
 
 /* =========================================================
-   35. STATISTICS MATCHING CASES
+   37. STATISTICS MATCHING CASES
    ========================================================= */
 
 .statistics-table-section {
+
     margin-top: 22px;
 
     padding-top: 22px;
@@ -2410,6 +2798,7 @@ main > p {
 }
 
 .statistics-table-section h3 {
+
     margin-bottom: 13px;
 
     color: var(--ink);
@@ -2418,6 +2807,7 @@ main > p {
 }
 
 .statistics-table-section h3::before {
+
     content: "CASE RESULTS";
 
     display: block;
@@ -2434,6 +2824,7 @@ main > p {
 }
 
 #matching-cases {
+
     display: grid;
 
     gap: 9px;
@@ -2442,13 +2833,14 @@ main > p {
 }
 
 .statistics-case {
+
     position: relative;
 
     min-width: 0;
 
     padding: 17px 19px;
 
-    background: #e9e6de;
+    background: #e7e0d2;
 
     border: 1px solid var(--border-light);
 
@@ -2464,6 +2856,7 @@ main > p {
 }
 
 .statistics-case::before {
+
     content: "CASE FILE";
 
     display: block;
@@ -2480,6 +2873,7 @@ main > p {
 }
 
 .statistics-case::after {
+
     content: "→";
 
     position: absolute;
@@ -2497,7 +2891,8 @@ main > p {
 }
 
 .statistics-case:hover {
-    background: #e3e0d8;
+
+    background: #ded7c8;
 
     border-color: var(--accent);
 
@@ -2507,10 +2902,11 @@ main > p {
 }
 
 .statistics-case:hover::after {
-    transform: translate(3px, -50%);
+    transform: translate(3px,-50%);
 }
 
 .statistics-case h4 {
+
     margin: 0 30px 7px 0;
 
     color: var(--ink);
@@ -2525,6 +2921,7 @@ main > p {
 }
 
 .statistics-case p {
+
     margin: 3px 0;
 
     color: var(--ink-soft);
@@ -2537,6 +2934,7 @@ main > p {
 }
 
 .statistics-case strong {
+
     color: var(--ink);
 
     font-weight: 600;
@@ -2544,13 +2942,14 @@ main > p {
 
 .statistics-chart-section > p,
 #matching-cases > p {
+
     margin: 0;
 
     padding: 13px;
 
-    background: #e3e0d8;
+    background: #ded7c8;
 
-    border: 1px dashed #c3c0b7;
+    border: 1px dashed #bdb4a3;
 
     color: var(--ink-muted);
 
@@ -2563,10 +2962,11 @@ main > p {
 
 
 /* =========================================================
-   36. MANAGEMENT — PAGE
+   38. MANAGEMENT — PAGE
    ========================================================= */
 
 .manage-page {
+
     width: 100%;
 
     max-width: 1100px;
@@ -2575,6 +2975,7 @@ main > p {
 }
 
 #login-section {
+
     width: 100%;
 
     max-width: 520px;
@@ -2584,12 +2985,13 @@ main > p {
 
 
 /* =========================================================
-   37. MANAGEMENT SECTIONS
+   39. MANAGEMENT SECTIONS
    ========================================================= */
 
 .manage-section,
 .management-section,
 .management-panel {
+
     padding: 23px;
 
     margin-top: 17px;
@@ -2597,6 +2999,8 @@ main > p {
     min-width: 0;
 
     overflow: visible;
+
+    background-color: var(--paper);
 }
 
 .manage-section:first-child,
@@ -2608,6 +3012,7 @@ main > p {
 .manage-section h2,
 .management-section h2,
 .management-panel h2 {
+
     color: var(--ink);
 
     font-size: 22px;
@@ -2617,10 +3022,11 @@ main > p {
 
 
 /* =========================================================
-   38. MANAGEMENT HEADER
+   40. MANAGEMENT HEADER
    ========================================================= */
 
 .management-header {
+
     display: flex;
 
     justify-content: space-between;
@@ -2633,7 +3039,7 @@ main > p {
 
     margin-bottom: 18px;
 
-    border-bottom: 1px solid var(--border-light);
+    border-bottom: 2px solid #aaa293;
 
     min-width: 0;
 }
@@ -2647,6 +3053,7 @@ main > p {
 }
 
 .management-header p {
+
     margin: 0;
 
     color: var(--ink-muted);
@@ -2658,11 +3065,12 @@ main > p {
 
 
 /* =========================================================
-   39. MANAGEMENT PANEL HEADINGS
+   41. MANAGEMENT PANEL HEADINGS
    ========================================================= */
 
 .management-panel > h2,
 .management-section > h2 {
+
     display: flex;
 
     align-items: flex-start;
@@ -2676,6 +3084,7 @@ main > p {
 
 .management-panel > h2::before,
 .management-section > h2::before {
+
     content: "";
 
     flex: 0 0 auto;
@@ -2695,10 +3104,11 @@ main > p {
 
 
 /* =========================================================
-   40. CASE SELECTOR
+   42. CASE SELECTOR
    ========================================================= */
 
 .case-selector-row {
+
     display: flex;
 
     align-items: stretch;
@@ -2715,6 +3125,7 @@ main > p {
 }
 
 .case-selector-row select {
+
     flex: 1 1 auto;
 
     width: 100%;
@@ -2727,6 +3138,7 @@ main > p {
 }
 
 #case-selector {
+
     width: 100%;
 
     min-width: 0;
@@ -2735,7 +3147,7 @@ main > p {
 
     padding: 9px 11px;
 
-    background: #f8f6f0;
+    background: #f6f1e6;
 
     border: 1px solid var(--border-light);
 
@@ -2749,18 +3161,20 @@ main > p {
 }
 
 #case-selector:focus {
+
     border-color: var(--accent);
 
     box-shadow:
-        0 0 0 3px rgba(116, 60, 61, 0.10);
+        0 0 0 3px rgba(113,59,60,0.10);
 }
 
 
 /* =========================================================
-   41. NEW CASE BUTTON
+   43. NEW CASE BUTTON
    ========================================================= */
 
 #new-case-button {
+
     display: inline-flex;
 
     align-items: center;
@@ -2785,7 +3199,7 @@ main > p {
 
     font-family: var(--mono);
 
-    font-size: 10px;
+    font-size: 9px;
 
     letter-spacing: 0.7px;
 
@@ -2804,6 +3218,7 @@ main > p {
 }
 
 #new-case-button:hover {
+
     background: var(--accent-dark);
 
     border-color: var(--accent-dark);
@@ -2813,10 +3228,11 @@ main > p {
 
 
 /* =========================================================
-   42. FORMS
+   44. FORMS
    ========================================================= */
 
 .form-grid {
+
     display: grid;
 
     grid-template-columns:
@@ -2832,6 +3248,7 @@ main > p {
 }
 
 .form-group {
+
     display: flex;
 
     flex-direction: column;
@@ -2844,6 +3261,7 @@ main > p {
 }
 
 .form-group-wide {
+
     grid-column: 1 / -1;
 
     min-width: 0;
@@ -2851,6 +3269,7 @@ main > p {
 
 .form-group label,
 #login-form label {
+
     display: block;
 
     color: var(--ink-muted);
@@ -2875,6 +3294,7 @@ main > p {
 .manage-form input,
 .manage-form select,
 .manage-form textarea {
+
     display: block;
 
     width: 100%;
@@ -2885,7 +3305,7 @@ main > p {
 
     padding: 10px 11px;
 
-    background: #f8f6f0;
+    background: #f8f4e9;
 
     border: 1px solid var(--border-light);
 
@@ -2907,10 +3327,11 @@ main > p {
 .manage-form input:focus,
 .manage-form select:focus,
 .manage-form textarea:focus {
+
     border-color: var(--accent);
 
     box-shadow:
-        0 0 0 3px rgba(116, 60, 61, 0.10);
+        0 0 0 3px rgba(113,59,60,0.10);
 }
 
 .form-group input,
@@ -2922,6 +3343,7 @@ main > p {
 
 .form-group textarea,
 .manage-form textarea {
+
     min-height: 110px;
 
     resize: vertical;
@@ -2931,10 +3353,11 @@ main > p {
 
 
 /* =========================================================
-   43. MANAGEMENT FORM
+   45. MANAGEMENT FORM
    ========================================================= */
 
 .manage-form {
+
     display: block;
 
     width: 100%;
@@ -2956,10 +3379,11 @@ main > p {
 
 
 /* =========================================================
-   44. FORM ACTIONS
+   46. FORM ACTIONS
    ========================================================= */
 
 .form-actions {
+
     display: flex;
 
     align-items: center;
@@ -2984,10 +3408,11 @@ main > p {
 
 
 /* =========================================================
-   45. CONTROLLED FIELDS
+   47. CONTROLLED FIELDS
    ========================================================= */
 
 .controlled-field {
+
     display: flex;
 
     align-items: stretch;
@@ -3006,6 +3431,7 @@ main > p {
 }
 
 .controlled-field select {
+
     flex: 1 1 auto;
 
     width: 100%;
@@ -3016,6 +3442,7 @@ main > p {
 }
 
 .controlled-field .add-option-button {
+
     flex: 0 0 auto;
 
     width: auto;
@@ -3030,7 +3457,7 @@ main > p {
 
     background: transparent;
 
-    border: 1px solid #aaa69e;
+    border: 1px solid #9c9689;
 
     border-radius: 0;
 
@@ -3057,7 +3484,8 @@ main > p {
 }
 
 .controlled-field .add-option-button:hover {
-    background: #d8d5cc;
+
+    background: #ddd6c8;
 
     border-color: var(--accent);
 
@@ -3074,10 +3502,11 @@ main > p {
 
 
 /* =========================================================
-   46. ADDITIONAL CHARGES
+   48. ADDITIONAL CHARGES
    ========================================================= */
 
 #case-additional-offenses-input {
+
     display: block;
 
     width: 100%;
@@ -3087,9 +3516,9 @@ main > p {
 
     padding: 5px;
 
-    background: #f7f5ef;
+    background: #f7f3e9;
 
-    border: 1px solid #bdb9af;
+    border: 1px solid #bdb5a5;
 
     border-left: 3px solid var(--accent);
 
@@ -3119,16 +3548,18 @@ main > p {
 }
 
 #case-additional-offenses-input:focus {
+
     border-color: var(--accent);
 
     box-shadow:
-        0 0 0 3px rgba(116, 60, 61, 0.10);
+        0 0 0 3px rgba(113,59,60,0.10);
 }
 
 #case-additional-offenses-input option {
+
     padding: 9px 10px;
 
-    background: #f7f5ef;
+    background: #f7f3e9;
 
     color: var(--ink);
 
@@ -3136,6 +3567,7 @@ main > p {
 }
 
 #case-additional-offenses-input option:checked {
+
     background: var(--accent);
 
     color: white;
@@ -3145,10 +3577,11 @@ main > p {
 
 
 /* =========================================================
-   47. ADDITIONAL CHARGES SUMMARY
+   49. ADDITIONAL CHARGES SUMMARY
    ========================================================= */
 
 .additional-charges-summary {
+
     width: 100%;
 
     min-width: 0;
@@ -3157,7 +3590,7 @@ main > p {
 
     padding: 10px 12px;
 
-    background: #e9e6de;
+    background: #e5ded0;
 
     border: 1px solid var(--border-light);
 
@@ -3175,6 +3608,7 @@ main > p {
 }
 
 .additional-charges-summary-label {
+
     display: block;
 
     margin-bottom: 6px;
@@ -3191,6 +3625,7 @@ main > p {
 }
 
 .additional-charge-tag {
+
     display: inline-block;
 
     max-width: 100%;
@@ -3213,6 +3648,7 @@ main > p {
 }
 
 .additional-charges-none {
+
     color: var(--ink-muted);
 
     font-style: italic;
@@ -3220,10 +3656,11 @@ main > p {
 
 
 /* =========================================================
-   48. MANAGEMENT MESSAGES
+   50. MANAGEMENT MESSAGES
    ========================================================= */
 
 .form-message {
+
     min-height: 18px;
 
     margin: 10px 0 0;
@@ -3236,13 +3673,14 @@ main > p {
 }
 
 .empty-message {
+
     padding: 13px;
 
     margin: 0;
 
-    background: #e9e7e0;
+    background: #e4ded0;
 
-    border: 1px dashed #c7c3ba;
+    border: 1px dashed #c4bcaa;
 
     font-family: var(--mono);
 
@@ -3255,10 +3693,11 @@ main > p {
 
 
 /* =========================================================
-   49. MANAGEMENT CASE RECORDS
+   51. MANAGEMENT CASE RECORDS
    ========================================================= */
 
 .manage-case {
+
     width: 100%;
 
     min-width: 0;
@@ -3267,7 +3706,7 @@ main > p {
 
     margin-top: 9px;
 
-    background: #e9e7e0;
+    background: #e5ded0;
 
     border: 1px solid var(--border-light);
 
@@ -3281,6 +3720,7 @@ main > p {
 }
 
 .manage-case h4 {
+
     margin-bottom: 6px;
 
     color: var(--ink);
@@ -3291,6 +3731,7 @@ main > p {
 }
 
 .manage-case p {
+
     margin: 4px 0;
 
     color: var(--ink-soft);
@@ -3302,10 +3743,11 @@ main > p {
 
 
 /* =========================================================
-   50. MUGSHOT MANAGEMENT
+   52. MUGSHOT MANAGEMENT
    ========================================================= */
 
 .mugshot-record {
+
     width: 100%;
 
     min-width: 0;
@@ -3314,7 +3756,7 @@ main > p {
 
     margin-bottom: 12px;
 
-    background: #e9e7e0;
+    background: #e5ded0;
 
     border: 1px solid var(--border-light);
 
@@ -3322,19 +3764,21 @@ main > p {
 }
 
 .manage-mugshot-preview {
-    width: min(180px, 100%);
+
+    width: min(180px,100%);
 
     margin: 10px 0;
 
-    background: #d7d4cc;
+    background: #d7d0c0;
 }
 
 
 /* =========================================================
-   51. PERSON DETAILS
+   53. PERSON DETAILS
    ========================================================= */
 
 .case-details {
+
     display: grid;
 
     grid-template-columns:
@@ -3346,6 +3790,7 @@ main > p {
 }
 
 .case-details > div {
+
     display: flex;
 
     flex-direction: column;
@@ -3364,6 +3809,7 @@ main > p {
 }
 
 .case-details strong {
+
     color: var(--ink-muted);
 
     font-family: var(--mono);
@@ -3376,6 +3822,7 @@ main > p {
 }
 
 .case-details span {
+
     color: var(--ink);
 
     font-size: 13px;
@@ -3385,10 +3832,11 @@ main > p {
 
 
 /* =========================================================
-   52. LOGIN
+   54. LOGIN
    ========================================================= */
 
 #login-form {
+
     display: flex;
 
     flex-direction: column;
@@ -3404,27 +3852,29 @@ main > p {
 
 
 /* =========================================================
-   53. FILE INPUTS
+   55. FILE INPUTS
    ========================================================= */
 
 input[type="file"] {
+
     width: 100%;
 
     min-width: 0;
 
     padding: 8px;
 
-    background: #ebe8e1;
+    background: #ebe5d8;
 
     cursor: pointer;
 }
 
 input[type="file"]::file-selector-button {
+
     margin-right: 9px;
 
     padding: 7px 10px;
 
-    background: var(--ink);
+    background: var(--navy-dark);
 
     border: none;
 
@@ -3439,12 +3889,13 @@ input[type="file"]::file-selector-button {
 
 
 /* =========================================================
-   54. MANAGEMENT INPUT PLACEHOLDERS
+   56. MANAGEMENT INPUT PLACEHOLDERS
    ========================================================= */
 
 .manage-page input::placeholder,
 .manage-page textarea::placeholder {
-    color: #77736b;
+
+    color: #777268;
 
     opacity: 1;
 }
@@ -3457,22 +3908,29 @@ input[type="file"]::file-selector-button {
 
 
 /* =========================================================
-   55. FOOTER
+   57. FOOTER
    ========================================================= */
 
 footer {
+
     padding: 25px 30px;
 
-    background: #101010;
+    background:
+        linear-gradient(
+            180deg,
+            #20221d,
+            #171914
+        );
 
-    border-top: 1px solid var(--border-dark);
+    border-top: 2px solid #0f100d;
 
-    color: #77746e;
+    color: #8b887d;
 
     text-align: center;
 }
 
 footer p {
+
     margin: 0;
 
     font-family: var(--mono);
@@ -3486,7 +3944,7 @@ footer p {
 
 
 /* =========================================================
-   56. HIDDEN
+   58. HIDDEN
    ========================================================= */
 
 .hidden {
@@ -3495,7 +3953,7 @@ footer p {
 
 
 /* =========================================================
-   57. FOCUS
+   59. FOCUS
    ========================================================= */
 
 a:focus-visible,
@@ -3503,6 +3961,7 @@ button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
+
     outline: 2px solid var(--accent);
 
     outline-offset: 2px;
@@ -3510,7 +3969,7 @@ textarea:focus-visible {
 
 
 /* =========================================================
-   58. GENERAL LONG-TEXT PROTECTION
+   60. GENERAL LONG-TEXT PROTECTION
    ========================================================= */
 
 .management-panel *,
@@ -3533,12 +3992,333 @@ textarea:focus-visible {
 
 
 /* =========================================================
-   59. RESPONSIVE — 900px
+   61. PERSON PAGE MUGSHOTS
+   ========================================================= */
+
+.person-mugshot-gallery {
+
+    display: grid !important;
+
+    grid-template-columns:
+        repeat(4,180px) !important;
+
+    gap: 20px !important;
+
+    width: 100% !important;
+
+    align-items: start !important;
+}
+
+.person-mugshot-card {
+
+    display: block !important;
+
+    width: 180px !important;
+    min-width: 180px !important;
+    max-width: 180px !important;
+
+    padding: 8px !important;
+
+    box-sizing: border-box !important;
+
+    background: #ded8ca !important;
+
+    border: 1px solid var(--border-light) !important;
+
+    box-shadow: var(--shadow-small);
+
+    overflow: hidden !important;
+}
+
+.person-mugshot-card > a {
+
+    display: block !important;
+
+    width: 162px !important;
+    height: 240px !important;
+
+    overflow: hidden !important;
+}
+
+.person-mugshot-card img {
+
+    display: block !important;
+
+    width: 162px !important;
+    height: 240px !important;
+
+    min-width: 162px !important;
+    max-width: 162px !important;
+
+    min-height: 240px !important;
+    max-height: 240px !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    box-sizing: border-box !important;
+
+    object-fit: cover !important;
+    object-position: center top !important;
+
+    border: 1px solid #bdb5a5 !important;
+
+    background: #d3ccbc !important;
+}
+
+.person-mugshot-card h3 {
+
+    width: 162px !important;
+
+    margin: 10px 0 5px !important;
+
+    font-size: 14px !important;
+
+    line-height: 1.3 !important;
+
+    overflow-wrap: anywhere !important;
+}
+
+.person-mugshot-card p {
+
+    width: 162px !important;
+
+    margin: 4px 0 !important;
+
+    font-size: 11px !important;
+
+    line-height: 1.4 !important;
+
+    overflow-wrap: anywhere !important;
+}
+
+.person-mugshot-card button {
+    margin-top: 8px;
+}
+
+
+/* =========================================================
+   62. COPYRIGHT / CONTENT SECTIONS
+   ========================================================= */
+
+.content-section {
+
+    min-width: 0;
+
+    margin-top: 18px;
+
+    background-color: var(--paper);
+
+    background-image:
+        radial-gradient(
+            rgba(80,70,50,0.045) 0.7px,
+            transparent 0.7px
+        );
+
+    background-size: 5px 5px;
+
+    border: 1px solid var(--border-light);
+
+    color: var(--ink);
+
+    box-shadow: var(--paper-shadow);
+}
+
+.content-section + .content-section {
+    margin-top: 15px;
+}
+
+.section-header {
+    padding: 25px;
+}
+
+.section-kicker {
+
+    margin-bottom: 8px;
+
+    color: var(--accent);
+
+    font-family: var(--mono);
+
+    font-size: 9px;
+
+    letter-spacing: 1.4px;
+}
+
+.content-section h3 {
+
+    margin-bottom: 9px;
+
+    color: var(--ink);
+
+    font-size: 22px;
+}
+
+.content-section h3::after {
+
+    content: "";
+
+    display: block;
+
+    width: 32px;
+
+    height: 2px;
+
+    margin-top: 8px;
+
+    background: var(--accent);
+}
+
+.section-header > div > p:last-child {
+
+    max-width: 820px;
+
+    color: var(--ink-muted);
+
+    font-size: 13px;
+
+    line-height: 1.65;
+}
+
+.content-card {
+    padding: 0 25px 25px;
+}
+
+.content-card p,
+.content-card li {
+
+    max-width: 820px;
+
+    color: var(--ink-soft);
+
+    font-size: 13px;
+
+    line-height: 1.75;
+}
+
+.content-card p {
+    margin-bottom: 14px;
+}
+
+.content-card h4 {
+
+    margin-top: 22px;
+
+    margin-bottom: 8px;
+
+    color: var(--ink);
+
+    font-size: 14px;
+}
+
+.content-card ul {
+
+    max-width: 820px;
+
+    margin: 8px 0 18px 20px;
+
+    padding: 0;
+}
+
+.content-card li {
+    margin-bottom: 6px;
+}
+
+.content-card strong {
+    color: var(--ink);
+}
+
+.last-updated {
+    margin-bottom: 8px !important;
+}
+
+.resource-type {
+
+    margin-bottom: 10px !important;
+
+    color: var(--accent) !important;
+
+    font-family: var(--mono);
+
+    font-size: 9px !important;
+
+    letter-spacing: 1.4px;
+
+    line-height: 1.4 !important;
+}
+
+
+/* =========================================================
+   63. FILE LABELS / ARCHIVE DETAILS
+   ========================================================= */
+
+.case-section::before,
+.about-section::before,
+.resource-card::before {
+    /* handled by individual sections */
+}
+
+
+/* =========================================================
+   64. PAPER DOCUMENT EFFECT
+   ========================================================= */
+
+/*
+   These make the important record areas feel like
+   physical documents sitting on the archive background.
+*/
+
+#person-profile,
+#case-profile {
+
+    position: relative;
+}
+
+
+/* subtle document shadow behind major sections */
+
+#person-profile > .case-section,
+#case-profile > .case-section {
+
+    position: relative;
+}
+
+
+/* =========================================================
+   65. PERSON PROFILE HEADER
+   ========================================================= */
+
+#person-profile .case-header {
+
+    border-top: 4px solid var(--navy);
+}
+
+#person-profile .case-header::before {
+
+    content: "CRIMINAL BEHAVIOR RESEARCH ARCHIVE  /  PERSON FILE";
+
+    color: var(--navy);
+}
+
+
+/* =========================================================
+   66. RECORD STAMP EFFECT
+   ========================================================= */
+
+.case-header-date strong {
+
+    position: relative;
+}
+
+
+/* =========================================================
+   67. RESPONSIVE — 900px
    ========================================================= */
 
 @media (max-width: 900px) {
 
     main {
+
         width: min(
             calc(100% - 36px),
             var(--content-width)
@@ -3548,7 +4328,9 @@ textarea:focus-visible {
     }
 
     header {
+
         padding-left: 28px;
+
         padding-right: 28px;
     }
 
@@ -3557,22 +4339,26 @@ textarea:focus-visible {
     }
 
     .archive-filters {
+
         grid-template-columns:
-            repeat(2, minmax(0, 1fr));
+            repeat(2,minmax(0,1fr));
     }
 
     .crime-scene-grid,
     .case-mugshot-grid {
+
         grid-template-columns:
-            repeat(2, minmax(0, 1fr));
+            repeat(2,minmax(0,1fr));
     }
 
     .statistics-filters {
+
         grid-template-columns:
-            145px minmax(0, 1fr);
+            145px minmax(0,1fr);
     }
 
     .statistics-tag-filters {
+
         grid-template-columns:
             1fr;
     }
@@ -3583,14 +4369,21 @@ textarea:focus-visible {
     }
 
     .stat-grid {
+
         grid-template-columns:
-            repeat(2, minmax(0, 1fr));
+            repeat(2,minmax(0,1fr));
+    }
+
+    .person-mugshot-gallery {
+
+        grid-template-columns:
+            repeat(3,180px) !important;
     }
 }
 
 
 /* =========================================================
-   60. RESPONSIVE — 700px
+   68. RESPONSIVE — 700px
    ========================================================= */
 
 @media (max-width: 700px) {
@@ -3608,20 +4401,27 @@ textarea:focus-visible {
     }
 
     nav {
+
         display: block;
 
         padding: 4px 15px;
     }
 
     nav a {
+
         display: flex;
 
         min-height: 40px;
 
         padding: 0 9px;
+
+        border-left: none;
+
+        border-right: none;
     }
 
     main {
+
         width: calc(100% - 28px);
 
         padding: 34px 0 55px;
@@ -3635,6 +4435,7 @@ textarea:focus-visible {
     .resource-list,
     .people-grid,
     .stat-grid {
+
         grid-template-columns: 1fr;
     }
 
@@ -3643,6 +4444,7 @@ textarea:focus-visible {
     }
 
     .archive-results-header {
+
         flex-direction: column;
 
         align-items: flex-start;
@@ -3655,11 +4457,23 @@ textarea:focus-visible {
     }
 
     .case-header {
+
         flex-direction: column;
 
         align-items: flex-start;
 
-        padding: 23px;
+        padding: 27px 23px 23px;
+    }
+
+    .case-header::after {
+
+        position: static;
+
+        display: block;
+
+        order: -1;
+
+        margin-bottom: 4px;
     }
 
     .case-header h1,
@@ -3668,6 +4482,7 @@ textarea:focus-visible {
     }
 
     .case-header-date {
+
         width: 100%;
 
         min-width: 0;
@@ -3676,7 +4491,7 @@ textarea:focus-visible {
 
         border-left: none;
 
-        border-top: 1px solid #444;
+        border-top: 1px solid #bdb5a5;
     }
 
 
@@ -3687,10 +4502,12 @@ textarea:focus-visible {
     .case-information,
     .case-info-grid,
     .case-information-grid {
+
         grid-template-columns: 1fr;
     }
 
     .case-info-item {
+
         min-height: 62px;
 
         padding: 11px 14px;
@@ -3716,6 +4533,7 @@ textarea:focus-visible {
     .info-label,
     .case-information-label,
     .case-info-item .info-label {
+
         margin-bottom: 3px;
 
         font-size: 8px;
@@ -3748,6 +4566,7 @@ textarea:focus-visible {
     .manage-section,
     .management-section,
     .management-panel {
+
         padding: 20px;
     }
 
@@ -3757,6 +4576,7 @@ textarea:focus-visible {
        ----------------------------------------- */
 
     .statistics-filters {
+
         grid-template-columns: 1fr;
 
         gap: 7px;
@@ -3771,6 +4591,7 @@ textarea:focus-visible {
     }
 
     .statistics-tag-filters {
+
         grid-column: 1;
 
         grid-template-columns: 1fr;
@@ -3794,6 +4615,7 @@ textarea:focus-visible {
     }
 
     .statistics-filters > #tag-mode + .filter-help {
+
         grid-column: 1;
 
         margin-top: 0;
@@ -3813,6 +4635,7 @@ textarea:focus-visible {
        ----------------------------------------- */
 
     .form-grid {
+
         grid-template-columns: 1fr;
 
         gap: 15px;
@@ -3837,6 +4660,7 @@ textarea:focus-visible {
        ----------------------------------------- */
 
     .controlled-field {
+
         flex-direction: column;
 
         gap: 8px;
@@ -3847,6 +4671,7 @@ textarea:focus-visible {
     }
 
     .controlled-field .add-option-button {
+
         width: 100%;
 
         min-width: 0;
@@ -3860,6 +4685,7 @@ textarea:focus-visible {
        ----------------------------------------- */
 
     .case-selector-row {
+
         flex-direction: column;
 
         align-items: stretch;
@@ -3873,6 +4699,7 @@ textarea:focus-visible {
     }
 
     #new-case-button {
+
         width: 100%;
 
         margin-top: 9px;
@@ -3907,6 +4734,7 @@ textarea:focus-visible {
        ----------------------------------------- */
 
     .management-header {
+
         flex-direction: column;
 
         align-items: flex-start;
@@ -3925,11 +4753,24 @@ textarea:focus-visible {
     #case-additional-offenses-input {
         min-height: 160px;
     }
+
+
+    /* -----------------------------------------
+       PERSON MUGSHOTS
+       ----------------------------------------- */
+
+    .person-mugshot-gallery {
+
+        grid-template-columns:
+            repeat(2,180px) !important;
+
+        gap: 15px !important;
+    }
 }
 
 
 /* =========================================================
-   61. RESPONSIVE — 450px
+   69. RESPONSIVE — 450px
    ========================================================= */
 
 @media (max-width: 450px) {
@@ -4022,11 +4863,60 @@ textarea:focus-visible {
     .controlled-field .add-option-button {
         font-size: 8px;
     }
+
+
+    /* -----------------------------------------
+       PERSON MUGSHOTS
+       ----------------------------------------- */
+
+    .person-mugshot-gallery {
+
+        grid-template-columns:
+            1fr 1fr !important;
+
+        gap: 10px !important;
+    }
+
+    .person-mugshot-card {
+
+        width: 100% !important;
+
+        min-width: 0 !important;
+
+        max-width: none !important;
+    }
+
+    .person-mugshot-card > a {
+
+        width: 100% !important;
+
+        height: 230px !important;
+    }
+
+    .person-mugshot-card img {
+
+        width: 100% !important;
+
+        min-width: 0 !important;
+
+        max-width: 100% !important;
+
+        height: 230px !important;
+
+        min-height: 230px !important;
+
+        max-height: 230px !important;
+    }
+
+    .person-mugshot-card h3,
+    .person-mugshot-card p {
+        width: 100% !important;
+    }
 }
 
 
 /* =========================================================
-   62. VERY SMALL / TOUCH SAFETY
+   70. VERY SMALL / TOUCH SAFETY
    ========================================================= */
 
 @media (max-width: 360px) {
@@ -4036,12 +4926,16 @@ textarea:focus-visible {
     }
 
     header {
+
         padding-left: 16px;
+
         padding-right: 16px;
     }
 
     nav {
+
         padding-left: 10px;
+
         padding-right: 10px;
     }
 
@@ -4060,307 +4954,150 @@ textarea:focus-visible {
         font-size: 12px;
     }
 }
-/* =========================================================
-   CBRA — PERSON PAGE MUGSHOTS
-   ========================================================= */
-
-.person-mugshot-gallery {
-    display: grid !important;
-
-    grid-template-columns:
-        repeat(4, 180px) !important;
-
-    gap: 20px !important;
-
-    width: 100% !important;
-
-    align-items: start !important;
-}
-
-
-.person-mugshot-card {
-    display: block !important;
-
-    width: 180px !important;
-    min-width: 180px !important;
-    max-width: 180px !important;
-
-    padding: 8px !important;
-
-    box-sizing: border-box !important;
-
-    background: #e4e1d9 !important;
-
-    border: 1px solid var(--border-light) !important;
-
-    overflow: hidden !important;
-}
-
-
-.person-mugshot-card > a {
-    display: block !important;
-
-    width: 162px !important;
-    height: 240px !important;
-
-    overflow: hidden !important;
-}
-
-
-.person-mugshot-card img {
-    display: block !important;
-
-    width: 162px !important;
-    height: 240px !important;
-
-    min-width: 162px !important;
-    max-width: 162px !important;
-
-    min-height: 240px !important;
-    max-height: 240px !important;
-
-    margin: 0 !important;
-    padding: 0 !important;
-
-    box-sizing: border-box !important;
-
-    object-fit: cover !important;
-    object-position: center top !important;
-
-    border: 1px solid #c4c0b6 !important;
-
-    background: #d6d3cb !important;
-}
-
-
-.person-mugshot-card h3 {
-    width: 162px !important;
-
-    margin: 10px 0 5px !important;
-
-    font-size: 14px !important;
-
-    line-height: 1.3 !important;
-
-    overflow-wrap: anywhere !important;
-}
-
-
-.person-mugshot-card p {
-    width: 162px !important;
-
-    margin: 4px 0 !important;
-
-    font-size: 11px !important;
-
-    line-height: 1.4 !important;
-
-    overflow-wrap: anywhere !important;
-}
-
-
-/* Buttons underneath mugshots */
-
-.person-mugshot-card button {
-    margin-top: 8px;
-}
 
 
 /* =========================================================
-   RESPONSIVE
+   71. SMALL ARCHIVE / PAPER DETAILS
    ========================================================= */
 
-@media (max-width: 900px) {
+/*
+   These don't alter layout.
+   They add the "old records office" feeling without
+   making the site look like a Halloween/true-crime theme.
+*/
 
-    .person-mugshot-gallery {
-        grid-template-columns:
-            repeat(3, 180px) !important;
-    }
+.case-section > h2,
+.content-section h3,
+.about-section h3,
+.resource-card h3 {
 
+    position: relative;
 }
 
 
-@media (max-width: 700px) {
+/* archive divider */
 
-    .person-mugshot-gallery {
-        grid-template-columns:
-            repeat(2, 180px) !important;
+.case-section > h2::before {
 
-        gap: 15px !important;
-    }
-
-}
-
-
-@media (max-width: 430px) {
-
-    .person-mugshot-gallery {
-        grid-template-columns:
-            1fr 1fr !important;
-
-        gap: 10px !important;
-    }
-
-
-    .person-mugshot-card {
-        width: 100% !important;
-        min-width: 0 !important;
-        max-width: none !important;
-    }
-
-
-    .person-mugshot-card > a {
-        width: 100% !important;
-        height: 230px !important;
-    }
-
-
-    .person-mugshot-card img {
-        width: 100% !important;
-        min-width: 0 !important;
-        max-width: 100% !important;
-
-        height: 230px !important;
-        min-height: 230px !important;
-        max-height: 230px !important;
-    }
-
-
-    .person-mugshot-card h3,
-    .person-mugshot-card p {
-        width: 100% !important;
-    }
-
-}
-
-/* =========================================================
-   COPYRIGHT & USAGE
-   ========================================================= */
-
-.content-section {
-    min-width: 0;
-
-    margin-top: 18px;
-
-    background: var(--paper);
-
-    border: 1px solid var(--border-light);
-
-    color: var(--ink);
-
-    box-shadow: var(--shadow-small);
-}
-
-.content-section + .content-section {
-    margin-top: 15px;
-}
-
-.section-header {
-    padding: 25px;
-}
-
-.section-kicker {
-    margin-bottom: 8px;
-
-    color: var(--accent);
-
-    font-family: var(--mono);
-
-    font-size: 9px;
-
-    letter-spacing: 1.4px;
-}
-
-.content-section h3 {
-    margin-bottom: 9px;
-
-    color: var(--ink);
-
-    font-size: 22px;
-}
-
-.content-section h3::after {
-    content: "";
+    content: "RECORD";
 
     display: block;
 
-    width: 32px;
+    margin-bottom: 5px;
 
-    height: 2px;
-
-    margin-top: 8px;
-
-    background: var(--accent);
-}
-
-.section-header > div > p:last-child {
-    max-width: 820px;
-
-    color: var(--ink-muted);
-
-    font-size: 13px;
-
-    line-height: 1.65;
-}
-
-.content-card {
-    padding: 0 25px 25px;
-}
-
-.content-card p,
-.content-card li {
-    max-width: 820px;
-
-    color: var(--ink-soft);
-
-    font-size: 13px;
-
-    line-height: 1.75;
-}
-
-.content-card p {
-    margin-bottom: 14px;
-}
-
-.content-card h4 {
-    margin-top: 22px;
-    margin-bottom: 8px;
-
-    color: var(--ink);
-
-    font-size: 14px;
-}
-
-.content-card ul {
-    max-width: 820px;
-
-    margin: 8px 0 18px 20px;
-
-    padding: 0;
-}
-
-.content-card li {
-    margin-bottom: 6px;
-}
-
-.content-card strong {
-    color: var(--ink);
-}
-
-.last-updated {
-    margin-bottom: 8px !important;
-}
-
-.resource-type {
-    margin-bottom: 10px !important;
-
-    color: var(--accent) !important;
+    color: var(--navy);
 
     font-family: var(--mono);
 
-    font-size: 9px !important;
+    font-size: 7px;
 
     letter-spacing: 1.4px;
 
-    line-height: 1.4 !important;
+    line-height: 1;
+}
+
+
+/* Person information gets a different document label */
+
+#person-profile .case-section > h2::before {
+    content: "PERSON FILE";
+}
+
+
+/* =========================================================
+   72. SOURCE RECORD DETAILS
+   ========================================================= */
+
+.person-source-card,
+.person-document-card,
+.person-case-card {
+
+    background: #e5ded0;
+
+    border: 1px solid var(--border-light);
+
+    box-shadow: none;
+}
+
+
+/* =========================================================
+   73. ADMIN CONTROLS
+   ========================================================= */
+
+.cbra-admin-only button,
+.cbra-admin-only a {
+
+    font-family: var(--mono);
+
+    font-size: 8px;
+
+    letter-spacing: 0.6px;
+
+    text-transform: uppercase;
+}
+
+
+/* =========================================================
+   74. PAPER FOLDER TAB EFFECT
+   ========================================================= */
+
+.case-section:first-of-type {
+
+    position: relative;
+}
+
+
+/* =========================================================
+   75. PRINT-FRIENDLY CASE FILE
+   ========================================================= */
+
+@media print {
+
+    body {
+
+        background: white;
+
+        color: black;
+    }
+
+    header,
+    nav,
+    footer {
+
+        display: none !important;
+    }
+
+    main {
+
+        width: 100%;
+
+        max-width: none;
+
+        padding: 0;
+    }
+
+    .case-header,
+    .case-section,
+    .content-section {
+
+        box-shadow: none;
+
+        break-inside: avoid;
+    }
+
+    .case-header {
+
+        border: 2px solid #222;
+    }
+
+    .case-section {
+
+        border-color: #777;
+    }
+
+    .primary-button,
+    .secondary-button {
+
+        display: none !important;
+    }
 }
