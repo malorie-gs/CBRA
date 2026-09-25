@@ -5052,3 +5052,300 @@ body:has(#person-profile) .case-section {
         border-left-width: 2px;
     }
 }
+
+/* =========================================================
+   CBRA — FILE PAGE CONTRAST FIX
+   ========================================================= */
+
+
+/* ---------------------------------------------------------
+   MAIN PAPER SECTIONS
+   --------------------------------------------------------- */
+
+body:has(.case-header) .case-section {
+    background: #e8e4da !important;
+    color: #292826 !important;
+
+    border-color: #bcb7ac !important;
+}
+
+
+/* All normal text inside paper sections */
+
+body:has(.case-header) .case-section p,
+body:has(.case-header) .case-section li,
+body:has(.case-header) .case-section span,
+body:has(.case-header) .case-section div {
+    color: #3f3c37;
+}
+
+
+/* Headings */
+
+body:has(.case-header) .case-section h2,
+body:has(.case-header) .case-section h3,
+body:has(.case-header) .case-section h4 {
+    color: #292826 !important;
+}
+
+
+/* ---------------------------------------------------------
+   CASE INFORMATION
+   --------------------------------------------------------- */
+
+body:has(.case-header) .case-information,
+body:has(.case-header) .case-information-grid,
+body:has(.case-header) .case-info-grid {
+    background: #e2ded4 !important;
+    color: #292826 !important;
+
+    border-color: #bdb8ad !important;
+}
+
+
+body:has(.case-header) .case-info-item,
+body:has(.case-header) .info-item,
+body:has(.case-header) .case-information-item {
+    background: #e8e4da !important;
+
+    color: #292826 !important;
+
+    border-color: #c5c0b5 !important;
+}
+
+
+/* Labels */
+
+body:has(.case-header) .case-info-label,
+body:has(.case-header) .info-label,
+body:has(.case-header) .case-information-label,
+body:has(.case-header) .case-info-item .info-label {
+    color: #68635b !important;
+}
+
+
+/* Values */
+
+body:has(.case-header) .case-info-value,
+body:has(.case-header) .case-info-item span {
+    color: #292826 !important;
+}
+
+
+/* Primary field */
+
+body:has(.case-header) .case-info-primary {
+    background: #d9d4c9 !important;
+
+    border-left-color: #704345 !important;
+}
+
+
+body:has(.case-header) .case-info-primary .case-info-value {
+    color: #292826 !important;
+}
+
+
+/* ---------------------------------------------------------
+   PERSON DETAILS
+   --------------------------------------------------------- */
+
+body:has(#person-profile) .case-details {
+    background: #e2ded4 !important;
+
+    border-color: #bdb8ad !important;
+}
+
+
+body:has(#person-profile) .case-details > div {
+    background: #e8e4da !important;
+
+    border-color: #c5c0b5 !important;
+}
+
+
+body:has(#person-profile) .case-details strong {
+    color: #68635b !important;
+}
+
+
+body:has(#person-profile) .case-details span {
+    color: #292826 !important;
+}
+
+
+/* ---------------------------------------------------------
+   PEOPLE CARDS
+   --------------------------------------------------------- */
+
+body:has(.case-header) .case-person {
+    background: #e8e4da !important;
+
+    color: #292826 !important;
+
+    border-color: #c2bdb2 !important;
+}
+
+
+body:has(.case-header) .case-person h3,
+body:has(.case-header) .case-person h4,
+body:has(.case-header) .case-person strong {
+    color: #292826 !important;
+}
+
+
+body:has(.case-header) .case-person p,
+body:has(.case-header) .case-person span {
+    color: #57534c !important;
+}
+
+
+/* ---------------------------------------------------------
+   SOURCES
+   --------------------------------------------------------- */
+
+body:has(.case-header) .source-item,
+body:has(.case-header) .source-card {
+    background: #e8e4da !important;
+
+    color: #292826 !important;
+
+    border-color: #c2bdb2 !important;
+}
+
+
+body:has(.case-header) .source-item h3,
+body:has(.case-header) .source-item h4,
+body:has(.case-header) .source-card h3,
+body:has(.case-header) .source-card h4 {
+    color: #292826 !important;
+}
+
+
+body:has(.case-header) .source-item p,
+body:has(.case-header) .source-item span,
+body:has(.case-header) .source-card p,
+body:has(.case-header) .source-card span {
+    color: #57534c !important;
+}
+
+
+/* ---------------------------------------------------------
+   PERSON PAGE
+   --------------------------------------------------------- */
+
+body:has(#person-profile) .case-section {
+    background: #e8e4da !important;
+
+    color: #292826 !important;
+}
+
+
+/* Person profile basic text */
+
+body:has(#person-profile) #person-basic-info {
+    color: #aaa69d !important;
+}
+
+
+/* Cases inside person page */
+
+body:has(#person-profile) #person-cases > * {
+    background: #e8e4da !important;
+
+    color: #292826 !important;
+
+    border-color: #c2bdb2 !important;
+}
+
+
+body:has(#person-profile) #person-cases h3,
+body:has(#person-profile) #person-cases h4 {
+    color: #292826 !important;
+}
+
+
+body:has(#person-profile) #person-cases p,
+body:has(#person-profile) #person-cases span {
+    color: #57534c !important;
+}
+
+
+/* Documents */
+
+body:has(#person-profile) #person-documents > * {
+    background: #e8e4da !important;
+
+    color: #292826 !important;
+
+    border-color: #c2bdb2 !important;
+}
+
+
+/* Sources */
+
+body:has(#person-profile) #person-sources > * {
+    background: #e8e4da !important;
+
+    color: #292826 !important;
+
+    border-color: #c2bdb2 !important;
+}
+
+
+/* ---------------------------------------------------------
+   EMPTY / NO DATA MESSAGES
+   --------------------------------------------------------- */
+
+body:has(.case-header) .empty-message,
+body:has(.case-header) .case-section .empty-message {
+    background: #ddd9cf !important;
+
+    color: #68635b !important;
+
+    border-color: #bdb8ad !important;
+}
+
+
+/* ---------------------------------------------------------
+   MUGSHOT AREA
+   --------------------------------------------------------- */
+
+body:has(#person-profile) #person-mugshots {
+    background: #d5d0c5 !important;
+
+    color: #292826 !important;
+
+    border-color: #b5b0a5 !important;
+}
+
+
+body:has(#person-profile) .person-mugshot-card {
+    background: #eeeae1 !important;
+
+    color: #292826 !important;
+}
+
+
+body:has(#person-profile) .person-mugshot-card h3 {
+    color: #292826 !important;
+}
+
+
+body:has(#person-profile) .person-mugshot-card p {
+    color: #57534c !important;
+}
+
+
+/* ---------------------------------------------------------
+   LINKS
+   --------------------------------------------------------- */
+
+body:has(.case-header) .case-section a {
+    color: #704345 !important;
+}
+
+
+body:has(.case-header) .case-section a:hover {
+    color: #593537 !important;
+}
