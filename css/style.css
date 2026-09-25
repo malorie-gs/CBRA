@@ -5349,3 +5349,153 @@ body:has(.case-header) .case-section a {
 body:has(.case-header) .case-section a:hover {
     color: #593537 !important;
 }
+
+/* =========================================================
+   CBRA — CASE / PERSONNEL FILE STAMPS
+   ========================================================= */
+
+
+/* ---------------------------------------------------------
+   CASE FILE STAMP
+   --------------------------------------------------------- */
+
+body:has(.case-header) .case-header::before {
+    content: "CASE FILE";
+
+    position: absolute;
+
+    top: 22px;
+    right: 24px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 112px;
+    height: 32px;
+
+    padding: 0;
+
+    border: 2px solid rgba(112, 67, 69, 0.78);
+
+    color: rgba(112, 67, 69, 0.88);
+
+    font-family: var(--mono);
+
+    font-size: 10px;
+
+    font-weight: 700;
+
+    letter-spacing: 1.8px;
+
+    text-align: center;
+
+    text-transform: uppercase;
+
+    transform: rotate(-7deg);
+
+    opacity: 0.9;
+
+    background: transparent;
+
+    box-shadow:
+        inset 0 0 0 1px rgba(112, 67, 69, 0.18);
+
+    z-index: 3;
+
+    pointer-events: none;
+}
+
+
+/* Slightly imperfect inner stamp edge */
+
+body:has(.case-header) .case-header::before {
+    outline: 1px solid rgba(112, 67, 69, 0.18);
+
+    outline-offset: 3px;
+}
+
+
+/* ---------------------------------------------------------
+   PERSONNEL FILE STAMP
+   --------------------------------------------------------- */
+
+body:has(#person-profile) .case-header::before {
+    content: "PERSONNEL FILE";
+
+    width: 148px;
+
+    border-color: rgba(83, 96, 82, 0.82);
+
+    color: rgba(83, 96, 82, 0.92);
+
+    transform: rotate(-6deg);
+
+    box-shadow:
+        inset 0 0 0 1px rgba(83, 96, 82, 0.18);
+
+    outline-color: rgba(83, 96, 82, 0.18);
+}
+
+
+/* ---------------------------------------------------------
+   SMALL "ARCHIVE" STAMP DETAIL
+   --------------------------------------------------------- */
+
+body:has(.case-header) .case-header-date::before {
+    content: "ARCHIVE RECORD";
+
+    display: block;
+
+    margin-bottom: 5px;
+
+    color: #77736b;
+
+    font-family: var(--mono);
+
+    font-size: 7px;
+
+    font-weight: 600;
+
+    letter-spacing: 1.3px;
+
+    text-transform: uppercase;
+}
+
+
+/* ---------------------------------------------------------
+   MOBILE
+   --------------------------------------------------------- */
+
+@media (max-width: 700px) {
+
+    body:has(.case-header) .case-header::before {
+        top: 17px;
+        right: 17px;
+
+        width: 100px;
+        height: 29px;
+
+        font-size: 8px;
+    }
+
+    body:has(#person-profile) .case-header::before {
+        width: 128px;
+    }
+}
+
+
+@media (max-width: 450px) {
+
+    body:has(.case-header) .case-header::before {
+        position: relative;
+
+        top: auto;
+        right: auto;
+
+        margin: 0 0 18px auto;
+
+        transform: rotate(-5deg);
+    }
+}
