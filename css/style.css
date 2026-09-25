@@ -5633,3 +5633,70 @@ body:has(.case-header) .case-section h2::before {
     margin-top: 12px;
     line-height: 1.7;
 }
+
+/* =========================================================
+   CBRA — CASE INFORMATION GRID
+   ========================================================= */
+
+.case-information-grid {
+    gap: 18px 20px;
+}
+
+.case-information-grid > div {
+    padding: 18px 20px;
+    min-height: 76px;
+}
+
+.case-information-grid strong {
+    display: block;
+    margin-bottom: 9px;
+    line-height: 1.3;
+}
+
+.case-information-grid span {
+    display: block;
+    line-height: 1.5;
+}
+
+/* Additional offenses */
+
+.case-information-grid #case-additional-offenses {
+    line-height: 1.5;
+}
+
+/* Description */
+
+.case-description {
+    margin-top: 30px;
+    padding-top: 24px;
+}
+
+.case-description h3 {
+    margin-bottom: 12px;
+}
+
+.case-description p {
+    line-height: 1.75;
+    margin: 0;
+}
+
+
+/* Mobile */
+
+@media (max-width: 700px) {
+
+    .case-information-grid {
+        gap: 12px;
+    }
+
+    .case-information-grid > div {
+        padding: 16px 17px;
+        min-height: 70px;
+    }
+
+    .case-description {
+        margin-top: 24px;
+        padding-top: 20px;
+    }
+
+}
