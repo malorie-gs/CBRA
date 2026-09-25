@@ -5506,3 +5506,83 @@ body:has(.case-header) .case-section h2::before {
     content: none !important;
     display: none !important;
 }
+
+/* =========================================================
+   CBRA — CASE INFORMATION SPACING
+   ========================================================= */
+
+.case-information .case-details,
+.case-section .case-details {
+
+    gap: 14px 18px;
+
+}
+
+.case-information .case-details > div,
+.case-section .case-details > div {
+
+    padding: 16px 18px;
+    min-height: 68px;
+
+}
+
+.case-information .case-details strong,
+.case-section .case-details strong {
+
+    display: block;
+    margin-bottom: 7px;
+    line-height: 1.2;
+
+}
+
+.case-information .case-details span,
+.case-section .case-details span {
+
+    display: block;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+
+}
+
+
+/* Give longer fields more breathing room */
+
+#case-additional-offenses {
+
+    line-height: 1.5;
+
+}
+
+.additional-offenses-list {
+
+    margin: 6px 0 0;
+    padding-left: 20px;
+
+}
+
+.additional-offenses-list li {
+
+    margin-bottom: 5px;
+
+}
+
+
+/* Slightly more breathing room on smaller screens */
+
+@media (max-width: 700px) {
+
+    .case-information .case-details,
+    .case-section .case-details {
+
+        gap: 12px;
+
+    }
+
+    .case-information .case-details > div,
+    .case-section .case-details > div {
+
+        padding: 14px 16px;
+
+    }
+
+}
