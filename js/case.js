@@ -368,7 +368,6 @@ async function loadCase() {
 
 }
 
-
 /* -----------------------------------------
    LOAD PEOPLE
    ----------------------------------------- */
@@ -429,6 +428,64 @@ async function loadPeople() {
         return;
 
     }
+
+
+    /* -----------------------------------------
+       SORT PEOPLE BY ROLE
+       ----------------------------------------- */
+
+    const rolePriority = {
+
+        /* Offenders first */
+        offender: 1,
+        defendant: 1,
+        suspect: 1,
+        perpetrator: 1,
+        accused: 1,
+        "person of interest": 1,
+
+        /* Victims second */
+        victim: 2,
+
+        /* Witnesses third */
+        witness: 3,
+
+        /* Everyone else last */
+        other: 4
+
+    };
+
+
+    data.sort((a, b) => {
+
+        const roleA =
+            String(
+                a.role || ""
+            )
+                .trim()
+                .toLowerCase();
+
+        const roleB =
+            String(
+                b.role || ""
+            )
+                .trim()
+                .toLowerCase();
+
+        const priorityA =
+            rolePriority[roleA] ?? 4;
+
+        const priorityB =
+            rolePriority[roleB] ?? 4;
+
+        return priorityA - priorityB;
+
+    });
+
+
+    /* -----------------------------------------
+       DISPLAY PEOPLE
+       ----------------------------------------- */
 
     const html =
         data
@@ -505,7 +562,6 @@ async function loadPeople() {
         `<div class="empty-state">No people are linked to this case.</div>`;
 
 }
-
 
 /* -----------------------------------------
    LOAD TAGS
