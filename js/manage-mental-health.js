@@ -5,6 +5,14 @@
 
 
 /* =========================================
+   STORAGE
+   ========================================= */
+
+const MENTAL_HEALTH_BUCKET =
+    "mental-health-documents";
+
+
+/* =========================================
    MENTAL HEALTH TAGS
    ========================================= */
 
@@ -220,10 +228,6 @@ async function addMentalHealthTag(event) {
     }
 
 
-    /* -----------------------------------------
-       Check whether tag already exists
-       ----------------------------------------- */
-
     const {
         data: existingTag,
         error: tagSearchError
@@ -255,20 +259,12 @@ async function addMentalHealthTag(event) {
     let tagId;
 
 
-    /* -----------------------------------------
-       Use existing tag
-       ----------------------------------------- */
-
     if (existingTag) {
 
         tagId =
             existingTag.id;
 
     } else {
-
-        /* --------------------------------------
-           Create new tag
-           -------------------------------------- */
 
         const {
             data: newTag,
@@ -302,10 +298,6 @@ async function addMentalHealthTag(event) {
 
     }
 
-
-    /* -----------------------------------------
-       Check whether person already has tag
-       ----------------------------------------- */
 
     const {
         data: existingConnection,
@@ -349,10 +341,6 @@ async function addMentalHealthTag(event) {
         return;
     }
 
-
-    /* -----------------------------------------
-       Attach tag to person
-       ----------------------------------------- */
 
     const { error: insertError } =
         await supabaseClient
@@ -664,7 +652,7 @@ async function loadMentalHealthDocuments(personId) {
 
 
             /* ---------------------------------
-               Open document
+               Open PDF
                --------------------------------- */
 
             if (
@@ -690,7 +678,7 @@ async function loadMentalHealthDocuments(personId) {
 
 
                 link.textContent =
-                    "Open Document";
+                    "Open PDF";
 
 
                 card.appendChild(
@@ -721,7 +709,8 @@ async function loadMentalHealthDocuments(personId) {
             remove.onclick =
                 () => removeMentalHealthDocument(
                     documentRecord.id,
-                    personId
+                    personId,
+                    documentRecord.document_url
                 );
 
 
@@ -788,10 +777,17 @@ async function addMentalHealthDocument(event) {
         null;
 
 
-    const url =
+    const fileInput =
         document.getElementById(
-            "mental-document-url"
-        ).value.trim();
+            "mental-document-file"
+        );
+
+
+    const file =
+        fileInput &&
+        fileInput.files
+            ? fileInput.files[0]
+            : null;
 
 
     const description =
@@ -816,6 +812,10 @@ async function addMentalHealthDocument(event) {
             : null;
 
 
+    /* -----------------------------------------
+       Validate title
+       ----------------------------------------- */
+
     if (!title) {
 
         message.textContent =
@@ -825,37 +825,171 @@ async function addMentalHealthDocument(event) {
     }
 
 
-    if (!url) {
+    /* -----------------------------------------
+       Validate PDF
+       ----------------------------------------- */
+
+    if (!file) {
 
         message.textContent =
-            "Please enter a document URL.";
+            "Please select a PDF document.";
 
         return;
     }
 
 
-    /* -----------------------------------------
-       Validate URL
-       ----------------------------------------- */
-
-    try {
-
-        new URL(url);
-
-    } catch {
+    if (
+        file.type !==
+        "application/pdf"
+    ) {
 
         message.textContent =
-            "Please enter a valid URL.";
+            "Only PDF files are allowed.";
 
         return;
     }
 
 
     message.textContent =
-        "Adding document...";
+        "Uploading PDF...";
 
 
-    const { error } =
+    /* -----------------------------------------
+       Create safe storage filename
+       ----------------------------------------- */
+
+    const originalName =
+        file.name
+            .replace(
+                /\.pdf$/i,
+                ""
+            )
+            .replace(
+                /[^a-zA-Z0-9-_]/g,
+                "-"
+            )
+            .replace(
+                /-+/g,
+                "-"
+            )
+            .replace(
+                /^-|-$/g,
+                ""
+            );
+
+
+    const fileName =
+        originalName ||
+        "document";
+
+
+    const filePath =
+        `${personId}/${Date.now()}-${fileName}.pdf`;
+
+
+    /* -----------------------------------------
+       Upload PDF
+       ----------------------------------------- */
+
+    const {
+        error: uploadError
+    } =
+        await supabaseClient
+            .storage
+            .from(
+                MENTAL_HEALTH_BUCKET
+            )
+            .upload(
+                filePath,
+                file,
+                {
+                    contentType:
+                        "application/pdf",
+
+                    upsert:
+                        false
+                }
+            );
+
+
+    if (uploadError) {
+
+        console.error(
+            "Mental health PDF upload error:",
+            uploadError
+        );
+
+        message.textContent =
+            "Unable to upload PDF.";
+
+        return;
+    }
+
+
+    /* -----------------------------------------
+       Get public URL
+       ----------------------------------------- */
+
+    const {
+        data: publicUrlData
+    } =
+        supabaseClient
+            .storage
+            .from(
+                MENTAL_HEALTH_BUCKET
+            )
+            .getPublicUrl(
+                filePath
+            );
+
+
+    const documentUrl =
+        publicUrlData &&
+        publicUrlData.publicUrl
+            ? publicUrlData.publicUrl
+            : null;
+
+
+    if (!documentUrl) {
+
+        console.error(
+            "Unable to create PDF URL."
+        );
+
+
+        /* --------------------------------------
+           Clean up uploaded file
+           -------------------------------------- */
+
+        await supabaseClient
+            .storage
+            .from(
+                MENTAL_HEALTH_BUCKET
+            )
+            .remove([
+                filePath
+            ]);
+
+
+        message.textContent =
+            "Unable to create PDF link.";
+
+        return;
+    }
+
+
+    message.textContent =
+        "Saving document...";
+
+
+    /* -----------------------------------------
+       Save document record
+       ----------------------------------------- */
+
+    const {
+        data: insertedDocument,
+        error: insertError
+    } =
         await supabaseClient
             .from("mental_health_documents")
             .insert({
@@ -867,7 +1001,7 @@ async function addMentalHealthDocument(event) {
                     title,
 
                 document_url:
-                    url,
+                    documentUrl,
 
                 document_type:
                     type,
@@ -881,22 +1015,45 @@ async function addMentalHealthDocument(event) {
                 source_id:
                     sourceId
 
-            });
+            })
+            .select()
+            .single();
 
 
-    if (error) {
+    if (insertError) {
 
         console.error(
             "Mental health document insert error:",
-            error
+            insertError
         );
 
+
+        /* --------------------------------------
+           Database insert failed.
+           Remove uploaded PDF so we don't
+           leave an orphaned file.
+           -------------------------------------- */
+
+        await supabaseClient
+            .storage
+            .from(
+                MENTAL_HEALTH_BUCKET
+            )
+            .remove([
+                filePath
+            ]);
+
+
         message.textContent =
-            "Unable to add mental health document.";
+            "Unable to save mental health document.";
 
         return;
     }
 
+
+    /* -----------------------------------------
+       Reset form
+       ----------------------------------------- */
 
     document.getElementById(
         "mental-health-document-form"
@@ -904,7 +1061,7 @@ async function addMentalHealthDocument(event) {
 
 
     message.textContent =
-        "Mental health document added.";
+        "Mental health PDF added.";
 
 
     await loadMentalHealthDocuments(
@@ -920,7 +1077,8 @@ async function addMentalHealthDocument(event) {
 
 async function removeMentalHealthDocument(
     id,
-    personId
+    personId,
+    documentUrl
 ) {
 
     if (
@@ -933,6 +1091,10 @@ async function removeMentalHealthDocument(
 
     }
 
+
+    /* -----------------------------------------
+       Delete database record
+       ----------------------------------------- */
 
     const { error } =
         await supabaseClient
@@ -956,6 +1118,59 @@ async function removeMentalHealthDocument(
         );
 
         return;
+    }
+
+
+    /* -----------------------------------------
+       Try to remove PDF from Storage
+       ----------------------------------------- */
+
+    if (documentUrl) {
+
+        try {
+
+            const marker =
+                `/mental-health-documents/`;
+
+            const markerIndex =
+                documentUrl.indexOf(
+                    marker
+                );
+
+
+            if (
+                markerIndex !== -1
+            ) {
+
+                const filePath =
+                    decodeURIComponent(
+                        documentUrl.substring(
+                            markerIndex +
+                            marker.length
+                        )
+                    );
+
+
+                await supabaseClient
+                    .storage
+                    .from(
+                        MENTAL_HEALTH_BUCKET
+                    )
+                    .remove([
+                        filePath
+                    ]);
+
+            }
+
+        } catch (storageError) {
+
+            console.error(
+                "Mental health PDF storage deletion error:",
+                storageError
+            );
+
+        }
+
     }
 
 
@@ -995,17 +1210,6 @@ async function loadMentalHealthDocumentSources(
         return;
     }
 
-
-    /*
-       IMPORTANT:
-       The existing sources table does not currently
-       have person_id.
-
-       Therefore we are not filtering sources by person
-       yet. This keeps the existing source relationship
-       intact while the mental-health functionality moves
-       from cases to people.
-    */
 
     const { data, error } =
         await supabaseClient
